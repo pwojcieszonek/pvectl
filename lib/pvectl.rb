@@ -276,4 +276,6 @@ require_relative "pvectl/commands/migrate_container"
 require_relative "pvectl/wizards/create_vm"
 require_relative "pvectl/wizards/create_container"
 
+require_relative "pvectl/plugin_loader"
+
 require_relative "pvectl/cli"
