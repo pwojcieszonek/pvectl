@@ -71,6 +71,7 @@ Two data paths depending on operation type:
 | `utils/` | Helper utilities (resource resolver) |
 | `config/` | Loading, validation, saving multi-context configuration |
 | `connection/` | API client with retry (exp. backoff) and timeout |
+| `console/` | Interactive terminal session (WebSocket I/O, xtermjs protocol) |
 | `plugin_loader.rb` | Command discovery and loading (built-in + gem/directory plugins) |
 
 ### Design Patterns

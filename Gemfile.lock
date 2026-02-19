@@ -6,10 +6,12 @@ PATH
       pastel (~> 0.8)
       proxmox-api (~> 1.1)
       tty-table (~> 0.12)
+      websocket-driver (~> 0.7)
 
 GEM
   remote: https://rubygems.org/
   specs:
+    base64 (0.3.0)
     domain_name (0.6.20240107)
     gli (2.22.2)
       ostruct
@@ -49,6 +51,10 @@ GEM
       tty-screen (~> 0.8)
     unicode-display_width (2.6.0)
     unicode_utils (1.4.0)
+    websocket-driver (0.8.0)
+      base64
+      websocket-extensions (>= 0.1.0)
+    websocket-extensions (0.1.5)
 
 PLATFORMS
   arm64-darwin-23

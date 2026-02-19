@@ -49,6 +49,12 @@ Context name: [default] production
 | `logs` | View logs and task history | `pvectl logs node pve1` |
 | `ping` | Check cluster connectivity | `pvectl ping` |
 
+### Interactive Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `console` | Open terminal session | `pvectl console vm 100` |
+
 ### Lifecycle Commands
 
 | Command | Description | VM | Container |
@@ -95,14 +101,14 @@ pvectl config view                  # Show config (secrets masked)
 
 ## Resource Types
 
-| Type | Aliases | get | describe | top | logs | lifecycle | create | delete | clone | migrate | edit |
-|------|---------|:---:|:--------:|:---:|:----:|:---------:|:------:|:------:|:-----:|:-------:|:----:|
-| nodes | node | yes | yes | yes | yes | - | - | - | - | - | - |
-| vms | vm | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
-| containers | container, ct, cts | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
-| storage | stor | yes | yes | - | - | - | - | - | - | - | - |
-| snapshots | snapshot, snap | yes | - | - | - | - | yes | yes | - | - | - |
-| backups | backup | yes | - | - | - | - | yes | yes | - | - | - |
+| Type | Aliases | get | describe | top | logs | lifecycle | create | delete | clone | migrate | edit | console |
+|------|---------|:---:|:--------:|:---:|:----:|:---------:|:------:|:------:|:-----:|:-------:|:----:|:-------:|
+| nodes | node | yes | yes | yes | yes | - | - | - | - | - | - | - |
+| vms | vm | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| containers | container, ct, cts | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
+| storage | stor | yes | yes | - | - | - | - | - | - | - | - | - |
+| snapshots | snapshot, snap | yes | - | - | - | - | yes | yes | - | - | - | - |
+| backups | backup | yes | - | - | - | - | yes | yes | - | - | - | - |
 
 ## Usage Examples
 
@@ -162,6 +168,19 @@ pvectl describe vm 100                # VM config, disks, network, snapshots
 pvectl describe container 200         # Container details
 pvectl describe storage local-lvm     # Storage pool info
 ```
+
+### Console Access
+
+```bash
+pvectl console vm 100                 # Open terminal to VM
+pvectl console ct 200                 # Open terminal to container
+pvectl console vm 100 --node pve1     # Specify node explicitly
+pvectl console vm 100 --user root@pam # Provide username (prompted for password)
+```
+
+> **Note:** Console requires session authentication (username/password). If your config
+> only has an API token, pvectl will prompt for credentials interactively.
+> Disconnect with `Ctrl+]`.
 
 ### Lifecycle Operations
 

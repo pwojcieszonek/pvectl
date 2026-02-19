@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **console**: Interactive terminal session for VMs and containers via `pvectl console vm|ct <ID>`
+- **console**: WebSocket-based xtermjs protocol with native Ruby implementation (websocket-driver gem)
+- **console**: Session authentication with interactive credential prompt when API token is insufficient
 - **plugins**: Plugin system with gem-based (`pvectl-plugin-*`) and directory-based (`~/.pvectl/plugins/*.rb`) discovery
 - **plugins**: `PluginLoader` class for automatic plugin loading with graceful error handling
 - **commands**: `SharedFlags` module for reusable flag definitions across commands

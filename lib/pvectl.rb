@@ -126,6 +126,9 @@ require_relative "pvectl/selectors/base"
 require_relative "pvectl/selectors/vm"
 require_relative "pvectl/selectors/container"
 
+# Console
+require_relative "pvectl/console/terminal_session"
+
 # Connection
 require_relative "pvectl/connection/retry_handler"
 require_relative "pvectl/connection"
@@ -186,6 +189,9 @@ require_relative "pvectl/services/clone_container"
 
 # Services - Resource Migration
 require_relative "pvectl/services/resource_migration"
+
+# Services - Console
+require_relative "pvectl/services/console"
 
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
@@ -272,6 +278,11 @@ require_relative "pvectl/commands/clone_container"
 require_relative "pvectl/commands/migrate_command"
 require_relative "pvectl/commands/migrate_vm"
 require_relative "pvectl/commands/migrate_container"
+
+# Commands - Console
+require_relative "pvectl/commands/console_vm"
+require_relative "pvectl/commands/console_ct"
+require_relative "pvectl/commands/console"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"

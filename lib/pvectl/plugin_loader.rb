@@ -38,6 +38,7 @@ module Pvectl
       Commands::MigrateVm,
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
+      Commands::Console,
     ].freeze
 
     @registered_plugins = []
