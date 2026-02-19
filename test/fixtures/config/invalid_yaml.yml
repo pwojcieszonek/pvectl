@@ -1,0 +1,7 @@
+# Invalid YAML for error testing
+clusters:
+  - name: production
+    cluster:
+      server: https://example.com
+  bad indentation
+    no: valid yaml here

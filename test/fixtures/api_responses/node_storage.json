@@ -1,0 +1,32 @@
+[
+  {
+    "storage": "local",
+    "type": "dir",
+    "total": 107374182400,
+    "used": 48318382080,
+    "avail": 59055800320,
+    "enabled": 1,
+    "active": 1,
+    "content": "images,rootdir,vztmpl,iso,backup"
+  },
+  {
+    "storage": "local-lvm",
+    "type": "lvmthin",
+    "total": 536870912000,
+    "used": 251274936320,
+    "avail": 285595975680,
+    "enabled": 1,
+    "active": 1,
+    "content": "images,rootdir"
+  },
+  {
+    "storage": "ceph-pool",
+    "type": "rbd",
+    "total": 2199023255552,
+    "used": 955630223360,
+    "avail": 1243393032192,
+    "enabled": 1,
+    "active": 1,
+    "content": "images"
+  }
+]

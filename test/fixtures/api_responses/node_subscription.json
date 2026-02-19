@@ -1,0 +1,9 @@
+{
+  "status": "Active",
+  "level": "c",
+  "productname": "Proxmox VE Community Subscription 1 CPU/year",
+  "serverid": "ABC123DEF456GHI789",
+  "checktime": "2024-01-15T10:00:00Z",
+  "nextduedate": "2025-01-15",
+  "regdate": "2020-01-15"
+}

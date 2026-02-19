@@ -1,0 +1,23 @@
+# Configuration with token authentication only
+apiVersion: pvectl/v1
+kind: Config
+
+clusters:
+  - name: main
+    cluster:
+      server: https://pve.example.com:8006
+      insecure-skip-tls-verify: false
+
+users:
+  - name: token-user
+    user:
+      token-id: root@pam!automation
+      token-secret: 11111111-2222-3333-4444-555555555555
+
+contexts:
+  - name: default
+    context:
+      cluster: main
+      user: token-user
+
+current-context: default

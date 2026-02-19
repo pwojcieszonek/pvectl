@@ -1,0 +1,16 @@
+{
+  "loadavg": [0.45, 0.52, 0.48],
+  "swap": {
+    "used": 0,
+    "total": 8589934592,
+    "free": 8589934592
+  },
+  "cpuinfo": {
+    "cores": 16,
+    "sockets": 2,
+    "model": "AMD EPYC 7302 16-Core Processor"
+  },
+  "kversion": "Linux 6.8.12-1-pve #1 SMP PREEMPT_DYNAMIC PMX 6.8.12-1 (2024-01-15T10:00:00Z) x86_64",
+  "uptime": 3898800,
+  "idle": 0.97
+}

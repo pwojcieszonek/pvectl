@@ -1,0 +1,44 @@
+[
+  {
+    "service": "pve-cluster",
+    "state": "running",
+    "name": "pve-cluster",
+    "desc": "Proxmox VE Cluster Service"
+  },
+  {
+    "service": "pvedaemon",
+    "state": "running",
+    "name": "pvedaemon",
+    "desc": "Proxmox VE API Daemon"
+  },
+  {
+    "service": "pveproxy",
+    "state": "running",
+    "name": "pveproxy",
+    "desc": "Proxmox VE API Proxy"
+  },
+  {
+    "service": "pvestatd",
+    "state": "running",
+    "name": "pvestatd",
+    "desc": "Proxmox VE Status Daemon"
+  },
+  {
+    "service": "pve-firewall",
+    "state": "running",
+    "name": "pve-firewall",
+    "desc": "Proxmox VE Firewall"
+  },
+  {
+    "service": "corosync",
+    "state": "running",
+    "name": "corosync",
+    "desc": "Corosync Cluster Engine"
+  },
+  {
+    "service": "ceph-mon",
+    "state": "stopped",
+    "name": "ceph-mon",
+    "desc": "Ceph Monitor"
+  }
+]

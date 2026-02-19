@@ -1,0 +1,20 @@
+{
+  "bios": "ovmf",
+  "machine": "q35",
+  "ostype": "l26",
+  "sockets": 1,
+  "cores": 4,
+  "cpu": "host",
+  "memory": 8192,
+  "balloon": 2048,
+  "scsi0": "local-lvm:vm-100-disk-0,size=50G,format=raw",
+  "scsi1": "ceph:vm-100-disk-1,size=100G,format=raw",
+  "ide2": "local:iso/ubuntu-22.04.iso,media=cdrom",
+  "net0": "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0,firewall=1",
+  "net1": "e1000=BC:24:11:AA:BB:DD,bridge=vmbr1",
+  "description": "Main production web server",
+  "ha": "ha-group-1",
+  "boot": "order=scsi0;ide2;net0",
+  "scsihw": "virtio-scsi-single",
+  "vmgenid": "a0b1c2d3-e4f5-6789-abcd-ef0123456789"
+}

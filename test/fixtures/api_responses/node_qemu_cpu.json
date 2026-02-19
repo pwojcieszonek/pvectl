@@ -1,0 +1,37 @@
+[
+  {
+    "name": "host",
+    "vendor": "unknown",
+    "custom": 0
+  },
+  {
+    "name": "max",
+    "vendor": "unknown",
+    "custom": 0
+  },
+  {
+    "name": "kvm64",
+    "vendor": "unknown",
+    "custom": 0
+  },
+  {
+    "name": "qemu64",
+    "vendor": "unknown",
+    "custom": 0
+  },
+  {
+    "name": "Skylake-Server",
+    "vendor": "Intel",
+    "custom": 0
+  },
+  {
+    "name": "EPYC",
+    "vendor": "AMD",
+    "custom": 0
+  },
+  {
+    "name": "EPYC-Rome",
+    "vendor": "AMD",
+    "custom": 0
+  }
+]

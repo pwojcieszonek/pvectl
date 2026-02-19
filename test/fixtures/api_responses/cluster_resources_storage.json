@@ -1,0 +1,101 @@
+[
+  {
+    "storage": "local",
+    "node": "pve-node1",
+    "type": "storage",
+    "plugintype": "dir",
+    "status": "available",
+    "disk": 48318382080,
+    "maxdisk": 107374182400,
+    "content": "images,rootdir,vztmpl,iso,backup",
+    "shared": 0
+  },
+  {
+    "storage": "local",
+    "node": "pve-node2",
+    "type": "storage",
+    "plugintype": "dir",
+    "status": "available",
+    "disk": 52428800000,
+    "maxdisk": 107374182400,
+    "content": "images,rootdir,vztmpl,iso,backup",
+    "shared": 0
+  },
+  {
+    "storage": "local-lvm",
+    "node": "pve-node1",
+    "type": "storage",
+    "plugintype": "lvmthin",
+    "status": "available",
+    "disk": 251274936320,
+    "maxdisk": 536870912000,
+    "content": "images,rootdir",
+    "shared": 0
+  },
+  {
+    "storage": "ceph-pool",
+    "node": "pve-node1",
+    "type": "storage",
+    "plugintype": "rbd",
+    "status": "available",
+    "disk": 955630223360,
+    "maxdisk": 2199023255552,
+    "content": "images",
+    "shared": 1
+  },
+  {
+    "storage": "ceph-pool",
+    "node": "pve-node2",
+    "type": "storage",
+    "plugintype": "rbd",
+    "status": "available",
+    "disk": 955630223360,
+    "maxdisk": 2199023255552,
+    "content": "images",
+    "shared": 1
+  },
+  {
+    "storage": "ceph-pool",
+    "node": "pve-node3",
+    "type": "storage",
+    "plugintype": "rbd",
+    "status": "available",
+    "disk": 955630223360,
+    "maxdisk": 2199023255552,
+    "content": "images",
+    "shared": 1
+  },
+  {
+    "storage": "nfs-backup",
+    "node": "pve-node1",
+    "type": "storage",
+    "plugintype": "nfs",
+    "status": "available",
+    "disk": 1288490188800,
+    "maxdisk": 4398046511104,
+    "content": "backup,iso",
+    "shared": 1
+  },
+  {
+    "storage": "nfs-backup",
+    "node": "pve-node2",
+    "type": "storage",
+    "plugintype": "nfs",
+    "status": "available",
+    "disk": 1288490188800,
+    "maxdisk": 4398046511104,
+    "content": "backup,iso",
+    "shared": 1
+  },
+  {
+    "storage": "offline-storage",
+    "node": "pve-node1",
+    "type": "storage",
+    "plugintype": "dir",
+    "status": "unavailable",
+    "disk": null,
+    "maxdisk": 53687091200,
+    "content": "images",
+    "shared": 0
+  }
+]

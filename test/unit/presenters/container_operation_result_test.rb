@@ -1,0 +1,133 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class PresentersContainerOperationResultTest < Minitest::Test
+  def setup
+    @container = Pvectl::Models::Container.new(vmid: 200, name: "test-ct", node: "pve1", status: "running")
+    @task_success = Pvectl::Models::Task.new(status: "stopped", exitstatus: "OK", upid: "UPID:pve1:ABC")
+    @presenter = Pvectl::Presenters::ContainerOperationResult.new
+  end
+
+  def test_class_exists
+    assert_kind_of Class, Pvectl::Presenters::ContainerOperationResult
+  end
+
+  def test_inherits_from_operation_result
+    assert Pvectl::Presenters::ContainerOperationResult < Pvectl::Presenters::OperationResult
+  end
+
+  def test_columns_returns_container_columns
+    expected = %w[CTID NAME NODE STATUS MESSAGE]
+    assert_equal expected, @presenter.columns
+  end
+
+  def test_extra_columns_returns_wide_columns
+    expected = %w[TASK DURATION]
+    assert_equal expected, @presenter.extra_columns
+  end
+
+  def test_to_row_returns_array_of_values
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      operation: :start,
+      success: true
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_kind_of Array, row
+    assert_equal 5, row.length
+    assert_equal "200", row[0]
+    assert_equal "test-ct", row[1]
+    assert_equal "pve1", row[2]
+    assert_includes row[3], "Success"
+    assert_equal "Success", row[4]
+  end
+
+  def test_to_row_shows_failed_status
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      operation: :stop,
+      success: false,
+      error: "Permission denied"
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_includes row[3], "Failed"
+    assert_equal "Permission denied", row[4]
+  end
+
+  def test_to_row_shows_pending_status
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      operation: :shutdown,
+      task_upid: "UPID:pve1:XYZ",
+      success: :pending
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_includes row[3], "Pending"
+    assert_equal "Task: UPID:pve1:XYZ", row[4]
+  end
+
+  def test_to_row_shows_container_fallback_name
+    ct_no_name = Pvectl::Models::Container.new(vmid: 300, node: "pve1", status: "stopped")
+    result = Pvectl::Models::ContainerOperationResult.new(container: ct_no_name, success: true)
+
+    row = @presenter.to_row(result)
+
+    assert_equal "CT-300", row[1]
+  end
+
+  def test_extra_values_returns_task_and_duration
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      task: Pvectl::Models::Task.new(
+        upid: "UPID:pve1:ABC",
+        starttime: 1707000000,
+        endtime: 1707000030,
+        status: "stopped",
+        exitstatus: "OK"
+      )
+    )
+
+    extra = @presenter.extra_values(result)
+
+    assert_equal 2, extra.length
+    assert_equal "UPID:pve1:ABC", extra[0]
+    assert_equal "30.0s", extra[1]
+  end
+
+  def test_extra_values_with_no_task_shows_dashes
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      success: true
+    )
+
+    extra = @presenter.extra_values(result)
+
+    assert_equal "-", extra[0]
+    assert_equal "-", extra[1]
+  end
+
+  def test_to_hash_returns_complete_hash
+    result = Pvectl::Models::ContainerOperationResult.new(
+      container: @container,
+      operation: :start,
+      task: @task_success,
+      success: true
+    )
+
+    hash = @presenter.to_hash(result)
+
+    assert_equal 200, hash["ctid"]
+    assert_equal "test-ct", hash["name"]
+    assert_equal "pve1", hash["node"]
+    assert_equal "Success", hash["status"]
+    assert_equal "OK", hash["message"]
+    assert_equal "UPID:pve1:ABC", hash["task_upid"]
+  end
+end

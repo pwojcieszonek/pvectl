@@ -1,0 +1,32 @@
+[
+  {
+    "devpath": "/dev/sda",
+    "model": "Samsung SSD 870",
+    "size": 536870912000,
+    "type": "SSD",
+    "health": "PASSED",
+    "serial": "S1234567890",
+    "vendor": "ATA",
+    "gpt": 1
+  },
+  {
+    "devpath": "/dev/sdb",
+    "model": "WDC WD4003FFBX",
+    "size": 4398046511104,
+    "type": "HDD",
+    "health": "PASSED",
+    "serial": "WD-ABC123456",
+    "vendor": "ATA",
+    "gpt": 1
+  },
+  {
+    "devpath": "/dev/nvme0n1",
+    "model": "Samsung 980 PRO",
+    "size": 1099511627776,
+    "type": "NVMe",
+    "health": "PASSED",
+    "serial": "S5GXNF0N123456",
+    "vendor": "Samsung",
+    "gpt": 1
+  }
+]

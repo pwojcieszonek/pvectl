@@ -1,0 +1,22 @@
+# Configuration with missing context reference
+apiVersion: pvectl/v1
+kind: Config
+
+clusters:
+  - name: main
+    cluster:
+      server: https://pve.example.com:8006
+
+users:
+  - name: admin
+    user:
+      token-id: root@pam!token
+      token-secret: 00000000-0000-0000-0000-000000000000
+
+contexts:
+  - name: default
+    context:
+      cluster: main
+      user: admin
+
+current-context: nonexistent

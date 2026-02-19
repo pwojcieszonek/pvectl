@@ -1,0 +1,14 @@
+{
+  "status": "running",
+  "qmpstatus": "running",
+  "cpu": 0.12,
+  "cpus": 4,
+  "mem": 5582077952,
+  "maxmem": 8589934592,
+  "disk": 0,
+  "maxdisk": 53687091200,
+  "uptime": 1314000,
+  "pid": 12345,
+  "running-qemu": "8.1.5",
+  "running-machine": "pc-q35-8.1"
+}

@@ -1,0 +1,40 @@
+# Full valid configuration file for testing
+apiVersion: pvectl/v1
+kind: Config
+
+clusters:
+  - name: production
+    cluster:
+      server: https://pve1.example.com:8006
+      certificate-authority: /path/to/ca.crt
+      insecure-skip-tls-verify: false
+
+  - name: development
+    cluster:
+      server: https://pve-dev.local:8006
+      insecure-skip-tls-verify: true
+
+users:
+  - name: admin-prod
+    user:
+      token-id: root@pam!pvectl
+      token-secret: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+  - name: admin-dev
+    user:
+      username: root@pam
+      password: secret
+
+contexts:
+  - name: prod
+    context:
+      cluster: production
+      user: admin-prod
+      default-node: pve1
+
+  - name: dev
+    context:
+      cluster: development
+      user: admin-dev
+
+current-context: prod

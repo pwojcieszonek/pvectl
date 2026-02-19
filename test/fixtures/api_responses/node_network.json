@@ -1,0 +1,40 @@
+[
+  {
+    "iface": "lo",
+    "type": "loopback",
+    "address": "127.0.0.1",
+    "netmask": "255.0.0.0",
+    "active": 1,
+    "method": "loopback"
+  },
+  {
+    "iface": "enp0s31f6",
+    "type": "eth",
+    "active": 1
+  },
+  {
+    "iface": "vmbr0",
+    "type": "bridge",
+    "address": "192.168.1.10",
+    "cidr": "192.168.1.10/24",
+    "netmask": "255.255.255.0",
+    "gateway": "192.168.1.1",
+    "bridge_ports": "enp0s31f6",
+    "bridge_stp": "off",
+    "bridge_fd": 0,
+    "active": 1,
+    "method": "static"
+  },
+  {
+    "iface": "vmbr1",
+    "type": "bridge",
+    "address": "10.0.0.1",
+    "cidr": "10.0.0.1/24",
+    "netmask": "255.255.255.0",
+    "bridge_ports": "enp0s25",
+    "bridge_stp": "off",
+    "bridge_fd": 0,
+    "active": 1,
+    "method": "static"
+  }
+]

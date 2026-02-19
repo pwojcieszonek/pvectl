@@ -1,0 +1,101 @@
+# ==========================================
+# Ruby / Bundler
+# ==========================================
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Documentation cache
+/.yardoc/
+/_yardoc/
+/doc/
+/rdoc/
+
+# Environment normalization (uncomment if not using rvm/rbenv)
+# /.bundle/
+# /vendor/bundle
+# /lib/bundled_gems
+
+# ==========================================
+# IDE / Editors
+# ==========================================
+# JetBrains (RubyMine, IntelliJ)
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+\#*\#
+.#*
+
+# ==========================================
+# macOS
+# ==========================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ==========================================
+# Credentials / Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# Proxmox config with credentials
+config/proxmox.yml
+config/*.local.yml
+*.pem
+*.key
+
+# ==========================================
+# Claude Code (local settings only)
+# ==========================================
+.claude/settings.local.json
+CLAUDE.local.md
+
+# ==========================================
+# Git Worktrees
+# ==========================================
+.worktrees/
+
+# ==========================================
+# Misc
+# ==========================================
+# Byebug history
+.byebug_history
+
+# IRB history
+.irb_history
+
+# Pry history
+.pry_history
+
+# SimpleCov
+/coverage/
+
+# Logs
+*.log
+log/
+
+# ==========================================
+# Workflow specs (working documents, not artifacts)
+# ==========================================
+docs/specs/*
+docs/plans/*

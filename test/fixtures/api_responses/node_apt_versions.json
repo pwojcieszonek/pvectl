@@ -1,0 +1,38 @@
+[
+  {
+    "Package": "pve-manager",
+    "CurrentVersion": "8.3.1",
+    "AvailableVersion": "8.3.2",
+    "Title": "Proxmox Virtual Environment"
+  },
+  {
+    "Package": "proxmox-ve",
+    "CurrentVersion": "8.3.1",
+    "AvailableVersion": "8.3.2",
+    "Title": "Proxmox Virtual Environment Meta Package"
+  },
+  {
+    "Package": "pve-kernel-6.8",
+    "CurrentVersion": "6.8.12-1",
+    "AvailableVersion": "6.8.12-2",
+    "Title": "Proxmox Kernel Image"
+  },
+  {
+    "Package": "qemu-server",
+    "CurrentVersion": "8.2.1",
+    "AvailableVersion": "8.2.1",
+    "Title": "QEMU Server"
+  },
+  {
+    "Package": "lxc-pve",
+    "CurrentVersion": "6.0.0-1",
+    "AvailableVersion": "6.0.0-2",
+    "Title": "Linux Containers"
+  },
+  {
+    "Package": "ceph",
+    "CurrentVersion": "18.2.0-1",
+    "AvailableVersion": "18.2.1-1",
+    "Title": "Ceph Storage System"
+  }
+]

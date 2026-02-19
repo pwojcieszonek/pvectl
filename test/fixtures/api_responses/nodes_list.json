@@ -1,0 +1,50 @@
+[
+  {
+    "node": "pve-node1",
+    "status": "online",
+    "cpu": 0.23,
+    "maxcpu": 32,
+    "mem": 48535150182,
+    "maxmem": 137438953472,
+    "disk": 1288490188800,
+    "maxdisk": 4398046511104,
+    "uptime": 3898800,
+    "level": "c"
+  },
+  {
+    "node": "pve-node2",
+    "status": "online",
+    "cpu": 0.67,
+    "maxcpu": 32,
+    "mem": 95695953920,
+    "maxmem": 137438953472,
+    "disk": 3006477107200,
+    "maxdisk": 4398046511104,
+    "uptime": 3898800,
+    "level": "c"
+  },
+  {
+    "node": "pve-node3",
+    "status": "online",
+    "cpu": 0.12,
+    "maxcpu": 16,
+    "mem": 34359738368,
+    "maxmem": 68719476736,
+    "disk": 536870912000,
+    "maxdisk": 2199023255552,
+    "uptime": 1058400,
+    "level": "c"
+  },
+  {
+    "node": "pve-node4",
+    "status": "offline",
+    "cpu": null,
+    "maxcpu": 16,
+    "mem": null,
+    "maxmem": 68719476736,
+    "disk": null,
+    "maxdisk": 2199023255552,
+    "uptime": null,
+    "level": "c"
+  }
+]

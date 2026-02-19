@@ -1,0 +1,27 @@
+[
+  {
+    "id": "pc-q35-8.1",
+    "type": "q35",
+    "version": "8.1"
+  },
+  {
+    "id": "pc-i440fx-8.1",
+    "type": "i440fx",
+    "version": "8.1"
+  },
+  {
+    "id": "pc-q35-8.0",
+    "type": "q35",
+    "version": "8.0"
+  },
+  {
+    "id": "pc-i440fx-8.0",
+    "type": "i440fx",
+    "version": "8.0"
+  },
+  {
+    "id": "pc-q35-7.2",
+    "type": "q35",
+    "version": "7.2"
+  }
+]

@@ -1,0 +1,42 @@
+{
+  "result": [
+    {
+      "name": "lo",
+      "hardware-address": "00:00:00:00:00:00",
+      "ip-addresses": [
+        {
+          "ip-address": "127.0.0.1",
+          "ip-address-type": "ipv4",
+          "prefix": 8
+        }
+      ]
+    },
+    {
+      "name": "eth0",
+      "hardware-address": "bc:24:11:aa:bb:cc",
+      "ip-addresses": [
+        {
+          "ip-address": "192.168.1.100",
+          "ip-address-type": "ipv4",
+          "prefix": 24
+        },
+        {
+          "ip-address": "fe80::be24:11ff:feaa:bbcc",
+          "ip-address-type": "ipv6",
+          "prefix": 64
+        }
+      ]
+    },
+    {
+      "name": "eth1",
+      "hardware-address": "bc:24:11:aa:bb:dd",
+      "ip-addresses": [
+        {
+          "ip-address": "10.0.0.50",
+          "ip-address-type": "ipv4",
+          "prefix": 16
+        }
+      ]
+    }
+  ]
+}

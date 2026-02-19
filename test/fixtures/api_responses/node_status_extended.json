@@ -1,0 +1,39 @@
+{
+  "loadavg": [0.45, 0.52, 0.48],
+  "swap": {
+    "used": 0,
+    "total": 8589934592,
+    "free": 8589934592
+  },
+  "cpuinfo": {
+    "cores": 16,
+    "sockets": 2,
+    "model": "AMD EPYC 7302 16-Core Processor",
+    "mhz": "2994.374",
+    "cpus": 32
+  },
+  "kversion": "Linux 6.8.12-1-pve #1 SMP PREEMPT_DYNAMIC PMX 6.8.12-1 (2024-01-15T10:00:00Z) x86_64",
+  "uptime": 3898800,
+  "idle": 0.97,
+  "boot-info": {
+    "mode": "efi",
+    "secureboot": 0
+  },
+  "rootfs": {
+    "used": 1288490188800,
+    "total": 4398046511104,
+    "free": 3109556322304,
+    "avail": 3109556322304
+  },
+  "memory": {
+    "used": 48535150182,
+    "total": 137438953472,
+    "free": 88903803290
+  },
+  "cpu": 0.23,
+  "wait": 0.01,
+  "ksm": {
+    "shared": 0
+  },
+  "pveversion": "pve-manager/8.3.2/cfbf0f1ad96f4e7a"
+}

@@ -1,0 +1,52 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(./**)",
+      "Write(./**)",
+      "Bash(touch ./*:*)",
+      "Bash(find .:*)",
+      "Bash(find ./:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(git ls-remote:*)",
+      "Bash(bundle info:*)",
+      "Bash(gem contents:*)",
+      "Bash(GLI_DEBUG=true bundle exec exe/pvectl:*)",
+      "WebSearch",
+      "AskUserQuestion",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:rubygems.org)",
+      "WebFetch(domain:rubystyle.guide)",
+      "WebFetch(domain:www.rubydoc.info)",
+      "WebFetch(domain:docs.ruby-lang.org)",
+      "WebFetch(domain:ruby-doc.org)",
+      "WebFetch(domain:rubyapi.org)",
+      "WebFetch(domain:davetron5000.github.io)",
+      "WebFetch(domain:pve.proxmox.com)",
+      "WebFetch(domain:docs.claude.com)",
+      "mcp__context7__*",
+      "mcp__acp__Bash"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7"
+  ],
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true
+  }
+}

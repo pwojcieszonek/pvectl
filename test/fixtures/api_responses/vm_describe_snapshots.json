@@ -1,0 +1,21 @@
+[
+  {
+    "name": "current",
+    "snaptime": 1705326765,
+    "vmstate": 0,
+    "description": "You are here!"
+  },
+  {
+    "name": "before-update",
+    "snaptime": 1705240365,
+    "vmstate": 1,
+    "description": "Before system update",
+    "parent": "current"
+  },
+  {
+    "name": "initial-setup",
+    "snaptime": 1704635565,
+    "vmstate": 0,
+    "description": "Initial configuration"
+  }
+]

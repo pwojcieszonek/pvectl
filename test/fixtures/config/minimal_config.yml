@@ -1,0 +1,22 @@
+# Minimal valid configuration
+apiVersion: pvectl/v1
+kind: Config
+
+clusters:
+  - name: default
+    cluster:
+      server: https://pve.local:8006
+
+users:
+  - name: default
+    user:
+      token-id: root@pam!token
+      token-secret: 00000000-0000-0000-0000-000000000000
+
+contexts:
+  - name: default
+    context:
+      cluster: default
+      user: default
+
+current-context: default
