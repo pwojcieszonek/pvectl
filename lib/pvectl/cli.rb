@@ -7,9 +7,8 @@ module Pvectl
   #
   # The CLI class is the entry point for the pvectl command line interface.
   # It is responsible for:
-  # - Parsing command line arguments
-  # - Routing to appropriate commands (get, describe, create, delete, etc.)
-  # - Handling global flags (--output, --verbose, --config)
+  # - Defining global flags and options
+  # - Loading commands via PluginLoader (built-in + plugins)
   # - Error handling and system signal handling
   #
   # Uses the GLI (Git-Like Interface) framework to create commands
