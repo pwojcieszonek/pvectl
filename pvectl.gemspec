@@ -38,6 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "proxmox-api", "~> 1.1"
   spec.add_dependency "tty-table", "~> 0.12"
   spec.add_dependency "pastel", "~> 0.8"
+  spec.add_dependency "websocket-driver", "~> 0.7"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

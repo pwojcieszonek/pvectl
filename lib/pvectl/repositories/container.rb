@@ -178,6 +178,16 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/status/reboot"].post
       end
 
+      # Opens a terminal proxy session for a container.
+      #
+      # @param ctid [Integer, String] Container identifier
+      # @param node [String] Node name
+      # @return [Hash] termproxy data with :port, :ticket, :user keys
+      def termproxy(ctid, node)
+        response = connection.client["nodes/#{node}/lxc/#{ctid}/termproxy"].post({})
+        extract_data(response)
+      end
+
       # Creates a new LXC container on the specified node.
       #
       # Posts to `/nodes/{node}/lxc` with the container configuration parameters.

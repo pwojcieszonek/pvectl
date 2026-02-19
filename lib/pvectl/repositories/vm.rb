@@ -138,6 +138,16 @@ module Pvectl
         post_status(vmid, node, "resume")
       end
 
+      # Opens a terminal proxy session for a VM.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] Node name
+      # @return [Hash] termproxy data with :port, :ticket, :user keys
+      def termproxy(vmid, node)
+        response = connection.client["nodes/#{node}/qemu/#{vmid}/termproxy"].post({})
+        normalize_hash_response(response)
+      end
+
       # Deletes a VM from the cluster.
       #
       # @param vmid [Integer, String] VM identifier
