@@ -128,26 +128,6 @@ module Pvectl
       command.flag [:l, :selector], arg_name: "SELECTOR", multiple: true
     end
 
-    # Describe command - show detailed information about a resource
-    desc "Show detailed information about a resource"
-    arg_name "RESOURCE_TYPE NAME"
-    command :describe do |c|
-      c.desc "Filter by node name (required for local storage)"
-      c.flag [:node], arg_name: "NODE"
-
-      c.action do |global_options, options, args|
-        resource_type = args[0]
-        resource_name = args[1]
-        exit_code = Commands::Describe::Command.execute(
-          resource_type,
-          resource_name,
-          options,
-          global_options
-        )
-        exit exit_code if exit_code != 0
-      end
-    end
-
     # Start command - start VMs or containers
     desc "Start virtual machines or containers"
     arg_name "RESOURCE_TYPE [ID...]"

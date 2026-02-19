@@ -23,6 +23,7 @@ module Pvectl
       Commands::Get::Command,
       Commands::Top::Command,
       Commands::Logs::Command,
+      Commands::Describe::Command,
     ].freeze
 
     @registered_plugins = []
