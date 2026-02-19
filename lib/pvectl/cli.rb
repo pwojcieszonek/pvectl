@@ -128,35 +128,6 @@ module Pvectl
       command.flag [:l, :selector], arg_name: "SELECTOR", multiple: true
     end
 
-    # Get command - list resources in cluster
-    desc "List resources in cluster"
-    command :get do |c|
-      c.desc "Filter by node name"
-      c.flag [:node], arg_name: "NODE"
-
-      c.desc "Filter by storage (for backups)"
-      c.flag [:storage], arg_name: "STORAGE"
-
-      c.desc "Watch for changes with auto-refresh"
-      c.switch [:watch, :w], negatable: false
-
-      c.desc "Watch refresh interval in seconds (default: 2, minimum: 1)"
-      c.default_value 2
-      c.flag [:"watch-interval"], arg_name: "SECONDS", type: Integer
-
-      c.action do |global_options, options, args|
-        resource_type = args[0]
-        resource_args = args[1..] || []
-        exit_code = Commands::Get::Command.execute(
-          resource_type,
-          resource_args,
-          options,
-          global_options
-        )
-        exit exit_code if exit_code != 0
-      end
-    end
-
     # Top command - display resource usage metrics
     desc "Display resource usage metrics (CPU, memory, disk)"
     arg_name "RESOURCE_TYPE"

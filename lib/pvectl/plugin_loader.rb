@@ -20,6 +20,7 @@ module Pvectl
     BUILTIN_COMMANDS = [
       Commands::Ping,
       Commands::Config::Command,
+      Commands::Get::Command,
     ].freeze
 
     @registered_plugins = []
