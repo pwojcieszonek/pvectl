@@ -17,6 +17,20 @@ module Pvectl
       #   pvectl config get-contexts --no-color
       #
       class GetContexts
+        # Registers the get-contexts subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "List all available contexts"
+          parent.command :"get-contexts" do |get_ctx|
+            get_ctx.action do |global_options, _options, _args|
+              exit_code = execute(global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the get-contexts command.
         #
         # @param global_options [Hash] global CLI options (includes :config, :output, :color)

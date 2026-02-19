@@ -147,6 +147,7 @@ require_relative "pvectl/commands/config/set_context"
 require_relative "pvectl/commands/config/set_cluster"
 require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
+require_relative "pvectl/commands/config/command"
 require_relative "pvectl/commands/ping"
 
 # Services - Get

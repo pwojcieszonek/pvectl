@@ -19,6 +19,7 @@ module Pvectl
     # Each must implement .register(cli).
     BUILTIN_COMMANDS = [
       Commands::Ping,
+      Commands::Config::Command,
     ].freeze
 
     @registered_plugins = []

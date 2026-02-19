@@ -16,6 +16,20 @@ module Pvectl
       #   pvectl config view -o json
       #
       class View
+        # Registers the view subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "Display current configuration with masked secrets"
+          parent.command :view do |view|
+            view.action do |global_options, _options, _args|
+              exit_code = execute(global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the view command.
         #
         # @param global_options [Hash] global CLI options (includes :config, :output)
