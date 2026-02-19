@@ -17,7 +17,9 @@ module Pvectl
   class PluginLoader
     # Built-in commands that ship with pvectl.
     # Each must implement .register(cli).
-    BUILTIN_COMMANDS = [].freeze
+    BUILTIN_COMMANDS = [
+      Commands::Ping,
+    ].freeze
 
     @registered_plugins = []
 

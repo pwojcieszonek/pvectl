@@ -240,15 +240,6 @@ module Pvectl
       end
     end
 
-    # Ping command - check connectivity to Proxmox cluster
-    desc "Check connectivity to Proxmox cluster"
-    command :ping do |c|
-      c.action do |global_options, _options, _args|
-        exit_code = Commands::Ping.execute(global_options)
-        exit exit_code if exit_code != 0
-      end
-    end
-
     # Start command - start VMs or containers
     desc "Start virtual machines or containers"
     arg_name "RESOURCE_TYPE [ID...]"
@@ -929,5 +920,8 @@ module Pvectl
     end
 
     # @!endgroup
+
+    # --- Load all commands (built-in + plugins) ---
+    Pvectl::PluginLoader.load_all(self)
   end
 end
