@@ -188,6 +188,7 @@ require_relative "pvectl/services/resource_migration"
 
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
+require_relative "pvectl/commands/shared_flags"
 
 # Commands - Get
 require_relative "pvectl/commands/get/resource_handler"
