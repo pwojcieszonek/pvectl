@@ -21,6 +21,7 @@ module Pvectl
       Commands::Ping,
       Commands::Config::Command,
       Commands::Get::Command,
+      Commands::Top::Command,
     ].freeze
 
     @registered_plugins = []

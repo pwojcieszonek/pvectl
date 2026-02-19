@@ -128,27 +128,6 @@ module Pvectl
       command.flag [:l, :selector], arg_name: "SELECTOR", multiple: true
     end
 
-    # Top command - display resource usage metrics
-    desc "Display resource usage metrics (CPU, memory, disk)"
-    arg_name "RESOURCE_TYPE"
-    command :top do |c|
-      c.desc "Sort by field (cpu, memory, disk, netin, netout, name, node)"
-      c.flag [:"sort-by"], arg_name: "FIELD"
-
-      c.desc "Show all (including stopped)"
-      c.switch [:all], default_value: false
-
-      c.action do |global_options, options, args|
-        resource_type = args[0]
-        exit_code = Commands::Top::Command.execute(
-          resource_type,
-          options,
-          global_options
-        )
-        exit exit_code if exit_code != 0
-      end
-    end
-
     # Logs command - view logs for resources
     desc "Show logs for resources (task history, syslog, journal)"
     arg_name "RESOURCE_TYPE ID"
