@@ -3,6 +3,15 @@
 require "test_helper"
 
 class PluginLoaderIntegrationTest < Minitest::Test
+  def setup
+    Pvectl::PluginLoader.reset!
+  end
+
+  def teardown
+    $LOADED_FEATURES.reject! { |f| f.include?("fixtures/plugins/") || f.include?("fixtures/broken_plugins/") }
+    Pvectl::PluginLoader.reset!
+  end
+
   def test_load_builtins_registers_all_expected_commands
     # Create a fresh GLI app to test registration
     test_app = Class.new do
@@ -43,7 +52,6 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     fixture_dir = File.expand_path("fixtures/plugins", __dir__)
 
-    Pvectl::PluginLoader.reset!
     Pvectl::PluginLoader.stub(:directory_plugins_path, fixture_dir) do
       Pvectl::PluginLoader.load_directory_plugins(test_app)
     end
@@ -60,7 +68,6 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     fixture_dir = File.expand_path("fixtures/broken_plugins", __dir__)
 
-    Pvectl::PluginLoader.reset!
     _out, err = capture_io do
       Pvectl::PluginLoader.stub(:directory_plugins_path, fixture_dir) do
         Pvectl::PluginLoader.load_directory_plugins(test_app)
