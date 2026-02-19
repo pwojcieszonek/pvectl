@@ -15,6 +15,56 @@ module Pvectl
     #   pvectl restore backup local:backup/vzdump-qemu-100-xxx.vma.zst --vmid 100 --force --yes
     #
     class RestoreBackup
+      # Registers the restore command with the CLI.
+      #
+      # @param cli [GLI::App] the CLI application object
+      # @return [void]
+      def self.register(cli)
+        cli.desc "Restore a resource from backup"
+        cli.arg_name "RESOURCE_TYPE VOLID"
+        cli.command :restore do |c|
+          c.desc "Target VMID (required)"
+          c.flag [:vmid], arg_name: "VMID", type: Integer
+
+          c.desc "Target storage"
+          c.flag [:storage], arg_name: "STORAGE"
+
+          c.desc "Overwrite existing VM/container"
+          c.switch [:force], negatable: false
+
+          c.desc "Start after restore"
+          c.switch [:start], negatable: false
+
+          c.desc "Regenerate unique properties (MAC, UUID)"
+          c.switch [:unique], negatable: false
+
+          c.desc "Skip confirmation prompt (REQUIRED)"
+          c.switch [:yes, :y], negatable: false
+
+          c.desc "Timeout in seconds"
+          c.flag [:timeout], type: Integer, arg_name: "SECONDS"
+
+          c.desc "Force async mode"
+          c.switch [:async], negatable: false
+
+          c.action do |global_options, options, args|
+            resource_type = args.shift
+            volid = args.first
+
+            exit_code = case resource_type
+            when "backup"
+              Commands::RestoreBackup.execute(resource_type, volid, options, global_options)
+            else
+              $stderr.puts "Error: Unknown resource type: #{resource_type}"
+              $stderr.puts "Valid types: backup"
+              ExitCodes::USAGE_ERROR
+            end
+
+            exit exit_code if exit_code != 0
+          end
+        end
+      end
+
       # Executes the restore backup command.
       #
       # @param resource_type [String, nil] resource type (backup)
