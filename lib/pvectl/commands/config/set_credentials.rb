@@ -17,6 +17,38 @@ module Pvectl
       #   pvectl config set-credentials dev-user --username=root@pam --password=secret
       #
       class SetCredentials
+        # Registers the set-credentials subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "Create or modify user credentials"
+          parent.command :"set-credentials" do |set_creds|
+            set_creds.arg_name "USER_NAME"
+
+            set_creds.desc "API token ID (e.g., root@pam!tokenname)"
+            set_creds.flag [:"token-id"]
+
+            set_creds.desc "API token secret"
+            set_creds.flag [:"token-secret"]
+
+            set_creds.desc "Username for password authentication"
+            set_creds.flag [:username]
+
+            set_creds.desc "Password for password authentication"
+            set_creds.flag [:password]
+
+            set_creds.action do |global_options, options, args|
+              if args.empty?
+                $stderr.puts "Error: user name is required"
+                exit ExitCodes::USAGE_ERROR
+              end
+              exit_code = execute(args[0], options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the set-credentials command.
         #
         # @param user_name [String] name of the user to create or modify

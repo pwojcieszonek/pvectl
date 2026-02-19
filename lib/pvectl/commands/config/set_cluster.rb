@@ -14,6 +14,35 @@ module Pvectl
       #   pvectl config set-cluster dev --server=https://pve-dev.local:8006 --insecure-skip-tls-verify
       #
       class SetCluster
+        # Registers the set-cluster subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "Create or modify a cluster"
+          parent.command :"set-cluster" do |set_cluster|
+            set_cluster.arg_name "CLUSTER_NAME"
+
+            set_cluster.desc "Proxmox server URL (e.g., https://pve.example.com:8006)"
+            set_cluster.flag [:server]
+
+            set_cluster.desc "Path to CA certificate file"
+            set_cluster.flag [:"certificate-authority"]
+
+            set_cluster.desc "Skip TLS certificate verification"
+            set_cluster.switch [:"insecure-skip-tls-verify"], negatable: false
+
+            set_cluster.action do |global_options, options, args|
+              if args.empty?
+                $stderr.puts "Error: cluster name is required"
+                exit ExitCodes::USAGE_ERROR
+              end
+              exit_code = execute(args[0], options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the set-cluster command.
         #
         # @param cluster_name [String] name of the cluster to create or modify

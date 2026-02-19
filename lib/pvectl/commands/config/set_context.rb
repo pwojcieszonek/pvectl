@@ -13,6 +13,35 @@ module Pvectl
       #   pvectl config set-context dev --cluster=pve-dev --user=admin --default-node=pve1
       #
       class SetContext
+        # Registers the set-context subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "Create or modify a context"
+          parent.command :"set-context" do |set_ctx|
+            set_ctx.arg_name "CONTEXT_NAME"
+
+            set_ctx.desc "Cluster name"
+            set_ctx.flag [:cluster]
+
+            set_ctx.desc "User name"
+            set_ctx.flag [:user]
+
+            set_ctx.desc "Default node"
+            set_ctx.flag [:"default-node"]
+
+            set_ctx.action do |global_options, options, args|
+              if args.empty?
+                $stderr.puts "Error: context name is required"
+                exit ExitCodes::USAGE_ERROR
+              end
+              exit_code = execute(args[0], options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the set-context command.
         #
         # @param context_name [String] name of the context to create or modify

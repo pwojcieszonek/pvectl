@@ -21,6 +21,20 @@ module Pvectl
     #   # Output: {"status":"ok","server":"pve1.example.com","latency_ms":45}
     #
     class Ping
+      # Registers the ping command with the CLI.
+      #
+      # @param cli [GLI::App] the CLI application object
+      # @return [void]
+      def self.register(cli)
+        cli.desc "Check connectivity to Proxmox cluster"
+        cli.command :ping do |c|
+          c.action do |global_options, _options, _args|
+            exit_code = execute(global_options)
+            exit exit_code if exit_code != 0
+          end
+        end
+      end
+
       # Executes the ping command.
       #
       # @param global_options [Hash] global CLI options

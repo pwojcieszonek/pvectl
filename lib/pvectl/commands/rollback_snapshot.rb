@@ -14,6 +14,39 @@ module Pvectl
     #   pvectl rollback snapshot 100 before-upgrade --yes --start
     #
     class RollbackSnapshot
+      # Registers the rollback command with the CLI.
+      #
+      # @param cli [GLI::App] the CLI application object
+      # @return [void]
+      def self.register(cli)
+        cli.desc "Rollback to a snapshot"
+        cli.arg_name "RESOURCE_TYPE VMID SNAPSHOT_NAME"
+        cli.command :rollback do |c|
+          c.desc "Skip confirmation prompt (REQUIRED for destructive operations)"
+          c.switch [:yes, :y], negatable: false
+
+          c.desc "Start VM/container after rollback (LXC only)"
+          c.switch [:start], negatable: false
+
+          c.desc "Timeout in seconds for sync operations"
+          c.flag [:timeout], type: Integer, arg_name: "SECONDS"
+
+          c.desc "Force async mode (return task ID immediately)"
+          c.switch [:async], negatable: false
+
+          c.action do |global_options, options, args|
+            resource_type = args.shift
+            exit_code = Commands::RollbackSnapshot.execute(
+              resource_type,
+              args,
+              options,
+              global_options
+            )
+            exit exit_code if exit_code != 0
+          end
+        end
+      end
+
       SUPPORTED_RESOURCES = %w[snapshot].freeze
 
       # Executes the rollback snapshot command.

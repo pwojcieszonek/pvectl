@@ -20,6 +20,48 @@ module Pvectl
         # Node resource types.
         NODE_TYPES = %w[node nodes].freeze
 
+        # Registers the logs command with the CLI.
+        #
+        # @param cli [GLI::App] the CLI application object
+        # @return [void]
+        def self.register(cli)
+          cli.desc "Show logs for resources (task history, syslog, journal)"
+          cli.arg_name "RESOURCE_TYPE ID"
+          cli.command :logs do |c|
+            c.desc "Maximum number of entries to show"
+            c.default_value 50
+            c.flag [:limit], type: Integer, arg_name: "N"
+
+            c.desc "Show entries since timestamp (YYYY-MM-DD or epoch)"
+            c.flag [:since], arg_name: "TIMESTAMP"
+
+            c.desc "Show entries until timestamp (YYYY-MM-DD or epoch)"
+            c.flag [:until], arg_name: "TIMESTAMP"
+
+            c.desc "Filter by task type (e.g., qmstart, qmstop, vzdump)"
+            c.flag [:type], arg_name: "TYPE"
+
+            c.desc "Filter by status (running, ok, error)"
+            c.flag [:status], arg_name: "STATUS"
+
+            c.desc "Filter by service name (syslog only)"
+            c.flag [:service], arg_name: "SERVICE"
+
+            c.desc "Use systemd journal instead of syslog (node only)"
+            c.switch [:journal], negatable: false
+
+            c.desc "Search across all cluster nodes (VM/CT only)"
+            c.switch [:"all-nodes"], negatable: false
+
+            c.action do |global_options, options, args|
+              resource_type = args[0]
+              resource_id = args[1]
+              exit_code = execute(resource_type, resource_id, options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the logs command.
         #
         # @param resource_type [String, nil] type (vm, ct, node, task)

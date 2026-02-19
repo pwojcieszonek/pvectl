@@ -341,6 +341,54 @@ pvectl get -o json vms                # Between arguments
 | 6 | Permission denied |
 | 130 | Interrupted (Ctrl+C) |
 
+## Plugins
+
+pvectl supports plugins that add new commands or extend existing resource types.
+
+### Gem-Based Plugins
+
+Install any gem following the `pvectl-plugin-*` naming convention:
+
+```bash
+gem install pvectl-plugin-ceph
+```
+
+Gem plugins are discovered automatically — no configuration needed. The gem must provide a `pvectl_plugin/register.rb` file that calls `Pvectl::PluginLoader.register_plugin(YourCommand)`.
+
+### Directory-Based Plugins
+
+Place `.rb` files in `~/.pvectl/plugins/`:
+
+```ruby
+# ~/.pvectl/plugins/my_command.rb
+class MyCommand
+  def self.register(cli)
+    cli.desc "My custom command"
+    cli.command :my_command do |c|
+      c.action do |_global, _options, _args|
+        puts "Hello from plugin!"
+      end
+    end
+  end
+end
+
+Pvectl::PluginLoader.register_plugin(MyCommand)
+```
+
+### Plugin Capabilities
+
+Plugins can:
+- Add new top-level commands (e.g., `pvectl my-command`)
+- Register new resource types with existing commands (`get`, `top`, `logs`, `describe`) via `ResourceRegistry`
+
+### Loading Order
+
+1. Built-in commands
+2. Gem-based plugins (`pvectl-plugin-*`)
+3. Directory-based plugins (`~/.pvectl/plugins/*.rb`)
+
+Broken plugins are skipped with a warning — they never crash pvectl. Use `GLI_DEBUG=true` for full stack traces.
+
 ## Development
 
 ```bash

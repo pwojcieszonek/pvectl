@@ -27,7 +27,8 @@ Two data paths depending on operation type:
 ```
                     ┌──────────────────────────────────┐
                     │           CLI Layer               │
-                    │  GLI::App (cli.rb) → Commands     │
+                    │  GLI::App (cli.rb) → PluginLoader │
+                    │  → Commands (.register)           │
                     └────────┬─────────────┬───────────┘
                              │             │
                   read-only  │             │  mutating
@@ -57,7 +58,7 @@ Two data paths depending on operation type:
 
 | Directory | Role |
 |-----------|------|
-| `commands/` | CLI command definitions, routing, Template Method hierarchies |
+| `commands/` | Self-registering command classes (`.register(cli)`), Template Method hierarchies, SharedFlags |
 | `commands/*/handlers/` | Per-resource handlers for read-only commands (dispatched via Registry) |
 | `services/` | Orchestration of complex operations (lifecycle, CRUD, migration, resource fetching) |
 | `repositories/` | Proxmox API encapsulation, conversion to domain models |
@@ -70,6 +71,7 @@ Two data paths depending on operation type:
 | `utils/` | Helper utilities (resource resolver) |
 | `config/` | Loading, validation, saving multi-context configuration |
 | `connection/` | API client with retry (exp. backoff) and timeout |
+| `plugin_loader.rb` | Command discovery and loading (built-in + gem/directory plugins) |
 
 ### Design Patterns
 
@@ -82,6 +84,8 @@ Two data paths depending on operation type:
 | **Handler** | Per-resource handlers in read-only commands, dispatched via Registry |
 | **Template Method** | Base module defines flow, specializations (VM/Container) implement hooks — used in lifecycle, delete, create, edit, migrate |
 | **Dependency Injection** | Repositories and services injected via constructor (testable with mocks) |
+| **Self-Registration** | Each command class implements `.register(cli)` to define its flags/desc/action with GLI |
+| **Plugin Discovery** | `PluginLoader` discovers commands from built-ins, gem plugins (`pvectl-plugin-*`), and directory plugins (`~/.pvectl/plugins/`) |
 
 ### Hybrid Module Include Pattern
 
@@ -165,7 +169,7 @@ Commands grouped by type:
 | **CRUD (VM/CT)** | `create`, `delete`, `edit`, `migrate` | Template Method (VM/Container) |
 | **Snapshot/Backup** | `create`/`delete` snapshot/backup, `rollback`, `restore` | Dedicated commands |
 | **Standalone** | `clone`, `ping` | Dedicated commands per resource type |
-| **Config** | `config <subcommand>` | GLI subcommands |
+| **Config** | `config <subcommand>` | Self-registration (`register_subcommand`) |
 
 Syntax: `pvectl <command> <resource_type> [id...] [--flags]`
 

@@ -25,6 +25,35 @@ module Pvectl
       #   Commands::Get::Command.execute("vms", nil, options, global_options)
       #
       class Command
+        # Registers the get command with the CLI.
+        #
+        # @param cli [GLI::App] the CLI application object
+        # @return [void]
+        def self.register(cli)
+          cli.desc "List resources in cluster"
+          cli.command :get do |c|
+            c.desc "Filter by node name"
+            c.flag [:node], arg_name: "NODE"
+
+            c.desc "Filter by storage (for backups)"
+            c.flag [:storage], arg_name: "STORAGE"
+
+            c.desc "Watch for changes with auto-refresh"
+            c.switch [:watch, :w], negatable: false
+
+            c.desc "Watch refresh interval in seconds (default: 2, minimum: 1)"
+            c.default_value 2
+            c.flag [:"watch-interval"], arg_name: "SECONDS", type: Integer
+
+            c.action do |global_options, options, args|
+              resource_type = args[0]
+              resource_args = args[1..] || []
+              exit_code = execute(resource_type, resource_args, options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the get command.
         #
         # @param resource_type [String, nil] type of resource to list (e.g., "nodes", "vms")

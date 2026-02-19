@@ -6,3 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Added
+- **plugins**: Plugin system with gem-based (`pvectl-plugin-*`) and directory-based (`~/.pvectl/plugins/*.rb`) discovery
+- **plugins**: `PluginLoader` class for automatic plugin loading with graceful error handling
+- **commands**: `SharedFlags` module for reusable flag definitions across commands
+
+### Changed
+- **cli**: Refactored all command definitions from inline `cli.rb` to self-registration via `.register(cli)` class methods
+- **cli**: `cli.rb` reduced from ~930 lines to ~96 lines (globals, error handling, PluginLoader)

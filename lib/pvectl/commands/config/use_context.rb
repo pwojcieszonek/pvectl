@@ -13,6 +13,25 @@ module Pvectl
       #   pvectl config use-context dev
       #
       class UseContext
+        # Registers the use-context subcommand.
+        #
+        # @param parent [GLI::Command] parent config command
+        # @return [void]
+        def self.register_subcommand(parent)
+          parent.desc "Switch to a different context"
+          parent.command :"use-context" do |use_ctx|
+            use_ctx.arg_name "CONTEXT_NAME"
+            use_ctx.action do |global_options, _options, args|
+              if args.empty?
+                $stderr.puts "Error: context name is required"
+                exit ExitCodes::USAGE_ERROR
+              end
+              exit_code = execute(args[0], global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the use-context command.
         #
         # @param context_name [String] name of the context to switch to

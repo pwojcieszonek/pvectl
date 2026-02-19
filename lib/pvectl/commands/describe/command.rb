@@ -14,6 +14,26 @@ module Pvectl
       #   Commands::Describe::Command.execute("node", "pve1", options, global_options)
       #
       class Command
+        # Registers the describe command with the CLI.
+        #
+        # @param cli [GLI::App] the CLI application object
+        # @return [void]
+        def self.register(cli)
+          cli.desc "Show detailed information about a resource"
+          cli.arg_name "RESOURCE_TYPE NAME"
+          cli.command :describe do |c|
+            c.desc "Filter by node name (required for local storage)"
+            c.flag [:node], arg_name: "NODE"
+
+            c.action do |global_options, options, args|
+              resource_type = args[0]
+              resource_name = args[1]
+              exit_code = execute(resource_type, resource_name, options, global_options)
+              exit exit_code if exit_code != 0
+            end
+          end
+        end
+
         # Executes the describe command.
         #
         # @param resource_type [String, nil] type of resource (e.g., "node")

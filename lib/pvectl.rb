@@ -147,6 +147,7 @@ require_relative "pvectl/commands/config/set_context"
 require_relative "pvectl/commands/config/set_cluster"
 require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
+require_relative "pvectl/commands/config/command"
 require_relative "pvectl/commands/ping"
 
 # Services - Get
@@ -188,6 +189,7 @@ require_relative "pvectl/services/resource_migration"
 
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
+require_relative "pvectl/commands/shared_flags"
 
 # Commands - Get
 require_relative "pvectl/commands/get/resource_handler"
@@ -274,5 +276,7 @@ require_relative "pvectl/commands/migrate_container"
 # Wizards
 require_relative "pvectl/wizards/create_vm"
 require_relative "pvectl/wizards/create_container"
+
+require_relative "pvectl/plugin_loader"
 
 require_relative "pvectl/cli"

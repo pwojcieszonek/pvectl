@@ -18,6 +18,60 @@ module Pvectl
     #   pvectl clone vm 100 --linked --target pve2
     #
     class CloneVm
+      # Registers the clone command with the CLI.
+      #
+      # @param cli [GLI::App] the CLI application object
+      # @return [void]
+      def self.register(cli)
+        cli.desc "Clone a resource"
+        cli.arg_name "RESOURCE_TYPE VMID"
+        cli.command :clone do |c|
+          c.desc "Name/hostname for the new resource"
+          c.flag [:name, :n], arg_name: "NAME"
+
+          c.desc "ID for the new resource (auto-selected if not specified)"
+          c.flag [:vmid], type: Integer, arg_name: "ID"
+
+          c.desc "Target node for the clone"
+          c.flag [:target, :t], arg_name: "NODE"
+
+          c.desc "Target storage for the clone"
+          c.flag [:storage, :s], arg_name: "STORAGE"
+
+          c.desc "Create a linked clone (requires source to be a template)"
+          c.switch [:linked], negatable: false
+
+          c.desc "Resource pool for the new resource"
+          c.flag [:pool, :p], arg_name: "POOL"
+
+          c.desc "Description for the new resource"
+          c.flag [:description, :d], arg_name: "DESCRIPTION"
+
+          c.desc "Timeout in seconds for sync operations (default: 300)"
+          c.flag [:timeout], type: Integer, arg_name: "SECONDS"
+
+          c.desc "Async mode (return task ID immediately)"
+          c.switch [:async], negatable: false
+
+          c.action do |global_options, options, args|
+            resource_type = args.shift
+
+            exit_code = case resource_type
+            when "vm"
+              Commands::CloneVm.execute(args, options, global_options)
+            when "container", "ct"
+              Commands::CloneContainer.execute(args, options, global_options)
+            else
+              $stderr.puts "Error: Unknown resource type: #{resource_type}"
+              $stderr.puts "Valid types: vm, container, ct"
+              ExitCodes::USAGE_ERROR
+            end
+
+            exit exit_code if exit_code != 0
+          end
+        end
+      end
+
       # Executes the clone VM command.
       #
       # @param args [Array<String>] command arguments (VMID)
