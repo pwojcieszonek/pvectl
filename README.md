@@ -73,6 +73,7 @@ Context name: [default] production
 |---------|-------------|---------|
 | `create` | Create VM, container, snapshot, or backup | `pvectl create vm --cores 4 --memory 8192` |
 | `delete` | Delete resources | `pvectl delete vm 100 --yes` |
+| `template` | Convert VM/container to template | `pvectl template vm 100 --force` |
 | `edit` | Edit config in $EDITOR | `pvectl edit vm 100` |
 | `clone` | Clone VM or container | `pvectl clone vm 100 --name clone-01` |
 | `migrate` | Migrate between nodes | `pvectl migrate vm 100 --target pve2` |
@@ -109,6 +110,7 @@ pvectl config view                  # Show config (secrets masked)
 | storage | stor | yes | yes | - | - | - | - | - | - | - | - | - |
 | snapshots | snapshot, snap | yes | - | - | - | - | yes | yes | - | - | - | - |
 | backups | backup | yes | - | - | - | - | yes | yes | - | - | - | - |
+| templates | template | yes | - | - | - | - | - | - | - | - | - | - |
 | tasks | task | yes | - | - | - | - | - | - | - | - | - | - |
 
 ## Usage Examples
@@ -122,6 +124,9 @@ pvectl get containers --node pve1     # Containers on specific node
 pvectl get storage                    # List storage pools
 pvectl get snapshots 100              # Snapshots for VM 100
 pvectl get backups --storage nfs      # Backups on specific storage
+pvectl get templates                  # List all templates (VMs and containers)
+pvectl get templates --type vm        # Only VM templates
+pvectl get templates --type ct        # Only container templates
 pvectl get tasks                      # Task history across all nodes
 pvectl get tasks --node pve1          # Tasks on specific node
 pvectl get tasks --type vzdump        # Filter by task type
@@ -253,6 +258,19 @@ pvectl migrate vm 100 --target pve2 --online
 
 # Batch migration
 pvectl migrate vm --all --node pve1 --target pve2 --yes
+```
+
+### Converting to Templates
+
+```bash
+# Convert VM to template (irreversible — prompts for confirmation)
+pvectl template vm 100
+
+# Convert container to template (skip confirmation)
+pvectl template ct 200 --force
+
+# Convert multiple VMs at once
+pvectl template vm 100 101 102 --force
 ```
 
 ### Editing Configuration

@@ -19,6 +19,7 @@ module Pvectl
       attr_reader netout: Integer?
       attr_reader describe_data: Hash[untyped, untyped]?
       attr_reader pool: String?
+      attr_reader type: String?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 

@@ -622,6 +622,48 @@ class RepositoriesVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # convert_to_template() Method
+  # ---------------------------
+
+  def test_convert_to_template_posts_to_correct_endpoint
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect :post, nil, [{}]
+
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) do |path|
+      raise "Wrong path: #{path}" unless path == "nodes/pve1/qemu/100/template"
+      mock_endpoint
+    end
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.convert_to_template(100, "pve1")
+
+    mock_endpoint.verify
+  end
+
+  def test_convert_to_template_passes_disk_param_when_given
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect :post, nil, [{ disk: "scsi0" }]
+
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) do |path|
+      raise "Wrong path: #{path}" unless path == "nodes/pve1/qemu/100/template"
+      mock_endpoint
+    end
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.convert_to_template(100, "pve1", disk: "scsi0")
+
+    mock_endpoint.verify
+  end
+
+  # ---------------------------
   # update() Method
   # ---------------------------
 

@@ -1,0 +1,19 @@
+module Pvectl
+  module Commands
+    module TemplateCommand
+      include IrreversibleCommand
+
+      private
+
+      def perform_operation: () -> Integer
+      def confirm_operation: (Array[Models::Vm | Models::Container] resources) -> bool
+      def confirm_message: (Array[Models::Vm | Models::Container] resources) -> String
+      def irreversibility_warning: () -> String
+      def perform_service_call: (Array[Models::Vm | Models::Container] resources, Pvectl::Connection connection) -> Array[Models::OperationResult]
+      def convert_single: (Repositories::Base repo, Models::Vm | Models::Container resource) -> Models::OperationResult
+      def build_success_result: (Models::Vm | Models::Container resource) -> Models::OperationResult
+      def build_error_result: (Models::Vm | Models::Container resource, String error_message) -> Models::OperationResult
+      def build_presenter: () -> Presenters::Base
+    end
+  end
+end

@@ -75,6 +75,9 @@ module Pvectl
       # @return [String, nil] resource pool name
       attr_reader :pool
 
+      # @return [String, nil] resource type from API ("qemu")
+      attr_reader :type
+
       # Creates a new VM model from attributes.
       #
       # @param attrs [Hash] VM attributes from API (string or symbol keys)
@@ -99,6 +102,7 @@ module Pvectl
         @netout = @attributes[:netout]
         @describe_data = @attributes[:describe_data]
         @pool = @attributes[:pool]
+        @type = @attributes[:type]
       end
 
       # Checks if the VM is running.

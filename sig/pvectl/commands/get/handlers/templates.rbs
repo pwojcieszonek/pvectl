@@ -1,0 +1,35 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Templates
+          include ResourceHandler
+
+          TYPE_MAP: Hash[String, String]
+          SORT_FIELDS: Hash[String, ^(Models::Vm | Models::Container) -> untyped]
+
+          @vm_repository: Repositories::Vm?
+          @container_repository: Repositories::Container?
+
+          def initialize: (?vm_repository: Repositories::Vm?, ?container_repository: Repositories::Container?) -> void
+
+          def list: (?node: String?, ?name: String?, ?type_filter: String?,
+                     ?sort: String?, **untyped) -> Array[Models::Vm | Models::Container]
+
+          def presenter: () -> Presenters::Template
+
+          private
+
+          def vm_repository: () -> Repositories::Vm
+          def container_repository: () -> Repositories::Container
+          def build_vm_repository: () -> Repositories::Vm
+          def build_container_repository: () -> Repositories::Container
+          def validate_type_filter!: (String? type_filter) -> void
+          def skip_vms?: (String? type_filter) -> bool
+          def skip_containers?: (String? type_filter) -> bool
+          def apply_sort: (Array[Models::Vm | Models::Container] templates, String sort_field) -> Array[Models::Vm | Models::Container]
+        end
+      end
+    end
+  end
+end
