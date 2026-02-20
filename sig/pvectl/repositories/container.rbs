@@ -19,6 +19,8 @@ module Pvectl
 
       def clone: (Integer | String ctid, String node, Integer new_ctid, ?Hash[Symbol, untyped] options) -> String
 
+      def convert_to_template: (Integer | String ctid, String node) -> void
+
       def migrate: (Integer ctid, String node, ?Hash[Symbol, untyped] params) -> String
 
       def next_available_ctid: (?min: Integer) -> Integer

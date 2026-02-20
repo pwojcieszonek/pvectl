@@ -137,6 +137,18 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/clone"].post(params)
       end
 
+      # Converts a container to a template.
+      #
+      # This is an irreversible operation. The container will become read-only
+      # and can only be used as a source for cloning.
+      #
+      # @param ctid [Integer, String] Container identifier
+      # @param node [String] Node name
+      # @return [void]
+      def convert_to_template(ctid, node)
+        connection.client["nodes/#{node}/lxc/#{ctid}/template"].post({})
+      end
+
       # Migrates a container to another node.
       #
       # @param ctid [Integer, String] container identifier
