@@ -3,27 +3,24 @@
 module Pvectl
   # Command line argument preprocessor.
   #
-  # Normalizes ARGV arguments before passing to GLI by:
-  # 1. Moving global flags (--output, --verbose, --config) to the beginning
-  # 2. Moving subcommand flags before positional arguments
+  # Normalizes ARGV arguments before passing to GLI by reordering flags
+  # to appear before positional arguments, using GLI command metadata
+  # for dynamic flag discovery.
   #
-  # This allows using flags anywhere on the command line, providing
-  # kubectl-like flexibility.
+  # GLI with `subcommand_option_handling :normal` requires flags before
+  # positional arguments. This preprocessor allows kubectl-style flag
+  # placement anywhere on the command line.
   #
-  # @example Normalizing global flags
-  #   ArgvPreprocessor.process(["get", "nodes", "-o", "json"])
+  # @example Global flags moved to beginning
+  #   ArgvPreprocessor.process(["get", "nodes", "-o", "json"], cli_app: CLI)
   #   #=> ["-o", "json", "get", "nodes"]
   #
-  # @example Flags with value via '='
-  #   ArgvPreprocessor.process(["get", "vms", "--output=yaml"])
-  #   #=> ["-o", "yaml", "get", "vms"]
-  #
-  # @example Subcommand flags after positional argument
-  #   ArgvPreprocessor.process(["config", "set-cluster", "test", "--server", "https://..."])
-  #   #=> ["config", "set-cluster", "--server", "https://...", "test"]
+  # @example Command flags moved before positional args
+  #   ArgvPreprocessor.process(["delete", "vm", "103", "--yes"], cli_app: CLI)
+  #   #=> ["delete", "--yes", "vm", "103"]
   #
   # @example Passthrough mode for --help
-  #   ArgvPreprocessor.process(["--help", "get"])
+  #   ArgvPreprocessor.process(["--help", "get"], cli_app: CLI)
   #   #=> ["--help", "get"]  # unchanged
   #
   class ArgvPreprocessor
@@ -33,45 +30,10 @@ module Pvectl
     # @return [Integer] Maximum length of single argument in bytes
     MAX_ARGUMENT_LENGTH = 4096
 
-    # @return [Hash<Symbol, Hash>] Global flags configuration
-    #   - :short - short flag form (e.g., "-o")
-    #   - :long - long flag form (e.g., "--output")
-    #   - :has_value - whether flag requires a value
-    GLOBAL_FLAGS = {
-      output:  { short: "-o", long: "--output",  has_value: true },
-      verbose: { short: "-v", long: "--verbose", has_value: false },
-      config:  { short: "-c", long: "--config",  has_value: true }
-    }.freeze
-
     # @return [Array<String>] Flags passed through without processing
     PASSTHROUGH_FLAGS = %w[--help -h --version].freeze
 
-    # @return [Hash<String, Hash>] Subcommand flags configuration
-    #   Maps "command subcommand" to flag definitions
-    SUBCOMMAND_FLAGS = {
-      "config set-cluster" => {
-        server: { long: "--server", has_value: true },
-        "certificate-authority": { long: "--certificate-authority", has_value: true },
-        "insecure-skip-tls-verify": { long: "--insecure-skip-tls-verify", has_value: false }
-      },
-      "config set-credentials" => {
-        "token-id": { long: "--token-id", has_value: true },
-        "token-secret": { long: "--token-secret", has_value: true },
-        username: { long: "--username", has_value: true },
-        password: { long: "--password", has_value: true }
-      },
-      "config set-context" => {
-        cluster: { long: "--cluster", has_value: true },
-        user: { long: "--user", has_value: true },
-        "default-node": { long: "--default-node", has_value: true }
-      }
-    }.freeze
-
-    # Error raised when the same flag is provided with different values.
-    #
-    # @example Situation causing error
-    #   pvectl -o json get nodes -o yaml  # DuplicateFlagError
-    #
+    # Error raised when the same global flag is provided with different values.
     class DuplicateFlagError < Pvectl::Error
       # Creates a new flag duplication error.
       #
@@ -85,23 +47,22 @@ module Pvectl
 
     # Processes command line arguments.
     #
-    # Factory method that creates an instance and invokes processing.
-    #
     # @param argv [Array<String>] command line arguments
-    # @return [Array<String>] normalized arguments with global flags at the beginning
+    # @param cli_app [GLI::App] CLI application with registered commands
+    # @return [Array<String>] normalized arguments
     # @raise [ArgumentError] when input limits are exceeded
     # @raise [DuplicateFlagError] when global flag has different values
-    def self.process(argv)
-      new(argv).call
+    def self.process(argv, cli_app: Pvectl::CLI)
+      new(argv, cli_app: cli_app).call
     end
 
     # Initializes preprocessor with a copy of arguments.
     #
     # @param argv [Array<String>] command line arguments
-    def initialize(argv)
+    # @param cli_app [GLI::App] CLI application with registered commands
+    def initialize(argv, cli_app: Pvectl::CLI)
       @argv = argv.dup
-      @extracted_flags = {}
-      @remaining_args = []
+      @cli_app = cli_app
     end
 
     # Executes argument processing.
@@ -114,9 +75,7 @@ module Pvectl
       return @argv if passthrough_mode?
       return [] if @argv.empty?
 
-      process_arguments
-      result = build_result
-      reorder_subcommand_flags(result)
+      reorder_all_flags
     end
 
     private
@@ -140,87 +99,139 @@ module Pvectl
       (@argv & PASSTHROUGH_FLAGS).any?
     end
 
-    # Processes all arguments iteratively.
+    # Main reordering logic. Three phases:
+    # 1. Extract global flags to front
+    # 2. Identify command (and optional subcommand)
+    # 3. Reorder command/subcommand flags before positional args
     #
-    # @return [void]
-    def process_arguments
+    # @return [Array<String>] reordered arguments
+    def reorder_all_flags
+      global_flags, rest = extract_global_flags(@argv)
+      return global_flags + rest if rest.empty?
+
+      command_name, command_tokens, after_command = identify_command(rest)
+      return global_flags + rest unless command_name
+
+      cmd = find_gli_command(command_name)
+      return global_flags + rest unless cmd
+
+      # Check for subcommand
+      if after_command.any? && cmd.commands.any?
+        sub_name = after_command.first
+        sub_cmd = find_gli_subcommand(cmd, sub_name)
+        if sub_cmd
+          subcommand_tokens = [after_command.shift]
+          reordered = reorder_command_flags(after_command, sub_cmd)
+          return global_flags + command_tokens + subcommand_tokens + reordered
+        end
+      end
+
+      reordered = reorder_command_flags(after_command, cmd)
+      global_flags + command_tokens + reordered
+    end
+
+    # Extracts global flags from anywhere in the argument list.
+    #
+    # @param args [Array<String>] arguments
+    # @return [Array(Array<String>, Array<String>)] [extracted_global_flags, remaining_args]
+    def extract_global_flags(args)
+      global_flags_collected = {}
+      global_result = []
+      remaining = []
       index = 0
-      while index < @argv.length
-        arg = @argv[index]
-        index = process_single_argument(arg, index)
+
+      while index < args.length
+        arg = args[index]
+
+        if arg == "--"
+          remaining.concat(args[index..])
+          break
+        end
+
+        flag_info = find_global_flag(arg)
+        if flag_info
+          name, has_value = flag_info
+          if arg.include?("=")
+            _, value = arg.split("=", 2)
+            validate_value!(value, name)
+            store_global_flag(global_flags_collected, name, value)
+            global_result << arg
+          elsif has_value
+            raise ArgumentError, "Missing value for flag #{arg}" if index + 1 >= args.length
+
+            value = args[index + 1]
+            validate_value!(value, name)
+            store_global_flag(global_flags_collected, name, value)
+            global_result << arg << value
+            index += 1
+          else
+            store_global_flag(global_flags_collected, name, true)
+            global_result << arg
+          end
+        else
+          remaining << arg
+        end
+
+        index += 1
       end
+
+      [global_result, remaining]
     end
 
-    # Processes a single argument.
-    #
-    # @param arg [String] current argument
-    # @param index [Integer] argument index in array
-    # @return [Integer] next index to process
-    def process_single_argument(arg, index)
-      if arg == "--"
-        @remaining_args.concat(@argv[index..])
-        return @argv.length
-      end
-
-      flag_config = find_flag_config(arg)
-      if flag_config
-        process_global_flag(arg, index, flag_config)
-      else
-        @remaining_args << arg
-        index + 1
-      end
-    end
-
-    # Finds configuration for a global flag.
+    # Finds a global flag definition matching the given argument.
     #
     # @param arg [String] argument to check
-    # @return [Hash, nil] flag configuration or nil if not a global flag
-    def find_flag_config(arg)
+    # @return [Array(Symbol, Boolean), nil] [flag_name, has_value] or nil
+    def find_global_flag(arg)
       flag_part = arg.split("=", 2).first
-      GLOBAL_FLAGS.each do |_name, config|
-        return config if flag_part == config[:short] || flag_part == config[:long]
+
+      @cli_app.flags.each_value do |flag|
+        return [flag_display_name(flag), true] if flag_matches?(flag, flag_part)
       end
+
+      @cli_app.switches.each_value do |sw|
+        return [flag_display_name(sw), false] if flag_matches?(sw, flag_part)
+      end
+
       nil
     end
 
-    # Processes global flag and its value.
+    # Checks if a GLI flag/switch matches the given argument string.
     #
-    # @param arg [String] argument with flag
-    # @param index [Integer] current index
-    # @param config [Hash] flag configuration
-    # @return [Integer] next index to process
-    # @raise [ArgumentError] when value missing for flag requiring value
-    def process_global_flag(arg, index, config)
-      flag_name = GLOBAL_FLAGS.key(config)
-
-      if arg.include?("=")
-        _, value = arg.split("=", 2)
-        store_flag(flag_name, value)
-        index + 1
-      elsif config[:has_value]
-        raise ArgumentError, "Missing value for flag #{arg}" if index + 1 >= @argv.length
-        value = @argv[index + 1]
-        store_flag(flag_name, value)
-        index + 2
-      else
-        store_flag(flag_name, true)
-        index + 1
+    # @param gli_flag [GLI::Flag, GLI::Switch] GLI flag or switch object
+    # @param flag_part [String] argument to match (e.g., "-o", "--output")
+    # @return [Boolean] true if matches
+    def flag_matches?(gli_flag, flag_part)
+      all_names = [gli_flag.name] + (gli_flag.aliases || [])
+      all_names.any? do |name|
+        prefix = name.to_s.length == 1 ? "-" : "--"
+        "#{prefix}#{name}" == flag_part
       end
     end
 
-    # Stores flag value with duplicate detection.
+    # Returns the display name for a GLI flag/switch (prefers long name).
     #
+    # @param gli_flag [GLI::Flag, GLI::Switch] GLI flag or switch object
+    # @return [Symbol] display name (long form if available)
+    def flag_display_name(gli_flag)
+      all_names = [gli_flag.name] + (gli_flag.aliases || [])
+      long_name = all_names.find { |n| n.to_s.length > 1 }
+      long_name || gli_flag.name
+    end
+
+    # Stores a global flag value with duplicate detection.
+    #
+    # @param store [Hash] flag storage
     # @param name [Symbol] flag name
     # @param value [String, Boolean] flag value
     # @raise [DuplicateFlagError] when flag already exists with different value
     # @return [void]
-    def store_flag(name, value)
-      validate_value!(value, name)
-      if @extracted_flags.key?(name)
-        existing = @extracted_flags[name]
+    def store_global_flag(store, name, value)
+      if store.key?(name)
+        existing = store[name]
         raise DuplicateFlagError.new(name, existing, value) if existing != value
       else
-        @extracted_flags[name] = value
+        store[name] = value
       end
     end
 
@@ -236,139 +247,87 @@ module Pvectl
       raise ArgumentError, "Invalid null byte in value for --#{flag_name}" if value.to_s.include?("\x00")
     end
 
-    # Builds result argument array.
+    # Identifies the command name from remaining args (after global flag extraction).
     #
-    # Global flags are placed at the beginning in fixed order,
-    # followed by remaining arguments.
-    #
-    # @return [Array<String>] normalized arguments
-    def build_result
-      result = []
-      GLOBAL_FLAGS.each_key do |name|
-        next unless @extracted_flags.key?(name)
-        config = GLOBAL_FLAGS[name]
-        value = @extracted_flags[name]
-        result << config[:short]
-        result << value.to_s unless value == true
-      end
-      result.concat(@remaining_args)
+    # @param args [Array<String>] arguments without global flags
+    # @return [Array(String, Array<String>, Array<String>)] [command_name, command_tokens, rest]
+    def identify_command(args)
+      return [nil, [], args] if args.empty? || args.first.start_with?("-")
+
+      command_name = args.first
+      [command_name, [command_name], args[1..]]
     end
 
-    # Reorders subcommand flags to appear before positional arguments.
+    # Finds a GLI command by name (supports aliases and dash-to-underscore).
     #
-    # Identifies the command/subcommand pattern and moves known flags
-    # before the first positional argument after the subcommand.
-    #
-    # @param args [Array<String>] arguments after global flag processing
-    # @return [Array<String>] arguments with subcommand flags reordered
-    def reorder_subcommand_flags(args)
-      return args if args.empty?
-
-      # Find double-dash position to limit processing
-      double_dash_pos = args.index("--")
-
-      # Identify command and subcommand (skip global flags at beginning)
-      subcommand_info = find_subcommand_key(args)
-      return args unless subcommand_info
-
-      subcommand_key, cmd_start_index = subcommand_info
-      flags_config = SUBCOMMAND_FLAGS[subcommand_key]
-      return args unless flags_config
-
-      # Find where subcommand ends (index after subcommand name)
-      subcommand_parts = subcommand_key.split
-      subcommand_end_index = cmd_start_index + subcommand_parts.length
-
-      # Process arguments after subcommand
-      reorder_flags_after_subcommand(args, cmd_start_index, subcommand_end_index, flags_config, double_dash_pos)
+    # @param name [String] command name
+    # @return [GLI::Command, nil] command object or nil
+    def find_gli_command(name)
+      @cli_app.commands[name.to_sym] || @cli_app.commands[name.tr("-", "_").to_sym]
     end
 
-    # Finds the subcommand key from arguments, skipping global flags.
+    # Finds a GLI subcommand by name (supports aliases and dash-to-underscore).
     #
-    # @param args [Array<String>] arguments
-    # @return [Array(String, Integer), nil] [subcommand_key, start_index] or nil if not found
-    def find_subcommand_key(args)
-      # Skip global flags at the beginning to find command
-      cmd_start = 0
-      while cmd_start < args.length
-        arg = args[cmd_start]
-        global_config = find_flag_config(arg)
-        if global_config
-          # Skip global flag and its value if needed
-          cmd_start += global_config[:has_value] && !arg.include?("=") ? 2 : 1
-        else
-          break
-        end
-      end
-
-      # Check for two-part subcommand (e.g., "config set-cluster")
-      if args.length >= cmd_start + 2
-        key = "#{args[cmd_start]} #{args[cmd_start + 1]}"
-        return [key, cmd_start] if SUBCOMMAND_FLAGS.key?(key)
-      end
-      nil
+    # @param cmd [GLI::Command] parent command
+    # @param name [String] subcommand name
+    # @return [GLI::Command, nil] subcommand object or nil
+    def find_gli_subcommand(cmd, name)
+      cmd.commands[name.to_sym] || cmd.commands[name.tr("-", "_").to_sym]
     end
 
-    # Reorders flags after subcommand to appear before positional arguments.
+    # Reorders command flags to appear before positional arguments.
     #
-    # @param args [Array<String>] arguments
-    # @param cmd_start_index [Integer] index where command starts
-    # @param subcommand_end_index [Integer] index after subcommand
-    # @param flags_config [Hash] subcommand flags configuration
-    # @param double_dash_pos [Integer, nil] position of -- or nil
+    # @param args [Array<String>] arguments after command name
+    # @param cmd [GLI::Command] GLI command with flag/switch metadata
     # @return [Array<String>] reordered arguments
-    def reorder_flags_after_subcommand(args, cmd_start_index, subcommand_end_index, flags_config, double_dash_pos)
-      global_prefix = args[0...cmd_start_index]
-      subcommand_prefix = args[cmd_start_index...subcommand_end_index]
-      rest = args[subcommand_end_index..]
-
-      # Limit rest to before double-dash if present
-      if double_dash_pos && double_dash_pos >= subcommand_end_index
-        rest = args[subcommand_end_index...double_dash_pos]
-        after_double_dash = args[double_dash_pos..]
-      else
-        after_double_dash = []
-      end
-
-      extracted_flags = []
-      positional_args = []
+    def reorder_command_flags(args, cmd)
+      flags = []
+      positional = []
       index = 0
 
-      while index < rest.length
-        arg = rest[index]
+      while index < args.length
+        arg = args[index]
 
-        if arg.start_with?("-")
-          flag_info = find_subcommand_flag(arg, flags_config)
-          if flag_info
-            extracted_flags << arg
-            if flag_info[:has_value] && !arg.include?("=") && index + 1 < rest.length
-              index += 1
-              extracted_flags << rest[index]
-            end
+        if arg == "--"
+          positional.concat(args[index..])
+          break
+        end
+
+        flag_info = find_command_flag(arg, cmd)
+        unless flag_info.nil?
+          has_value = flag_info
+          if has_value && !arg.include?("=") && index + 1 < args.length
+            flags << arg << args[index + 1]
+            index += 1
           else
-            # Unknown flag - keep with positional args
-            positional_args << arg
+            flags << arg
           end
         else
-          positional_args << arg
+          positional << arg
         end
 
         index += 1
       end
 
-      global_prefix + subcommand_prefix + extracted_flags + positional_args + after_double_dash
+      flags + positional
     end
 
-    # Finds subcommand flag configuration.
+    # Finds a command flag/switch definition matching the given argument.
     #
     # @param arg [String] argument to check
-    # @param flags_config [Hash] subcommand flags configuration
-    # @return [Hash, nil] flag configuration or nil
-    def find_subcommand_flag(arg, flags_config)
+    # @param cmd [GLI::Command] command to search in
+    # @return [Boolean, nil] has_value (true for flags, false for switches) or nil if not found
+    def find_command_flag(arg, cmd)
       flag_part = arg.split("=", 2).first
-      flags_config.each_value do |config|
-        return config if flag_part == config[:long]
+
+      cmd.flags.each_value do |flag|
+        return true if flag_matches?(flag, flag_part)
       end
+
+      cmd.switches.each_value do |sw|
+        return false if flag_matches?(sw, flag_part)
+      end
+
       nil
     end
   end

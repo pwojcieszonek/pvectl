@@ -29,3 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cli**: `cli.rb` reduced from ~930 lines to ~96 lines (globals, error handling, PluginLoader)
 - **cli**: `template` command now uses `--yes` to skip confirmation (was `--force`) for consistency with `delete` and other destructive commands
 - **cli**: `template --force` now stops running VMs/containers before conversion (matching `delete --force` behavior)
+- **cli**: `ArgvPreprocessor` refactored to use dynamic GLI reflection instead of static flag maps — automatically discovers all registered flags and switches
+
+### Fixed
+- **cli**: Command flags placed after positional arguments are now correctly reordered (e.g., `pvectl delete vm 103 --yes` now works as expected)
