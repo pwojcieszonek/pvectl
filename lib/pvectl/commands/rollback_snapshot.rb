@@ -20,7 +20,7 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Rollback to a snapshot"
-        cli.arg_name "RESOURCE_TYPE VMID SNAPSHOT_NAME"
+        cli.arg_name "RESOURCE_TYPE ID SNAPSHOT_NAME"
         cli.command :rollback do |c|
           c.desc "Skip confirmation prompt (REQUIRED for destructive operations)"
           c.switch [:yes, :y], negatable: false

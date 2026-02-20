@@ -21,7 +21,7 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Suspend virtual machines (hibernate)"
-        cli.arg_name "RESOURCE_TYPE [VMID...]"
+        cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :suspend do |c|
           SharedFlags.lifecycle(c)
 

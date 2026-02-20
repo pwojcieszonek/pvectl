@@ -21,7 +21,7 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Resume suspended virtual machines"
-        cli.arg_name "RESOURCE_TYPE [VMID...]"
+        cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :resume do |c|
           SharedFlags.lifecycle(c)
 
