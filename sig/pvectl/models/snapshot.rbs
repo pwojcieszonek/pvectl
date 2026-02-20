@@ -1,0 +1,21 @@
+module Pvectl
+  module Models
+    class Snapshot < Base
+      attr_reader name: String?
+      attr_reader snaptime: Integer?
+      attr_reader description: String?
+      attr_reader vmstate: Integer?
+      attr_reader parent: String?
+      attr_reader vmid: Integer?
+      attr_reader node: String?
+      attr_reader resource_type: Symbol?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def has_vmstate?: () -> bool
+      def created_at: () -> Time?
+      def vm?: () -> bool
+      def container?: () -> bool
+    end
+  end
+end

@@ -1,0 +1,37 @@
+module Pvectl
+  module Selectors
+    class Base
+      attr_reader conditions: Array[Hash[Symbol, untyped]]
+
+      def self.parse: (String selector_string) -> instance
+
+      def self.parse_all: (Array[String] selector_strings) -> instance
+
+      def initialize: (?Array[Hash[Symbol, untyped]] conditions) -> void
+
+      def empty?: () -> bool
+
+      def apply: (Array[untyped] collection) -> Array[untyped]
+
+      def matches?: (untyped item) -> bool
+
+      public
+
+      def match_condition?: (untyped item, Hash[Symbol, untyped] condition) -> bool
+
+      def extract_value: (untyped item, String field) -> untyped
+
+      def compare_value: (untyped actual, Symbol operator, untyped expected) -> bool
+
+      def wildcard_match?: (String value, String pattern) -> bool
+
+      private
+
+      def self.parse_conditions: (String? selector_string) -> Array[Hash[Symbol, untyped]]
+
+      def self.split_selectors: (String str) -> Array[String]
+
+      def self.parse_single_condition: (String condition_str) -> Hash[Symbol, untyped]
+    end
+  end
+end

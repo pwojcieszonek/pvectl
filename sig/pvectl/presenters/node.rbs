@@ -1,0 +1,117 @@
+module Pvectl
+  module Presenters
+    class Node < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String?]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String?]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+
+      def cpu_percent: () -> String
+
+      def memory_used_gb: () -> Float?
+
+      def memory_total_gb: () -> Integer?
+
+      def memory_display: () -> String
+
+      def disk_used_gb: () -> Float?
+
+      def disk_total_gb: () -> Float?
+
+      def storage_display: () -> String
+
+      def swap_used_gb: () -> Float?
+
+      def swap_total_gb: () -> Integer?
+
+      def swap_display: () -> String
+
+      def load_1m: () -> Float?
+
+      def load_display: () -> String
+
+      def uptime_human: () -> String
+
+      def version_display: () -> String
+
+      def kernel_display: () -> String
+
+      def ip_display: () -> String
+
+      def alerts: () -> Array[String]
+
+      def alerts_display: () -> String
+
+      def has_alerts?: () -> bool
+
+      def cpu_model: () -> String?
+
+      def cpu_sockets: () -> Integer?
+
+      def cpu_cores: () -> Integer?
+
+      def boot_mode: () -> String
+
+      def subscription_display: () -> String
+
+      def timezone: () -> String
+
+      def local_time: () -> String
+
+      def dns_search: () -> String
+
+      def dns_nameservers: () -> String
+
+      def rootfs_usage_percent: () -> Integer?
+
+      def rootfs_display: () -> String
+
+      private
+
+      attr_reader node: untyped
+
+      def offline_description: () -> Hash[String, untyped]
+
+      def memory_percent_display: (untyped model) -> String
+
+      def swap_percent_display: (untyped model) -> String
+
+      def format_gib: (Integer? bytes) -> String
+
+      def format_network_interfaces: (Array[Hash[Symbol, untyped]]? interfaces) -> (Array[Hash[String, untyped]] | String)
+
+      def format_services: (Array[Hash[Symbol, untyped]]? services) -> (Array[Hash[String, untyped]] | String)
+
+      def format_storage_pools: (Array[untyped]? pools) -> (Array[Hash[String, untyped]] | String)
+
+      def format_physical_disks: (Array[Hash[Symbol, untyped]]? disks) -> (Array[Hash[String, untyped]] | String)
+
+      def format_cpu_models: (Array[Hash[Symbol, untyped]]? models) -> String
+
+      def format_machines: (Array[Hash[Symbol, untyped]]? machines) -> String
+
+      def memory_percent: (untyped model) -> Float?
+
+      def swap_percent: (untyped model) -> Float?
+
+      def storage_percent: (untyped model) -> Float?
+
+      def storage_enabled?: (untyped pool) -> bool
+
+      def format_storage_pool: (untyped pool) -> Hash[String, untyped]
+
+      def format_storage_pool_model: (untyped pool) -> Hash[String, untyped]
+
+      def format_storage_pool_hash: (Hash[Symbol, untyped] pool) -> Hash[String, untyped]
+
+      def format_storage_size: (Float gb) -> String
+    end
+  end
+end

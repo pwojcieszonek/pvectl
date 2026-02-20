@@ -1,0 +1,25 @@
+module Pvectl
+  module Services
+    class Snapshot
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (snapshot_repo: untyped, resource_resolver: untyped, task_repo: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def list: (Array[Integer] vmids) -> Array[Models::Snapshot]
+
+      def create: (Array[Integer] vmids, name: String, ?description: String?, ?vmstate: bool) -> Array[Models::OperationResult]
+
+      def delete: (Array[Integer] vmids, String snapname, ?force: bool) -> Array[Models::OperationResult]
+
+      def rollback: (Integer vmid, String snapname, ?start: bool) -> Models::OperationResult
+
+      private
+
+      def execute_multi: (Array[Hash[Symbol, untyped]] resources, Symbol operation) { (Hash[Symbol, untyped]) -> String } -> Array[Models::OperationResult]
+
+      def execute_single: (Hash[Symbol, untyped] resource, Symbol operation) { () -> String } -> Models::OperationResult
+
+      def timeout: () -> Integer
+    end
+  end
+end

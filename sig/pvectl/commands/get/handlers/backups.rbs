@@ -1,0 +1,23 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Backups
+          include ResourceHandler
+
+          def initialize: (?service: untyped) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Backup]
+
+          def presenter: () -> Presenters::Backup
+
+          private
+
+          def service: () -> untyped
+
+          def build_service: () -> untyped
+        end
+      end
+    end
+  end
+end

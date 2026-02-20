@@ -1,0 +1,33 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Nodes
+          include ResourceHandler
+
+          SORT_FIELDS: Hash[String, ^(untyped) -> untyped]
+
+          def initialize: (?repository: Repositories::Node?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?filter: Hash[Symbol, String]?, ?sort: String?, ?include_details: bool) -> Array[Models::Node]
+
+          def presenter: () -> Presenters::Node
+
+          def describe: (name: String, ?node: String?) -> Models::Node
+
+          private
+
+          attr_reader repository: Repositories::Node
+
+          def build_repository: () -> Repositories::Node
+
+          def apply_filters: (Array[Models::Node] nodes, Hash[Symbol, String] filter) -> Array[Models::Node]
+
+          def apply_sort: (Array[Models::Node] nodes, String sort_field) -> Array[Models::Node]
+
+          def valid_node_name?: (String? name) -> bool
+        end
+      end
+    end
+  end
+end

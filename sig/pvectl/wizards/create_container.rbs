@@ -1,0 +1,21 @@
+module Pvectl
+  module Wizards
+    class CreateContainer
+      def initialize: (Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?prompt: untyped) -> void
+
+      def run: () -> Hash[Symbol, untyped]?
+
+      private
+
+      def create_default_prompt: () -> untyped
+
+      def collect_params: () -> Hash[Symbol, untyped]
+
+      def collect_rootfs: () -> Hash[Symbol, String]
+
+      def collect_mountpoints: () -> Array[Hash[Symbol, String]]?
+
+      def collect_nets: () -> Array[Hash[Symbol, String]]?
+    end
+  end
+end

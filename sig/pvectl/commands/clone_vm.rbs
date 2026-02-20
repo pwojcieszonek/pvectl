@@ -1,0 +1,27 @@
+module Pvectl
+  module Commands
+    class CloneVm
+      def self.register: (untyped cli) -> void
+
+      def self.execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def perform_clone: (Integer vmid) -> Integer
+
+      def print_progress: (untyped result) -> void
+
+      def load_config: () -> void
+
+      def service_options: () -> Hash[Symbol, untyped]
+
+      def output_result: (untyped result) -> void
+
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

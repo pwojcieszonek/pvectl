@@ -1,0 +1,21 @@
+module Pvectl
+  module Presenters
+    class Base
+      def columns: () -> Array[String]
+
+      def wide_columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String?]
+
+      def to_wide_row: (untyped model, **untyped context) -> Array[String?]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String?]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+    end
+  end
+end

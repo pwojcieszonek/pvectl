@@ -1,0 +1,13 @@
+module Pvectl
+  module Formatters
+    class Base
+      def format: (untyped data, untyped presenter, ?color_enabled: bool, **untyped context) -> String
+
+      public
+
+      def collection?: (untyped data) -> bool
+
+      def normalize_nil: (untyped value, ?String nil_placeholder) -> untyped
+    end
+  end
+end

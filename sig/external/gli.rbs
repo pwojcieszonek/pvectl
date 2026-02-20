@@ -1,0 +1,16 @@
+module GLI
+  class App
+    def desc: (String description) -> void
+    def long_desc: (String description) -> void
+    def command: (*Symbol names) { (Command) -> void } -> void
+    def flag: (Symbol | Array[Symbol] names, ?desc: String, ?default_value: untyped, ?type: untyped, ?must_match: untyped) -> void
+    def switch: (Symbol | Array[Symbol] names, ?desc: String, ?negatable: bool, ?default_value: bool) -> void
+    def action: () { (Hash[Symbol, untyped], Hash[Symbol, untyped], Array[String]) -> void } -> void
+    def arg_name: (String name, ?Symbol optionality) -> void
+    def skips_pre: () -> void
+    def skips_post: () -> void
+  end
+
+  class Command < App
+  end
+end

@@ -1,0 +1,8 @@
+module Pvectl
+  module Commands
+    module Logs
+      class ResourceRegistry < Commands::ResourceRegistry
+      end
+    end
+  end
+end

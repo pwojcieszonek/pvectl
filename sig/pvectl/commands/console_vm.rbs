@@ -1,0 +1,27 @@
+module Pvectl
+  module Commands
+    class ConsoleVm
+      def self.execute: (String? vmid, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (String? vmid, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def resource_path: () -> String
+
+      def resolve_credentials: () -> [String?, String?]
+
+      def prompt_username: (?String? default) -> String?
+
+      def prompt_password: () -> String?
+
+      def load_config: () -> void
+
+      def usage_error: (String message) -> Integer
+
+      def not_found: (String message) -> Integer
+    end
+  end
+end

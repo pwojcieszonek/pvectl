@@ -1,0 +1,24 @@
+module Pvectl
+  module Models
+    class TaskEntry < Base
+      attr_reader upid: String?
+      attr_reader node: String?
+      attr_reader type: String?
+      attr_reader status: String?
+      attr_reader exitstatus: String?
+      attr_reader starttime: Integer?
+      attr_reader endtime: Integer?
+      attr_reader user: String?
+      attr_reader id: String?
+      attr_reader pid: Integer?
+      attr_reader pstart: Integer?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def successful?: () -> bool
+      def failed?: () -> bool
+      def completed?: () -> bool
+      def duration: () -> Integer?
+    end
+  end
+end

@@ -1,0 +1,26 @@
+module Pvectl
+  module Services
+    class ContainerLifecycle
+      SYNC_OPERATIONS: Array[Symbol]
+      ASYNC_OPERATIONS: Array[Symbol]
+      ALL_OPERATIONS: Array[Symbol]
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (untyped container_repository, untyped task_repository, ?Hash[Symbol, untyped] options) -> void
+
+      def execute: (Symbol operation, Array[Models::Container] containers) -> Array[Models::ContainerOperationResult]
+
+      private
+
+      def execute_single: (Symbol operation, Models::Container container) -> Models::ContainerOperationResult
+
+      def call_api: (Symbol operation, Models::Container container) -> String
+
+      def sync_mode?: (Symbol operation) -> bool
+
+      def timeout: () -> Integer
+
+      def validate_operation!: (Symbol operation) -> void
+    end
+  end
+end

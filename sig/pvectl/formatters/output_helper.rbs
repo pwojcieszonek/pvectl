@@ -1,0 +1,9 @@
+module Pvectl
+  module Formatters
+    module OutputHelper
+      def self.print: (data: untyped, presenter: untyped, ?format: String, ?color_flag: bool?, ?describe: bool, **untyped context) -> void
+
+      def self.render: (data: untyped, presenter: untyped, ?format: String, ?color_flag: bool?, ?describe: bool, **untyped context) -> String
+    end
+  end
+end

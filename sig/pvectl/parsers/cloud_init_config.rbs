@@ -1,0 +1,15 @@
+module Pvectl
+  module Parsers
+    class CloudInitConfig
+      VALID_KEYS: Array[String]
+
+      def self.parse: (String string) -> Hash[Symbol, String]
+
+      def self.to_proxmox_params: (Hash[Symbol, String] config) -> Hash[Symbol, String]
+
+      private
+
+      def self.validate!: (Hash[Symbol, String] config) -> void
+    end
+  end
+end

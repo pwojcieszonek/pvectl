@@ -1,0 +1,33 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Vms
+          include ResourceHandler
+
+          VMID_PATTERN: Regexp
+
+          SORT_FIELDS: Hash[String, ^(untyped) -> untyped]
+
+          def initialize: (?repository: Repositories::Vm?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?sort: String?) -> Array[Models::Vm]
+
+          def presenter: () -> Presenters::Vm
+
+          def describe: (name: String, ?node: String?) -> Models::Vm
+
+          private
+
+          attr_reader repository: Repositories::Vm
+
+          def build_repository: () -> Repositories::Vm
+
+          def apply_sort: (Array[Models::Vm] vms, String sort_field) -> Array[Models::Vm]
+
+          def valid_vmid?: (String? vmid) -> bool
+        end
+      end
+    end
+  end
+end

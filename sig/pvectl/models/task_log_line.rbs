@@ -1,0 +1,10 @@
+module Pvectl
+  module Models
+    class TaskLogLine < Base
+      attr_reader n: Integer?
+      attr_reader t: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+    end
+  end
+end

@@ -1,0 +1,7 @@
+module Pvectl
+  module Commands
+    module SharedFlags
+      def self.lifecycle: (untyped command) -> void
+    end
+  end
+end

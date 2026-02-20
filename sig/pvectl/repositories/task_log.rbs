@@ -1,0 +1,11 @@
+module Pvectl
+  module Repositories
+    class TaskLog < Base
+      def list: (upid: String, ?start: Integer, ?limit: Integer) -> Array[Models::TaskLogLine]
+
+      private
+
+      def extract_node_from_upid: (String upid) -> String
+    end
+  end
+end

@@ -1,0 +1,26 @@
+module Pvectl
+  class CLI
+    # GLI::App methods provided via extend
+    def self.program_desc: (String desc) -> void
+
+    def self.version: (String version) -> void
+
+    def self.subcommand_option_handling: (Symbol mode) -> void
+
+    def self.desc: (String description) -> void
+
+    def self.arg_name: (String name) -> void
+
+    def self.default_value: (untyped value) -> void
+
+    def self.flag: (Array[Symbol] names, **untyped options) -> void
+
+    def self.switch: (Array[Symbol] names, **untyped options) -> void
+
+    def self.on_error: () { (Exception) -> void } -> void
+
+    def self.run: (Array[String] argv) -> Integer
+
+    def self.trap: (String signal) { () -> void } -> void
+  end
+end

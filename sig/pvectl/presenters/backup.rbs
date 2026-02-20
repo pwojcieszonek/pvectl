@@ -1,0 +1,25 @@
+module Pvectl
+  module Presenters
+    class Backup < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[untyped]
+
+      def extra_values: (untyped model, **untyped context) -> Array[untyped]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def format_type: (Symbol? resource_type) -> String
+
+      def format_time: (Time? time) -> String
+
+      def format_protected: (bool protected_status) -> String
+
+      def truncate: (String? text, Integer max_length) -> String?
+    end
+  end
+end

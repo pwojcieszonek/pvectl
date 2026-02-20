@@ -1,0 +1,19 @@
+module Pvectl
+  module Models
+    class PhysicalDisk < Base
+      attr_reader devpath: String?
+      attr_reader model: String?
+      attr_reader size: Integer?
+      attr_reader type: String?
+      attr_reader health: String?
+      attr_reader serial: String?
+      attr_reader vendor: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def size_gb: () -> Float?
+      def healthy?: () -> bool
+      def ssd?: () -> bool
+    end
+  end
+end

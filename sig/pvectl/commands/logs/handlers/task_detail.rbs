@@ -1,0 +1,21 @@
+module Pvectl
+  module Commands
+    module Logs
+      module Handlers
+        class TaskDetail
+          include Logs::ResourceHandler
+
+          def initialize: (?repository: Repositories::TaskLog?) -> void
+
+          def list: (upid: String, ?start: Integer, ?limit: Integer, **untyped) -> Array[Models::TaskLogLine]
+
+          def presenter: () -> Presenters::TaskLogLine
+
+          private
+
+          def repository: () -> Repositories::TaskLog
+        end
+      end
+    end
+  end
+end

@@ -1,0 +1,7 @@
+module Pvectl
+  module Repositories
+    class Syslog < Base
+      def list: (node: String, ?limit: Integer, ?since: String?, ?until_time: String?, ?service: String?) -> Array[Models::SyslogEntry]
+    end
+  end
+end

@@ -1,0 +1,27 @@
+module Pvectl
+  module Services
+    class Backup
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (backup_repo: untyped, resource_resolver: untyped, task_repo: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def list: (?vmid: Integer?, ?storage: String?) -> Array[Models::Backup]
+
+      def create: (Array[Integer] vmids, storage: String, ?mode: String, ?compress: String, ?notes: String?, ?protected: bool) -> Array[Models::OperationResult]
+
+      def delete: (String volid) -> Models::OperationResult
+
+      def restore: (String volid, vmid: Integer, ?storage: String?, ?force: bool, ?start: bool, ?unique: bool) -> Models::OperationResult
+
+      private
+
+      def execute_multi: (Array[Hash[Symbol, untyped]] resources, Symbol operation) { (Hash[Symbol, untyped]) -> String } -> Array[Models::OperationResult]
+
+      def execute_single: (Hash[Symbol, untyped] resource, Symbol operation) { () -> String } -> Models::OperationResult
+
+      def timeout: () -> Integer
+
+      def find_node_for_volid: (String volid) -> String
+    end
+  end
+end

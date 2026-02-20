@@ -1,0 +1,39 @@
+module Pvectl
+  module Models
+    class Storage < Base
+      attr_reader name: String?
+      attr_reader plugintype: String?
+      attr_reader status: String?
+      attr_reader node: String?
+      attr_reader disk: Integer?
+      attr_reader maxdisk: Integer?
+      attr_reader content: String?
+      attr_reader shared: Integer
+      attr_reader avail: Integer?
+      attr_reader enabled: Integer?
+      attr_reader active_flag: Integer?
+      attr_reader path: String?
+      attr_reader server: String?
+      attr_reader export: String?
+      attr_reader pool: String?
+      attr_reader vgname: String?
+      attr_reader thinpool: String?
+      attr_reader nodes_allowed: String?
+      attr_reader prune_backups: Hash[untyped, untyped]?
+      attr_reader max_files: Integer?
+      attr_reader volumes: Array[Hash[untyped, untyped]]
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def active?: () -> bool
+      def used: () -> Integer?
+      def total: () -> Integer?
+      def enabled?: () -> bool
+      def shared?: () -> bool
+
+      private
+
+      def derive_status_from_active: () -> String?
+    end
+  end
+end

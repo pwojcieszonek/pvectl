@@ -1,0 +1,63 @@
+module Pvectl
+  module Console
+    class TerminalSession
+      CTRL_CLOSE_BRACKET: String
+
+      PING_INTERVAL: Integer
+
+      READ_CHUNK_SIZE: Integer
+
+      def initialize: (url: String, cookie: String, user: String, ticket: String, verify_ssl: bool) -> void
+
+      def run: () -> void
+
+      private
+
+      def encode_input: (String data) -> String
+
+      def encode_resize: (Integer cols, Integer rows) -> String
+
+      def encode_ping: () -> String
+
+      def disconnect_key?: (String byte) -> bool
+
+      def handshake_message: () -> String
+
+      def open_socket: (URI::Generic uri) -> (TCPSocket | OpenSSL::SSL::SSLSocket)
+
+      def wrap_ssl: (TCPSocket tcp, String hostname) -> OpenSSL::SSL::SSLSocket
+
+      def create_driver: (URI::Generic uri, TCPSocket | OpenSSL::SSL::SSLSocket socket) -> untyped
+
+      def build_referer: (URI::Generic uri) -> String
+
+      def read_from_socket: (TCPSocket | OpenSSL::SSL::SSLSocket socket, timeout: Numeric) -> String?
+
+      def perform_websocket_handshake: (untyped driver, TCPSocket | OpenSSL::SSL::SSLSocket socket) -> void
+
+      def run_io_loop: (untyped driver, TCPSocket | OpenSSL::SSL::SSLSocket socket) -> void
+
+      def handle_stdin: (untyped driver) -> void
+
+      def handle_socket: (untyped driver, TCPSocket | OpenSSL::SSL::SSLSocket socket) -> void
+
+      def enable_raw_terminal: () -> void
+
+      def restore_terminal: () -> void
+
+      def send_initial_resize: (untyped driver) -> void
+
+      def trap_resize: (untyped driver) -> void
+
+      def detect_terminal_size: () -> [Integer, Integer]
+
+      class SocketAdapter
+        attr_reader url: String
+
+        def initialize: (String url, TCPSocket | OpenSSL::SSL::SSLSocket socket) -> void
+
+        def write: (String data) -> Integer
+      end
+    end
+  end
+end

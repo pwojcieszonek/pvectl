@@ -1,0 +1,35 @@
+module Pvectl
+  module Commands
+    module Logs
+      module Handlers
+        class TaskLogs
+          include Logs::ResourceHandler
+
+          RESOURCE_REPOS: Hash[String, ^() -> singleton(Repositories::Vm) | singleton(Repositories::Container)]
+
+          def initialize: (?task_list_repository: Repositories::TaskList?, ?vm_repository: untyped, ?node_repository: Repositories::Node?) -> void
+
+          def list: (vmid: Integer, ?resource_type: String, ?all_nodes: bool, ?limit: Integer, ?since: String?, ?until_time: String?, ?type_filter: String?, ?status_filter: String?, **untyped) -> Array[Models::TaskEntry]
+
+          def presenter: () -> Presenters::TaskEntry
+
+          private
+
+          def resolve_node: (Integer vmid, String resource_type) -> String
+
+          def resource_repository: (String resource_type) -> untyped
+
+          def build_resource_repository: (String resource_type) -> untyped
+
+          def task_list_repository: () -> Repositories::TaskList
+
+          def build_task_list_repository: () -> Repositories::TaskList
+
+          def list_all_nodes: (vmid: Integer, limit: Integer, since: String?, until_time: String?, type_filter: String?, status_filter: String?) -> Array[Models::TaskEntry]
+
+          def node_repository: () -> Repositories::Node
+        end
+      end
+    end
+  end
+end

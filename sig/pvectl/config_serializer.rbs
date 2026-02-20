@@ -1,0 +1,43 @@
+module Pvectl
+  module ConfigSerializer
+    VM_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+
+    CONTAINER_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+
+    YAML_SPECIAL_CHARS: Array[String]
+
+    def self.to_yaml: (Hash[Symbol, untyped] flat_config, type: Symbol, ?resource: Hash[Symbol, untyped]) -> String
+
+    def self.from_yaml: (String yaml_string, type: Symbol) -> Hash[Symbol, untyped]
+
+    def self.validate: (String yaml_string, type: Symbol) -> Array[String]
+
+    def self.readonly_violations: (Hash[Symbol, untyped] original_flat, Hash[Symbol, untyped] edited_flat, type: Symbol) -> Array[String]
+
+    def self.diff: (Hash[Symbol, untyped] original, Hash[Symbol, untyped] edited) -> Hash[Symbol, Hash[Symbol, untyped] | Array[Symbol]]
+
+    def self.format_diff: (Hash[Symbol, untyped] diff_hash) -> String
+
+    private
+
+    def self.sections_for: (Symbol type) -> Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+
+    def self.header_comment: (Symbol type, Hash[Symbol, untyped] resource) -> String
+
+    def self.keys_for_section: (Hash[Symbol, untyped] config, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def) -> Array[Symbol]
+
+    def self.key_in_section?: (Symbol key, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def) -> bool
+
+    def self.readonly_key?: (Symbol key, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def) -> bool
+
+    def self.collect_readonly_keys: (Array[Symbol] keys, Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]] sections) -> Array[Symbol]
+
+    def self.format_yaml_value: (untyped value) -> String
+
+    def self.needs_quoting?: (String value) -> bool
+
+    def self.strip_comments: (String yaml_string) -> String
+
+    def self.flatten_sections: (Hash[String, untyped] parsed) -> Hash[Symbol, untyped]
+  end
+end

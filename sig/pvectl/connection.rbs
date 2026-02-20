@@ -1,0 +1,35 @@
+module Pvectl
+  class Connection
+    attr_reader config: untyped
+
+    attr_reader retry_handler: untyped
+
+    def initialize: (untyped config, ?logger: untyped?) -> void
+
+    def client: () -> untyped
+
+    def verify!: () -> void
+
+    def version: () -> Hash[String, untyped]
+
+    private
+
+    @config: untyped
+
+    @client: untyped?
+
+    @logger: untyped?
+
+    @retry_handler: untyped
+
+    def with_timeout: [T] () { () -> T } -> T
+
+    def create_client: () -> untyped
+
+    def extract_host: () -> String
+
+    def build_client_options: () -> Hash[Symbol, untyped]
+
+    def parse_username: (String full_username) -> [String, String]
+  end
+end

@@ -1,0 +1,29 @@
+module Pvectl
+  module Services
+    class ResourceMigration
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (vm_repository: untyped, container_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (Symbol resource_type, Array[Models::Vm | Models::Container] resources, target: String) -> Array[Models::VmOperationResult | Models::ContainerOperationResult]
+
+      private
+
+      def partition_by_target: (Array[Models::Vm | Models::Container] resources, String target) -> [Array[Models::Vm | Models::Container], Array[Models::Vm | Models::Container]]
+
+      def report_skipped: (Array[Models::Vm | Models::Container] skipped, String target) -> void
+
+      def all_on_target_results: (String target) -> Array[untyped]
+
+      def migrate_single: (Models::Vm | Models::Container resource, String target) -> (Models::VmOperationResult | Models::ContainerOperationResult)
+
+      def build_migrate_params: (String target) -> Hash[Symbol, untyped]
+
+      def build_result: (Models::Vm | Models::Container resource, **untyped attrs) -> (Models::VmOperationResult | Models::ContainerOperationResult)
+
+      def repository_for: (Symbol type) -> untyped
+
+      def timeout: () -> Integer
+    end
+  end
+end

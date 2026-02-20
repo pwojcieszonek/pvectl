@@ -1,0 +1,45 @@
+module Pvectl
+  module Models
+    class Node < Base
+      attr_reader name: String
+      attr_reader status: String
+      attr_reader cpu: Float?
+      attr_reader maxcpu: Integer?
+      attr_reader mem: Integer?
+      attr_reader maxmem: Integer?
+      attr_reader disk: Integer?
+      attr_reader maxdisk: Integer?
+      attr_reader uptime: Integer?
+      attr_reader level: String?
+      attr_reader version: String?
+      attr_reader kernel: String?
+      attr_reader loadavg: Array[Float]?
+      attr_reader swap_used: Integer?
+      attr_reader swap_total: Integer?
+      attr_reader guests_vms: Integer
+      attr_reader guests_cts: Integer
+      attr_reader ip: String?
+      attr_reader cpuinfo: Hash[untyped, untyped]?
+      attr_reader boot_info: Hash[untyped, untyped]?
+      attr_reader rootfs: Hash[untyped, untyped]?
+      attr_reader subscription: Hash[untyped, untyped]?
+      attr_reader dns: Hash[untyped, untyped]?
+      attr_reader time_info: Hash[untyped, untyped]?
+      attr_reader network_interfaces: Array[Hash[untyped, untyped]]
+      attr_reader services: Array[Hash[untyped, untyped]]
+      attr_reader storage_pools: Array[Models::Storage]
+      attr_reader physical_disks: Array[Hash[untyped, untyped]]
+      attr_reader qemu_cpu_models: Array[Hash[untyped, untyped]]
+      attr_reader qemu_machines: Array[Hash[untyped, untyped]]
+      attr_reader updates_available: Integer
+      attr_reader updates: Array[Hash[untyped, untyped]]
+      attr_reader offline_note: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def online?: () -> bool
+      def offline?: () -> bool
+      def guests_total: () -> Integer
+    end
+  end
+end

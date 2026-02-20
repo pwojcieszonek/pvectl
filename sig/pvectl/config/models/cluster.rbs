@@ -1,0 +1,39 @@
+module Pvectl
+  module Config
+    module Models
+      class Cluster
+        attr_reader name: String
+        attr_reader server: String
+        attr_reader verify_ssl: bool
+        attr_reader certificate_authority: String?
+        attr_reader timeout: Integer?
+        attr_reader retry_count: Integer?
+        attr_reader retry_delay: Integer?
+        attr_reader max_retry_delay: Integer?
+        attr_reader retry_writes: bool?
+
+        def initialize: (
+          name: String,
+          server: String,
+          ?verify_ssl: bool,
+          ?certificate_authority: String?,
+          ?timeout: Integer?,
+          ?retry_count: Integer?,
+          ?retry_delay: Integer?,
+          ?max_retry_delay: Integer?,
+          ?retry_writes: bool?
+        ) -> void
+
+        def self.from_hash: (Hash[String, untyped]) -> Cluster
+
+        def to_hash: () -> Hash[String, untyped]
+
+        private
+
+        def validate_retry_settings!: () -> void
+        def validate_positive: (Symbol name, untyped value) -> void
+        def validate_non_negative_integer: (Symbol name, untyped value) -> void
+      end
+    end
+  end
+end

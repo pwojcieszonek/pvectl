@@ -1,0 +1,35 @@
+module Pvectl
+  module Commands
+    class CreateVm
+      include CreateResourceCommand
+
+      def self.register: (untyped cli) -> void
+
+      private
+
+      def resource_label: () -> String
+
+      def resource_id_label: () -> String
+
+      def required_params_missing?: () -> bool
+
+      def build_wizard: () -> Wizards::CreateVm
+
+      def build_create_service: (untyped connection, untyped task_repo) -> Services::CreateVm
+
+      def output_result: (untyped result) -> void
+
+      def perform_create: () -> Integer
+
+      def build_params_from_flags: () -> Hash[Symbol, untyped]
+
+      def display_resource_summary: (Hash[Symbol, untyped] params) -> void
+
+      def parse_disks: () -> Array[Hash[Symbol, untyped]]
+
+      def parse_nets: () -> Array[Hash[Symbol, untyped]]
+
+      def parse_cloud_init: () -> Hash[Symbol, untyped]
+    end
+  end
+end

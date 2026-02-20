@@ -1,0 +1,23 @@
+module Pvectl
+  module Services
+    module Get
+      class ResourceService
+        def initialize: (handler: untyped, ?format: String, ?color_enabled: bool) -> void
+
+        def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> String
+
+        def describe: (name: String, ?node: String?) -> String
+
+        private
+
+        attr_reader handler: untyped
+        attr_reader format: String
+        attr_reader color_enabled: bool
+
+        def format_output: (Array[untyped] models, untyped presenter) -> String
+
+        def format_output_describe: (untyped model, untyped presenter) -> String
+      end
+    end
+  end
+end

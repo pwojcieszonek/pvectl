@@ -1,0 +1,17 @@
+module Pvectl
+  module Services
+    class EditVm
+      def initialize: (vm_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (vmid: Integer) -> Models::VmOperationResult?
+
+      private
+
+      def build_update_params: (Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::VmOperationResult
+
+      def not_found_result: (Integer vmid) -> Models::VmOperationResult
+    end
+  end
+end

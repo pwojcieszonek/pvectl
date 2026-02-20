@@ -1,0 +1,33 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Containers
+          include ResourceHandler
+
+          CTID_PATTERN: Regexp
+
+          SORT_FIELDS: Hash[String, ^(untyped) -> untyped]
+
+          def initialize: (?repository: Repositories::Container?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?sort: String?) -> Array[Models::Container]
+
+          def presenter: () -> Presenters::Container
+
+          def describe: (name: String, ?node: String?) -> Models::Container
+
+          private
+
+          attr_reader repository: Repositories::Container
+
+          def build_repository: () -> Repositories::Container
+
+          def apply_sort: (Array[Models::Container] containers, String sort_field) -> Array[Models::Container]
+
+          def valid_ctid?: (String? ctid) -> bool
+        end
+      end
+    end
+  end
+end

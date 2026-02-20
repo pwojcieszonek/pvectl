@@ -1,0 +1,27 @@
+module Pvectl
+  module Presenters
+    class SnapshotOperationResult < Base
+      include Formatters::ColorSupport
+
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def status_display: (untyped model) -> String
+
+      def task_upid: (untyped model) -> String
+
+      def duration_display: (untyped model) -> String
+
+      def colorize: (String text, Symbol color) -> String
+    end
+  end
+end

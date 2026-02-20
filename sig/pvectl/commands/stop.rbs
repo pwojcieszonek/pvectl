@@ -1,0 +1,11 @@
+module Pvectl
+  module Commands
+    class Stop
+      include VmLifecycleCommand
+
+      OPERATION: Symbol
+
+      def self.register: (untyped cli) -> void
+    end
+  end
+end

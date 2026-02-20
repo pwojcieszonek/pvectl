@@ -1,0 +1,45 @@
+module Pvectl
+  module Commands
+    module MigrateCommand
+      NODE_NAME_FORMAT: Regexp
+
+      module ClassMethods
+        def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      def self.included: (Class base) -> void
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def resource_type_symbol: () -> Symbol
+
+      def restart_not_allowed?: () -> bool
+
+      def perform_operation: () -> Integer
+
+      def resolve_resources: (untyped connection) -> Array[untyped]
+
+      def selector_strings: () -> Array[String]
+
+      def apply_selectors: (Array[untyped] resources) -> Array[untyped]
+
+      def confirm_operation: (Array[untyped] resources, String target) -> bool
+
+      def load_config: () -> void
+
+      def service_options: () -> Hash[Symbol, untyped]
+
+      def output_results: (Array[untyped] results) -> void
+
+      def determine_exit_code: (Array[untyped] results) -> Integer
+
+      def usage_error: (String message) -> Integer
+
+      def no_resources_found: () -> Integer
+    end
+  end
+end

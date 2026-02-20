@@ -1,0 +1,19 @@
+module Pvectl
+  module Selectors
+    class Container < Base
+      SUPPORTED_FIELDS: Array[String]
+
+      def apply: (Array[untyped] containers) -> Array[untyped]
+
+      public
+
+      def extract_value: (untyped container, String field) -> String?
+
+      def match_condition?: (untyped container, Hash[Symbol, untyped] condition) -> bool
+
+      private
+
+      def match_tags_condition?: (untyped container, Hash[Symbol, untyped] condition) -> bool
+    end
+  end
+end

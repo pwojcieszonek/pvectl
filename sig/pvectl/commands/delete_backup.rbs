@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    class DeleteBackup
+      def self.execute: (String? resource_type, Array[String] | String | nil args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (String? resource_type, Array[String] | String | nil args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def perform_operation: () -> Integer
+
+      def load_config: () -> void
+
+      def service_options: () -> Hash[Symbol, untyped]
+
+      def output_results: (Array[untyped] results) -> void
+
+      def determine_exit_code: (Array[untyped] results) -> Integer
+
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

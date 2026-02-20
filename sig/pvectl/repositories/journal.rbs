@@ -1,0 +1,7 @@
+module Pvectl
+  module Repositories
+    class Journal < Base
+      def list: (node: String, ?last_entries: Integer, ?since: Integer?, ?until_time: Integer?) -> Array[Models::JournalEntry]
+    end
+  end
+end

@@ -1,0 +1,15 @@
+module Pvectl
+  module Models
+    class Service < Base
+      attr_reader service: String?
+      attr_reader name: String?
+      attr_reader state: String?
+      attr_reader desc: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def running?: () -> bool
+      def display_name: () -> String
+    end
+  end
+end

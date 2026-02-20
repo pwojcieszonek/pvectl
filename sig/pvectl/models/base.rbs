@@ -1,0 +1,11 @@
+module Pvectl
+  module Models
+    class Base
+      def initialize: (?Hash[Symbol, untyped] attributes) -> void
+
+      private
+
+      attr_reader attributes: Hash[Symbol, untyped]
+    end
+  end
+end

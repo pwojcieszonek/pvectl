@@ -1,0 +1,21 @@
+module Pvectl
+  module Commands
+    module Logs
+      module Handlers
+        class Syslog
+          include Logs::ResourceHandler
+
+          def initialize: (?repository: Repositories::Syslog?) -> void
+
+          def list: (node: String, ?limit: Integer, ?since: String?, ?until_time: String?, ?service: String?, **untyped) -> Array[Models::SyslogEntry]
+
+          def presenter: () -> Presenters::SyslogEntry
+
+          private
+
+          def repository: () -> Repositories::Syslog
+        end
+      end
+    end
+  end
+end

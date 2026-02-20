@@ -1,0 +1,64 @@
+module Pvectl
+  module Services
+    class CreateContainer
+      DEFAULT_TIMEOUT: Integer
+      START_TIMEOUT: Integer
+
+      def initialize: (container_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (
+        ?ctid: Integer?,
+        hostname: String,
+        node: String,
+        ostemplate: String,
+        ?cores: Integer?,
+        ?memory: Integer?,
+        ?swap: Integer?,
+        ?rootfs: Hash[Symbol, untyped]?,
+        ?mountpoints: Array[Hash[Symbol, untyped]]?,
+        ?nets: Array[Hash[Symbol, untyped]]?,
+        ?privileged: bool?,
+        ?features: String?,
+        ?password: String?,
+        ?ssh_public_keys: String?,
+        ?onboot: bool?,
+        ?startup: String?,
+        ?description: String?,
+        ?tags: String?,
+        ?pool: String?
+      ) -> Models::ContainerOperationResult
+
+      private
+
+      def build_params: (
+        hostname: String,
+        ostemplate: String,
+        cores: Integer?,
+        memory: Integer?,
+        swap: Integer?,
+        rootfs: Hash[Symbol, untyped]?,
+        mountpoints: Array[Hash[Symbol, untyped]]?,
+        nets: Array[Hash[Symbol, untyped]]?,
+        privileged: bool?,
+        features: String?,
+        password: String?,
+        ssh_public_keys: String?,
+        onboot: bool?,
+        startup: String?,
+        description: String?,
+        tags: String?,
+        pool: String?
+      ) -> Hash[Symbol, untyped]
+
+      def add_mountpoint_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, untyped]] mountpoints) -> void
+
+      def add_net_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, untyped]] nets) -> void
+
+      def start_container: (Integer ctid, String node) -> void
+
+      def timeout: () -> Integer
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::ContainerOperationResult
+    end
+  end
+end

@@ -1,0 +1,23 @@
+module Pvectl
+  module Config
+    module Models
+      class Context
+        attr_reader name: String
+        attr_reader cluster_ref: String
+        attr_reader user_ref: String
+        attr_reader default_node: String?
+
+        def initialize: (
+          name: String,
+          cluster_ref: String,
+          user_ref: String,
+          ?default_node: String?
+        ) -> void
+
+        def self.from_hash: (Hash[String, untyped]) -> Context
+
+        def to_hash: () -> Hash[String, untyped]
+      end
+    end
+  end
+end

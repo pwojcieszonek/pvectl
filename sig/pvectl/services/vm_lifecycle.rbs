@@ -1,0 +1,26 @@
+module Pvectl
+  module Services
+    class VmLifecycle
+      SYNC_OPERATIONS: Array[Symbol]
+      ASYNC_OPERATIONS: Array[Symbol]
+      ALL_OPERATIONS: Array[Symbol]
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (untyped vm_repository, untyped task_repository, ?Hash[Symbol, untyped] options) -> void
+
+      def execute: (Symbol operation, Array[Models::Vm] vms) -> Array[Models::VmOperationResult]
+
+      private
+
+      def execute_single: (Symbol operation, Models::Vm vm) -> Models::VmOperationResult
+
+      def call_api: (Symbol operation, Models::Vm vm) -> String
+
+      def sync_mode?: (Symbol operation) -> bool
+
+      def timeout: () -> Integer
+
+      def validate_operation!: (Symbol operation) -> void
+    end
+  end
+end

@@ -1,0 +1,11 @@
+module Pvectl
+  module Commands
+    module Config
+      class SetCluster
+        def self.register_subcommand: (untyped parent) -> void
+
+        def self.execute: (String cluster_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+    end
+  end
+end

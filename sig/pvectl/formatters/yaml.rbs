@@ -1,0 +1,7 @@
+module Pvectl
+  module Formatters
+    class Yaml < Base
+      def format: (untyped data, untyped presenter, ?color_enabled: bool, ?describe: bool, **untyped context) -> String
+    end
+  end
+end

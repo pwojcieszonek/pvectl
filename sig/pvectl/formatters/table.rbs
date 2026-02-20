@@ -1,0 +1,25 @@
+module Pvectl
+  module Formatters
+    class Table < Base
+      def format: (untyped data, untyped presenter, ?color_enabled: bool, ?describe: bool, **untyped context) -> String
+
+      private
+
+      def format_table: (untyped data, untyped presenter, untyped pastel, **untyped context) -> String
+
+      def format_describe: (untyped model, untyped presenter, untyped pastel) -> String
+
+      def colorize_row: (Array[untyped] row, Array[String] headers, untyped pastel) -> Array[untyped]
+
+      def format_describe_hash: (Hash[untyped, untyped]? hash, untyped pastel, ?indent: Integer) -> String
+
+      def format_describe_table: (Array[Hash[untyped, untyped]] array, ?indent: Integer) -> String
+
+      def format_describe_value: (untyped value, String key, untyped pastel) -> String
+
+      def humanize_key: (String | Symbol key) -> String
+
+      def render_table: (Array[String] headers, Array[Array[untyped]] rows) -> String
+    end
+  end
+end

@@ -1,0 +1,19 @@
+module Pvectl
+  module Presenters
+    class VmOperationResult < OperationResult
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def display_name: (untyped vm) -> String
+    end
+  end
+end

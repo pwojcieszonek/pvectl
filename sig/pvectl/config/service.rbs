@@ -1,0 +1,65 @@
+module Pvectl
+  module Config
+    class Service
+      DEFAULT_CONFIG_PATH: String
+
+      attr_reader config_path: String
+      attr_reader raw_config: Hash[String, untyped]
+      attr_reader current_context_name: String
+
+      def initialize: (?provider: Provider?, ?store: Store?, ?wizard: Wizard?) -> void
+
+      def load: (?Hash[Symbol, untyped] cli_options) -> Service
+      def current_config: () -> Models::ResolvedConfig
+
+      def contexts: () -> Array[Models::Context]
+      def context: (String name) -> Models::Context?
+
+      def use_context: (String context_name) -> void
+
+      def set_context: (
+        name: String,
+        cluster: String,
+        user: String,
+        ?default_node: String?
+      ) -> Models::Context
+
+      def clusters: () -> Array[Models::Cluster]
+      def cluster: (String name) -> Models::Cluster?
+
+      def set_cluster: (
+        name: String,
+        server: String,
+        ?verify_ssl: bool,
+        ?certificate_authority: String?
+      ) -> Models::Cluster
+
+      def users: () -> Array[Models::User]
+      def user: (String name) -> Models::User?
+
+      def set_credentials: (
+        name: String,
+        ?token_id: String?,
+        ?token_secret: String?,
+        ?username: String?,
+        ?password: String?
+      ) -> Models::User
+
+      def masked_config: () -> Hash[String, untyped]
+      def save: () -> void
+
+      private
+
+      @provider: Provider
+      @store: Store
+      @wizard: Wizard?
+      @loaded: bool
+      @resolved_config: Models::ResolvedConfig?
+
+      def resolve_config_path: (Hash[Symbol, untyped] cli_options) -> String
+      def warn_insecure_permissions: () -> void
+      def refresh_raw_config: () -> void
+      def deep_copy: (untyped obj) -> untyped
+    end
+  end
+end

@@ -1,0 +1,33 @@
+module Pvectl
+  class EditorSession
+    ERROR_SEPARATOR: String
+
+    def initialize: (?editor: _Callable?, ?validator: _Callable?) -> void
+
+    def edit: (String original_content) -> String?
+
+    private
+
+    @editor: _Callable
+
+    @validator: _Callable?
+
+    interface _Callable
+      def call: (untyped) -> untyped
+    end
+
+    def edit_loop: (String path, String original_content) -> String?
+
+    def cancelled?: (String content, String original_content) -> bool
+
+    def inject_errors: (String path, String content, Array[String] errors) -> void
+
+    def strip_error_block: (String content) -> String
+
+    def build_error_block: (Array[String] errors) -> String
+
+    def system_editor: (String path) -> void
+
+    def default_editor: () -> String?
+  end
+end
