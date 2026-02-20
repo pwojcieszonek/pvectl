@@ -1,0 +1,15 @@
+module Pvectl
+  module Presenters
+    class Template < Base
+      def columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def format_disk: (Integer? bytes) -> String
+    end
+  end
+end
