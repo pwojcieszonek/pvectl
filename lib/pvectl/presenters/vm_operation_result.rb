@@ -28,17 +28,30 @@ module Pvectl
 
       # Converts result to table row values.
       #
+      # For clone operations, displays the new (cloned) VM data.
+      # For all other operations, displays the source VM data.
+      #
       # @param model [Models::VmOperationResult] result model
       # @param context [Hash] optional context
       # @return [Array<String>] row values
       def to_row(model, **_context)
-        [
-          model.vm.vmid.to_s,
-          display_name(model.vm),
-          model.vm.node,
-          status_display(model),
-          model.message
-        ]
+        if model.operation == :clone && model.resource
+          [
+            model.resource[:new_vmid].to_s,
+            model.resource[:name] || "VM-#{model.resource[:new_vmid]}",
+            model.resource[:node] || model.vm&.node,
+            status_display(model),
+            model.message
+          ]
+        else
+          [
+            model.vm.vmid.to_s,
+            display_name(model.vm),
+            model.vm.node,
+            status_display(model),
+            model.message
+          ]
+        end
       end
 
       # Returns additional values for wide output.
@@ -55,17 +68,31 @@ module Pvectl
 
       # Converts result to hash for JSON/YAML output.
       #
+      # For clone operations, displays the new (cloned) VM data.
+      # For all other operations, displays the source VM data.
+      #
       # @param model [Models::VmOperationResult] result model
       # @return [Hash] hash representation
       def to_hash(model)
-        {
-          "vmid" => model.vm.vmid,
-          "name" => model.vm.name,
-          "node" => model.vm.node,
-          "status" => model.status_text,
-          "message" => model.message,
-          "task_upid" => model.task_upid || model.task&.upid
-        }
+        if model.operation == :clone && model.resource
+          {
+            "vmid" => model.resource[:new_vmid],
+            "name" => model.resource[:name],
+            "node" => model.resource[:node] || model.vm&.node,
+            "status" => model.status_text,
+            "message" => model.message,
+            "task_upid" => model.task_upid || model.task&.upid
+          }
+        else
+          {
+            "vmid" => model.vm.vmid,
+            "name" => model.vm.name,
+            "node" => model.vm.node,
+            "status" => model.status_text,
+            "message" => model.message,
+            "task_upid" => model.task_upid || model.task&.upid
+          }
+        end
       end
 
       private

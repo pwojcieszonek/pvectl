@@ -22,6 +22,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **plugins**: `PluginLoader` class for automatic plugin loading with graceful error handling
 - **commands**: `SharedFlags` module for reusable flag definitions across commands
 
+### Fixed
+- **presenters**: Clone operation output now displays the new (cloned) resource data (VMID/CTID, name, node) instead of the source resource data
+
 ### Changed
 - **commands**: Extracted `IrreversibleCommand` mixin from `DeleteCommand` for reuse in template and other destructive commands
 - **services**: Extract `Services::TaskListing` from `Logs::Handlers::TaskLogs` for shared multi-node task listing logic

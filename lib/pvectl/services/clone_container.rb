@@ -64,7 +64,7 @@ module Pvectl
         )
 
         upid = @container_repository.clone(ctid, node, new_ctid, clone_options)
-        resource_info = { new_ctid: new_ctid, hostname: hostname }
+        resource_info = { new_ctid: new_ctid, hostname: hostname, node: target_node || node }
 
         if @options[:async]
           Models::ContainerOperationResult.new(

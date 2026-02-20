@@ -170,6 +170,7 @@ module Pvectl
             result = service.execute(ctid: 100, new_ctid: 200)
 
             assert result.successful?
+            assert_equal "pve2", result.resource[:node]
             ct_repo.verify
           end
 
@@ -186,7 +187,28 @@ module Pvectl
             result = service.execute(ctid: 100, new_ctid: 200, node: "pve3")
 
             assert result.successful?
+            assert_equal "pve3", result.resource[:node]
             ct_repo.verify
+          end
+
+          it "uses target_node in resource_info when provided" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container(node: "pve1")
+            task = build_task
+
+            clone_opts = nil
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone") do |ctid, node, new_ctid, opts|
+              clone_opts = opts
+              "UPID:pve1:clone"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, target_node: "pve2")
+
+            assert_equal "pve2", result.resource[:node]
+            assert_equal "pve2", clone_opts[:target]
           end
         end
 
