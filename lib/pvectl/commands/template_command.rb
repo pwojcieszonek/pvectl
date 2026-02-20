@@ -62,12 +62,12 @@ module Pvectl
         ExitCodes::GENERAL_ERROR
       end
 
-      # Confirms template operation — uses --force flag.
+      # Confirms template operation — uses --yes flag.
       #
       # @param resources [Array] Resources to convert
       # @return [Boolean] true if operation should proceed
       def confirm_operation(resources)
-        return true if @options[:force]
+        return true if @options[:yes]
 
         $stdout.puts confirm_message(resources)
         $stdout.puts ""
