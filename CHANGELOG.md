@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **cli**: `pvectl template vm/ct` command for converting VMs and containers to Proxmox templates (irreversible, with confirmation prompt or `--yes` flag)
+- **cli**: `pvectl template vm/ct` command for converting VMs and containers to Proxmox templates (irreversible, with confirmation prompt or `--yes` flag, `--force` to stop running resources)
 - **cli**: `pvectl get templates` handler for listing templates with optional `--type vm|ct` filter
 - **models**: `type` attribute added to VM and Container models (distinguishes `qemu`/`lxc`)
 - **cli**: `pvectl get tasks` command for cluster-wide task listing with `--node`, `--limit`, `--since`, `--until`, `--type`, `--status` filtering flags
@@ -27,3 +27,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **services**: Extract `Services::TaskListing` from `Logs::Handlers::TaskLogs` for shared multi-node task listing logic
 - **cli**: Refactored all command definitions from inline `cli.rb` to self-registration via `.register(cli)` class methods
 - **cli**: `cli.rb` reduced from ~930 lines to ~96 lines (globals, error handling, PluginLoader)
+- **cli**: `template` command now uses `--yes` to skip confirmation (was `--force`) for consistency with `delete` and other destructive commands
+- **cli**: `template --force` now stops running VMs/containers before conversion (matching `delete --force` behavior)
