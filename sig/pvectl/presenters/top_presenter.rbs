@@ -1,0 +1,13 @@
+module Pvectl
+  module Presenters
+    module TopPresenter
+      def cpu_cores_value: (untyped resource) -> String
+
+      def cpu_usage_value: (untyped resource) -> String
+
+      def percent_display: (Numeric? used, Numeric? total) -> String
+
+      def percent_value: (Numeric? used, Numeric? total) -> Integer?
+    end
+  end
+end

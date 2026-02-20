@@ -1,0 +1,19 @@
+module Pvectl
+  module Selectors
+    class Vm < Base
+      SUPPORTED_FIELDS: Array[String]
+
+      def apply: (Array[untyped] vms) -> Array[untyped]
+
+      public
+
+      def extract_value: (untyped vm, String field) -> String?
+
+      def match_condition?: (untyped vm, Hash[Symbol, untyped] condition) -> bool
+
+      private
+
+      def match_tags_condition?: (untyped vm, Hash[Symbol, untyped] condition) -> bool
+    end
+  end
+end

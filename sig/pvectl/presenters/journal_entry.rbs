@@ -1,0 +1,11 @@
+module Pvectl
+  module Presenters
+    class JournalEntry < Base
+      def columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+    end
+  end
+end

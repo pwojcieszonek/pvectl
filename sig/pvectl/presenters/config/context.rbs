@@ -1,0 +1,17 @@
+module Pvectl
+  module Presenters
+    module Config
+      class Context < Pvectl::Presenters::Base
+        def columns: () -> Array[String]
+
+        def extra_columns: () -> Array[String]
+
+        def to_row: (untyped context, ?current_context: String?, **untyped context_kwargs) -> Array[String]
+
+        def extra_values: (untyped context, **untyped context_kwargs) -> Array[String?]
+
+        def to_hash: (untyped context) -> Hash[String, untyped]
+      end
+    end
+  end
+end

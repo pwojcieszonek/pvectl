@@ -1,0 +1,7 @@
+module Pvectl
+  module Repositories
+    class TaskList < Base
+      def list: (node: String, ?vmid: Integer?, ?limit: Integer, ?since: Integer?, ?until_time: Integer?, ?type_filter: String?, ?status_filter: String?) -> Array[Models::TaskEntry]
+    end
+  end
+end

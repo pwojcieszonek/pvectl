@@ -1,0 +1,75 @@
+module Pvectl
+  module Presenters
+    class Container < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String?]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String?]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+
+      def display_name: () -> String
+
+      def cpu_percent: () -> String
+
+      def memory_used_gib: () -> Float?
+
+      def memory_total_gib: () -> Float?
+
+      def memory_display: () -> String
+
+      def swap_used_mib: () -> Float?
+
+      def swap_total_mib: () -> Float?
+
+      def swap_display: () -> String
+
+      def disk_used_gib: () -> Float?
+
+      def disk_total_gib: () -> Float?
+
+      def disk_display: () -> String
+
+      def uptime_human: () -> String
+
+      def tags_array: () -> Array[String]
+
+      def tags_display: () -> String
+
+      def template_display: () -> String
+
+      def pool_display: () -> String
+
+      def netin_display: () -> String
+
+      def netout_display: () -> String
+
+      private
+
+      attr_reader container: untyped
+
+      def format_system: () -> Hash[String, String]
+
+      def format_cpu: () -> Hash[String, untyped]
+
+      def format_memory: () -> Hash[String, String]
+
+      def format_swap: () -> Hash[String, String]
+
+      def format_rootfs: () -> Hash[String, String]
+
+      def format_network_interfaces: () -> (Array[Hash[String, String]] | String)
+
+      def format_features: () -> String
+
+      def format_runtime: () -> (Hash[String, untyped] | String)
+
+      def format_bytes: (Integer? bytes) -> String
+    end
+  end
+end

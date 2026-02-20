@@ -1,0 +1,19 @@
+module Pvectl
+  module Repositories
+    class Snapshot < Base
+      def list: (Integer | String vmid, String node, Symbol resource_type) -> Array[Models::Snapshot]
+
+      def create: (Integer | String vmid, String node, Symbol resource_type, name: String, ?description: String?, ?vmstate: bool) -> String
+
+      def delete: (Integer | String vmid, String node, Symbol resource_type, String snapname, ?force: bool) -> String
+
+      def rollback: (Integer | String vmid, String node, Symbol resource_type, String snapname, ?start: bool) -> String
+
+      private
+
+      def resource_endpoint: (Symbol resource_type) -> String
+
+      def build_model: (Hash[Symbol, untyped] data, Integer | String vmid, String node, Symbol resource_type) -> Models::Snapshot
+    end
+  end
+end

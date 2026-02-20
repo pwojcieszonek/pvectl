@@ -1,0 +1,37 @@
+module Pvectl
+  module Repositories
+    class Storage < Base
+      def list: (?node: String?) -> Array[Models::Storage]
+
+      def get: (String name) -> Models::Storage?
+
+      def list_instances: (String name) -> Array[Models::Storage]
+
+      def get_for_node: (String name, String node) -> Models::Storage?
+
+      def describe: (String name, ?node: String?) -> Models::Storage?
+
+      def list_for_node: (String node_name) -> Array[Models::Storage]
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Storage
+
+      def build_model_from_node_api: (Hash[Symbol, untyped] data, String node_name) -> Models::Storage
+
+      def fetch_storage_config: (String name) -> Hash[Symbol, untyped]
+
+      def fetch_storage_status: (String node, String name) -> Hash[Symbol, untyped]
+
+      def fetch_storage_content: (String node, String name) -> Array[Hash[Symbol, untyped]]
+
+      def find_node_for_storage: (String name, Models::Storage storage) -> String?
+
+      def build_describe_model: (Models::Storage storage, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status, Array[Hash[Symbol, untyped]] content) -> Models::Storage
+
+      def normalize_response: (Array[untyped] | Hash[Symbol, untyped] response) -> Array[Hash[Symbol, untyped]]
+
+      def aggregate_storage: (Array[Hash[Symbol, untyped]] storage_data) -> Array[Hash[Symbol, untyped]]
+    end
+  end
+end

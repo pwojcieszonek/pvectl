@@ -1,0 +1,13 @@
+module Pvectl
+  module Formatters
+    class Registry
+      FORMATS: Hash[String, singleton(Base)]
+
+      def self.for: (String | Symbol format_name) -> Base
+
+      def self.available_formats: () -> Array[String]
+
+      def self.supported?: (String | Symbol format_name) -> bool
+    end
+  end
+end

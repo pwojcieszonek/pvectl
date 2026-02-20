@@ -1,0 +1,19 @@
+module Pvectl
+  module Repositories
+    class Task < Base
+      def find: (String upid) -> Models::Task
+
+      def wait: (String upid, ?timeout: Integer, ?interval: Integer) -> Models::Task
+
+      def list: () -> bot
+
+      def get: (String | Integer id) -> Models::Task
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Task
+
+      def extract_node_from_upid: (String upid) -> String
+    end
+  end
+end

@@ -1,0 +1,59 @@
+module Pvectl
+  module Presenters
+    class Storage < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+
+      def type_display: () -> String
+
+      def status_display: () -> String
+
+      def node_display: () -> String
+
+      def disk_used_gb: () -> Float?
+
+      def disk_total_gb: () -> Float?
+
+      def usage_percent: () -> Integer?
+
+      def avail_gb: () -> Float?
+
+      def avail_display: () -> String
+
+      def used_display: () -> String
+
+      def total_display: () -> String
+
+      def usage_display: () -> String
+
+      def content_display: () -> String
+
+      def shared_display: () -> String
+
+      private
+
+      attr_reader storage: untyped
+
+      def format_size: (Float gb) -> String
+
+      def nodes_display: () -> String
+
+      def build_capacity_section: () -> Hash[String, String]
+
+      def build_configuration_section: () -> (Hash[String, String] | String)
+
+      def format_content_summary: () -> (Array[Hash[String, String]] | String)
+
+      def format_backup_retention: () -> (Hash[String, untyped] | String)
+    end
+  end
+end

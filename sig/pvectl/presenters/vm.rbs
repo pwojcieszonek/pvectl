@@ -1,0 +1,73 @@
+module Pvectl
+  module Presenters
+    class Vm < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String?]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String?]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+
+      def display_name: () -> String
+
+      def cpu_percent: () -> String
+
+      def memory_used_gb: () -> Float?
+
+      def memory_total_gb: () -> Float?
+
+      def memory_display: () -> String
+
+      def disk_used_gb: () -> Integer?
+
+      def disk_total_gb: () -> Integer?
+
+      def disk_display: () -> String
+
+      def uptime_human: () -> String
+
+      def tags_array: () -> Array[String]
+
+      def tags_display: () -> String
+
+      def template_display: () -> String
+
+      private
+
+      attr_reader vm: untyped
+
+      def format_system: (Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_ostype: (String? ostype) -> String
+
+      def format_cpu: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, untyped]
+
+      def format_memory: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, String]
+
+      def parse_disks: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
+
+      def parse_disk_string: (String name, untyped value) -> Hash[String, String]?
+
+      def format_network: (Hash[Symbol, untyped] config, Array[Hash[Symbol, untyped]]? agent_ips) -> (Array[Hash[String, String]] | String)
+
+      def build_mac_ip_map: (Array[Hash[Symbol, untyped]]? agent_ips) -> Hash[String, String]
+
+      def parse_network_string: (String name, untyped value, Hash[String, String] mac_to_ip) -> Hash[String, String]?
+
+      def format_snapshots: (Array[Hash[Symbol, untyped]]? snapshots) -> (Array[Hash[String, String]] | String)
+
+      def format_runtime: (Hash[Symbol, untyped] status) -> (Hash[String, untyped] | String)
+
+      def format_network_io: () -> (Hash[String, String] | String)
+
+      def format_bytes: (Integer? bytes) -> String
+
+      def format_ha: (Hash[Symbol, untyped] config) -> Hash[String, String]
+    end
+  end
+end

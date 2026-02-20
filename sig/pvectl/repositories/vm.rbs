@@ -1,0 +1,61 @@
+module Pvectl
+  module Repositories
+    class Vm < Base
+      def list: (?node: String?) -> Array[Models::Vm]
+
+      def get: (Integer | String vmid) -> Models::Vm?
+
+      def describe: (Integer | String vmid) -> Models::Vm?
+
+      def start: (Integer | String vmid, String node) -> String
+
+      def stop: (Integer | String vmid, String node) -> String
+
+      def shutdown: (Integer | String vmid, String node) -> String
+
+      def restart: (Integer | String vmid, String node) -> String
+
+      def reset: (Integer | String vmid, String node) -> String
+
+      def suspend: (Integer | String vmid, String node) -> String
+
+      def resume: (Integer | String vmid, String node) -> String
+
+      def termproxy: (Integer | String vmid, String node) -> Hash[Symbol, untyped]
+
+      def delete: (Integer | String vmid, String node, ?destroy_disks: bool, ?purge: bool, ?force: bool) -> String
+
+      def clone: (Integer | String vmid, String node, Integer new_vmid, ?Hash[Symbol, untyped] options) -> String
+
+      def create: (String node, Integer vmid, ?Hash[Symbol, untyped] params) -> String
+
+      def update: (Integer | String vmid, String node, ?Hash[Symbol, untyped] params) -> nil
+
+      def fetch_config: (String node, Integer vmid) -> Hash[Symbol, untyped]
+
+      def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String
+
+      def next_available_vmid: (?min: Integer) -> Integer
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Vm
+
+      def post_status: (Integer | String vmid, String node, String action) -> String
+
+      def find_vm_basic_data: (Integer vmid) -> Hash[Symbol, untyped]?
+
+      def fetch_status: (String node, Integer vmid) -> Hash[Symbol, untyped]
+
+      def fetch_snapshots: (String node, Integer vmid) -> Array[Hash[Symbol, untyped]]
+
+      def fetch_agent_ips: (String node, Integer vmid) -> Array[Hash[Symbol, untyped]]?
+
+      def normalize_hash_response: (Hash[Symbol, untyped] response) -> Hash[Symbol, untyped]
+
+      def normalize_response: (Array[untyped] | Hash[Symbol, untyped] response) -> Array[Hash[Symbol, untyped]]
+
+      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] describe_data) -> Models::Vm
+    end
+  end
+end

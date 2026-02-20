@@ -1,0 +1,57 @@
+module Pvectl
+  module Repositories
+    class Node < Base
+      def initialize: (untyped connection, ?storage_repository: Repositories::Storage?) -> void
+
+      def list: (?include_details: bool) -> Array[Models::Node]
+
+      def get: (String name, ?include_details: bool) -> Models::Node?
+
+      def describe: (String name) -> Models::Node?
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Node
+
+      def guest_counts_for_cluster: () -> Hash[String, Hash[Symbol, Integer]]
+
+      def details_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def ip_for: (String node_name) -> String?
+
+      def extract_ip_from_network: (Array[Hash[Symbol, untyped]]? interfaces) -> String?
+
+      def extract_kernel_version: (String? kversion) -> String?
+
+      def describe_details_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def subscription_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def dns_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def time_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def services_for: (String node_name) -> Hash[Symbol, Array[Hash[Symbol, untyped]]]
+
+      def storage_pools_for: (String node_name) -> Hash[Symbol, Array[Models::Storage]]
+
+      def storage_repository: () -> Repositories::Storage
+
+      def disks_for: (String node_name) -> Hash[Symbol, Array[Hash[Symbol, untyped]]]
+
+      def qemu_cpu_for: (String node_name) -> Hash[Symbol, Array[Hash[Symbol, untyped]]]
+
+      def qemu_machines_for: (String node_name) -> Hash[Symbol, Array[Hash[Symbol, untyped]]]
+
+      def updates_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def extended_status_for: (String node_name) -> Hash[Symbol, untyped]
+
+      def network_interfaces_for: (String node_name) -> Array[Hash[Symbol, untyped]]
+
+      def build_describe_model: (Hash[Symbol, untyped] data) -> Models::Node
+
+      @storage_repository: Repositories::Storage?
+    end
+  end
+end

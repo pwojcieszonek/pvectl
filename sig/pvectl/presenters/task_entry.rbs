@@ -1,0 +1,21 @@
+module Pvectl
+  module Presenters
+    class TaskEntry < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def format_time: (Integer? timestamp) -> String
+
+      def format_duration: (Integer? seconds) -> String
+    end
+  end
+end

@@ -1,0 +1,15 @@
+module Pvectl
+  module Formatters
+    class Wide < Base
+      def format: (untyped data, untyped presenter, ?color_enabled: bool, ?describe: bool, **untyped context) -> String
+
+      private
+
+      def format_wide_table: (untyped data, untyped presenter, bool color_enabled, **untyped context) -> String
+
+      def colorize_row: (Array[untyped] row, Array[String] headers, untyped pastel) -> Array[untyped]
+
+      def render_table: (Array[String] headers, Array[Array[untyped]] rows) -> String
+    end
+  end
+end

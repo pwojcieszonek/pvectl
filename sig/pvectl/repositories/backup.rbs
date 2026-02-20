@@ -1,0 +1,27 @@
+module Pvectl
+  module Repositories
+    class Backup < Base
+      def list: (?vmid: Integer?, ?storage: String?, ?node: String?) -> Array[Models::Backup]
+
+      def create: (Integer vmid, String node, storage: String, ?mode: String, ?compress: String, ?notes: String?, ?protected: bool) -> String
+
+      def delete: (String volid, String node) -> String?
+
+      def restore: (String volid, String node, vmid: Integer, ?storage: String?, ?force: bool, ?start: bool, ?unique: bool) -> String
+
+      private
+
+      def list_nodes: () -> Array[String]
+
+      def list_backup_storages: (String node) -> Array[String]
+
+      def list_from_storage: (String node, String storage, ?vmid: Integer?) -> Array[Models::Backup]
+
+      def build_backup_model: (Hash[Symbol, untyped] data, String node, String storage) -> Models::Backup
+
+      def parse_storage: (String volid) -> String
+
+      def detect_type_from_volid: (String volid) -> Symbol
+    end
+  end
+end

@@ -1,0 +1,13 @@
+module Pvectl
+  module Formatters
+    module ColorSupport
+      STATUS_COLORS: Hash[String, Symbol]
+
+      def self.enabled?: (?explicit_flag: bool?) -> bool
+
+      def self.pastel: (?explicit_flag: bool?) -> untyped
+
+      def self.colorize_status: (String? status, untyped pastel_instance) -> String
+    end
+  end
+end

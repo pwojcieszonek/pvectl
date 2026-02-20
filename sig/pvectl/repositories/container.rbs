@@ -1,0 +1,49 @@
+module Pvectl
+  module Repositories
+    class Container < Base
+      def list: (?node: String?) -> Array[Models::Container]
+
+      def get: (Integer | String ctid) -> Models::Container?
+
+      def describe: (Integer | String ctid) -> Models::Container?
+
+      def delete: (Integer | String ctid, String node, ?destroy_disks: bool, ?purge: bool, ?force: bool) -> String
+
+      def start: (Integer | String ctid, String node) -> String
+
+      def stop: (Integer | String ctid, String node) -> String
+
+      def shutdown: (Integer | String ctid, String node) -> String
+
+      def restart: (Integer | String ctid, String node) -> String
+
+      def clone: (Integer | String ctid, String node, Integer new_ctid, ?Hash[Symbol, untyped] options) -> String
+
+      def migrate: (Integer ctid, String node, ?Hash[Symbol, untyped] params) -> String
+
+      def next_available_ctid: (?min: Integer) -> Integer
+
+      def termproxy: (Integer | String ctid, String node) -> Hash[Symbol, untyped]
+
+      def create: (String node, Integer ctid, ?Hash[Symbol, untyped] params) -> String
+
+      def update: (Integer | String ctid, String node, ?Hash[Symbol, untyped] params) -> nil
+
+      def fetch_config: (String node, Integer ctid) -> Hash[Symbol, untyped]
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Container
+
+      def find_container_basic_data: (Integer ctid) -> Hash[Symbol, untyped]?
+
+      def fetch_status: (String node, Integer ctid) -> Hash[Symbol, untyped]
+
+      def extract_network_interfaces: (Hash[Symbol, untyped] config) -> Array[Hash[Symbol, untyped]]
+
+      def parse_network_interface: (String key, String value) -> Hash[Symbol, untyped]?
+
+      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Models::Container
+    end
+  end
+end

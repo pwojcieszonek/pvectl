@@ -1,0 +1,23 @@
+module Pvectl
+  module Repositories
+    class Base
+      def initialize: (untyped connection) -> void
+
+      def list: () -> Array[untyped]
+
+      def get: (String | Integer id) -> untyped
+
+      private
+
+      attr_reader connection: untyped
+
+      def build_model: (Hash[Symbol, untyped] data) -> untyped
+
+      def unwrap: (Array[untyped] | Hash[Symbol, untyped] | nil response) -> Array[untyped]
+
+      def extract_data: (Hash[Symbol, untyped] | untyped response) -> untyped
+
+      def models_from: (Array[untyped] | Hash[Symbol, untyped] | nil response, Class model_class) -> Array[untyped]
+    end
+  end
+end
