@@ -4,19 +4,15 @@ module Pvectl
 
     MAX_ARGUMENT_LENGTH: Integer
 
-    GLOBAL_FLAGS: Hash[Symbol, Hash[Symbol, String | bool]]
-
     PASSTHROUGH_FLAGS: Array[String]
-
-    SUBCOMMAND_FLAGS: Hash[String, Hash[Symbol, Hash[Symbol, String | bool]]]
 
     class DuplicateFlagError < Pvectl::Error
       def initialize: (Symbol flag_name, (String | bool) existing_value, (String | bool) new_value) -> void
     end
 
-    def self.process: (Array[String] argv) -> Array[String]
+    def self.process: (Array[String] argv, ?cli_app: untyped) -> Array[String]
 
-    def initialize: (Array[String] argv) -> void
+    def initialize: (Array[String] argv, ?cli_app: untyped) -> void
 
     def call: () -> Array[String]
 
@@ -24,34 +20,34 @@ module Pvectl
 
     @argv: Array[String]
 
-    @extracted_flags: Hash[Symbol, String | bool]
-
-    @remaining_args: Array[String]
+    @cli_app: untyped
 
     def validate_input_limits!: () -> void
 
     def passthrough_mode?: () -> bool
 
-    def process_arguments: () -> void
+    def reorder_all_flags: () -> Array[String]
 
-    def process_single_argument: (String arg, Integer index) -> Integer
+    def extract_global_flags: (Array[String] args) -> [Array[String], Array[String]]
 
-    def find_flag_config: (String arg) -> Hash[Symbol, String | bool]?
+    def find_global_flag: (String arg) -> [Symbol, bool]?
 
-    def process_global_flag: (String arg, Integer index, Hash[Symbol, String | bool] config) -> Integer
+    def flag_matches?: (untyped gli_flag, String flag_part) -> bool
 
-    def store_flag: (Symbol name, String | bool value) -> void
+    def flag_display_name: (untyped gli_flag) -> Symbol
+
+    def store_global_flag: (Hash[Symbol, String | bool] store, Symbol name, String | bool value) -> void
 
     def validate_value!: (String | bool value, Symbol flag_name) -> void
 
-    def build_result: () -> Array[String]
+    def identify_command: (Array[String] args) -> [String?, Array[String], Array[String]]
 
-    def reorder_subcommand_flags: (Array[String] args) -> Array[String]
+    def find_gli_command: (String name) -> untyped
 
-    def find_subcommand_key: (Array[String] args) -> [String, Integer]?
+    def find_gli_subcommand: (untyped cmd, String name) -> untyped
 
-    def reorder_flags_after_subcommand: (Array[String] args, Integer cmd_start_index, Integer subcommand_end_index, Hash[Symbol, Hash[Symbol, String | bool]] flags_config, Integer? double_dash_pos) -> Array[String]
+    def reorder_command_flags: (Array[String] args, untyped cmd) -> Array[String]
 
-    def find_subcommand_flag: (String arg, Hash[Symbol, Hash[Symbol, String | bool]] flags_config) -> Hash[Symbol, String | bool]?
+    def find_command_flag: (String arg, untyped cmd) -> bool?
   end
 end
