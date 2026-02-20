@@ -2,7 +2,7 @@ module Pvectl
   module Commands
     module Get
       module ResourceHandler
-        def list: (?node: String?, ?name: String?) -> Array[untyped]
+        def list: (?node: String?, ?name: String?, **untyped) -> Array[untyped]
 
         def presenter: () -> Presenters::Base
       end

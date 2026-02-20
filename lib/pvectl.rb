@@ -193,6 +193,9 @@ require_relative "pvectl/services/resource_migration"
 # Services - Console
 require_relative "pvectl/services/console"
 
+# Services - Task Listing
+require_relative "pvectl/services/task_listing"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -208,6 +211,7 @@ require_relative "pvectl/commands/get/handlers/storage"
 require_relative "pvectl/commands/get/handlers/containers"
 require_relative "pvectl/commands/get/handlers/snapshots"
 require_relative "pvectl/commands/get/handlers/backups"
+require_relative "pvectl/commands/get/handlers/tasks"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"

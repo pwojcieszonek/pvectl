@@ -53,7 +53,7 @@ module Pvectl
           # @param storage [String, nil] unused, for interface compatibility
           # @param sort [String, nil] sort field (name, node, cpu, memory, disk, netin, netout)
           # @return [Array<Models::Vm>] collection of VM models
-          def list(node: nil, name: nil, args: [], storage: nil, sort: nil)
+          def list(node: nil, name: nil, args: [], storage: nil, sort: nil, **_options)
             vms = repository.list(node: node)
             vms = vms.select { |vm| vm.name == name } if name
             vms = apply_sort(vms, sort) if sort

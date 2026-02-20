@@ -6,15 +6,15 @@ module Pvectl
       module Handlers
         # Handler for VM/CT task history logs.
         #
-        # Resolves VM/CT node via repository, then fetches task list
-        # from that node. With --all-nodes, iterates all cluster nodes
-        # and merges results sorted by start time.
+        # Resolves VM/CT node via repository, then delegates task listing
+        # to Services::TaskListing. With --all-nodes, passes node: nil
+        # to the service for cluster-wide iteration.
         #
         # @example Using via registry
         #   handler = Logs::ResourceRegistry.for("vm")
         #   entries = handler.list(vmid: 100, resource_type: "vm")
         #
-        # @see Pvectl::Repositories::TaskList Task list repository
+        # @see Pvectl::Services::TaskListing Shared task listing service
         # @see Pvectl::Presenters::TaskEntry Task entry presenter
         #
         class TaskLogs
@@ -39,12 +39,14 @@ module Pvectl
           def list(vmid:, resource_type: "vm", all_nodes: false, limit: 50,
                    since: nil, until_time: nil, type_filter: nil, status_filter: nil, **_)
             if all_nodes
-              list_all_nodes(vmid: vmid, limit: limit, since: since,
-                             until_time: until_time, type_filter: type_filter,
-                             status_filter: status_filter)
+              service.list(
+                vmid: vmid, limit: limit, since: since,
+                until_time: until_time, type_filter: type_filter,
+                status_filter: status_filter
+              )
             else
               node = resolve_node(vmid, resource_type)
-              task_list_repository.list(
+              service.list(
                 node: node, vmid: vmid, limit: limit, since: since,
                 until_time: until_time, type_filter: type_filter,
                 status_filter: status_filter
@@ -71,42 +73,35 @@ module Pvectl
 
           def build_resource_repository(resource_type)
             repo_class = RESOURCE_REPOS.fetch(resource_type, -> { Pvectl::Repositories::Vm }).call
-            config_service = Pvectl::Config::Service.new
-            config_service.load
-            connection = Pvectl::Connection.new(config_service.current_config)
+            connection = build_connection
             repo_class.new(connection)
           end
 
+          def service
+            @service ||= Pvectl::Services::TaskListing.new(
+              task_list_repository: task_list_repository,
+              node_repository: node_repository
+            )
+          end
+
           def task_list_repository
-            @task_list_repository ||= build_task_list_repository
-          end
-
-          def build_task_list_repository
-            config_service = Pvectl::Config::Service.new
-            config_service.load
-            connection = Pvectl::Connection.new(config_service.current_config)
-            Repositories::TaskList.new(connection)
-          end
-
-          def list_all_nodes(vmid:, limit:, since:, until_time:, type_filter:, status_filter:)
-            nodes = node_repository.list.map(&:name)
-            entries = nodes.flat_map do |node|
-              task_list_repository.list(
-                node: node, vmid: vmid, limit: limit, since: since,
-                until_time: until_time, type_filter: type_filter,
-                status_filter: status_filter
-              )
+            @task_list_repository ||= begin
+              connection = build_connection
+              Repositories::TaskList.new(connection)
             end
-            entries.sort_by { |e| -(e.starttime || 0) }.first(limit)
           end
 
           def node_repository
             @node_repository ||= begin
-              config_service = Pvectl::Config::Service.new
-              config_service.load
-              connection = Pvectl::Connection.new(config_service.current_config)
+              connection = build_connection
               Repositories::Node.new(connection)
             end
+          end
+
+          def build_connection
+            config_service = Pvectl::Config::Service.new
+            config_service.load
+            Pvectl::Connection.new(config_service.current_config)
           end
         end
       end

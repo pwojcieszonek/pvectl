@@ -150,7 +150,7 @@ class GetResourceHandlerTest < Minitest::Test
   class CompleteHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       []
     end
 
@@ -163,7 +163,7 @@ class GetResourceHandlerTest < Minitest::Test
   class FilteringHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       results = [
         { node: "pve1", name: "vm-100" },
         { node: "pve1", name: "vm-101" },

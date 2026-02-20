@@ -45,6 +45,25 @@ module Pvectl
             c.default_value 2
             c.flag [:"watch-interval"], arg_name: "SECONDS", type: Integer
 
+            c.desc "Maximum number of entries to show (for tasks)"
+            c.default_value 50
+            c.flag [:limit], type: Integer, arg_name: "N"
+
+            c.desc "Show entries since timestamp (YYYY-MM-DD or epoch, for tasks)"
+            c.flag [:since], arg_name: "TIMESTAMP"
+
+            c.desc "Show entries until timestamp (YYYY-MM-DD or epoch, for tasks)"
+            c.flag [:until], arg_name: "TIMESTAMP"
+
+            c.desc "Filter by task type (e.g., qmstart, qmstop, vzdump)"
+            c.flag [:type], arg_name: "TYPE"
+
+            c.desc "Filter by status (running, ok, error)"
+            c.flag [:status], arg_name: "STATUS"
+
+            c.desc "Search across all cluster nodes (default for tasks)"
+            c.switch [:"all-nodes"], negatable: false
+
             c.action do |global_options, options, args|
               resource_type = args[0]
               resource_args = args[1..] || []
@@ -175,7 +194,13 @@ module Pvectl
             node: options[:node],
             name: nil,
             args: args,
-            storage: options[:storage]
+            storage: options[:storage],
+            limit: options[:limit],
+            since: options[:since],
+            until_time: options[:until],
+            type_filter: options[:type],
+            status_filter: options[:status],
+            all_nodes: options[:"all-nodes"] || false
           )
           puts output
         end

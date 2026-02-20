@@ -32,7 +32,7 @@ module Pvectl
           # @param storage [String, nil] unused, for interface compatibility
           # @return [Array<Models::Snapshot>] collection of snapshot models
           # @raise [ArgumentError] if args is empty (no VMIDs provided)
-          def list(node: nil, name: nil, args: [], storage: nil)
+          def list(node: nil, name: nil, args: [], storage: nil, **_options)
             raise ArgumentError, "At least one VMID is required" if args.empty?
 
             parsed_vmids = args.map(&:to_i)

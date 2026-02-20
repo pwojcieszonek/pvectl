@@ -33,9 +33,10 @@ module Pvectl
         #
         # @param node [String, nil] filter by node name (for VMs/containers)
         # @param name [String, nil] filter by resource name
+        # @param _options [Hash] additional options passed through from CLI (e.g., limit, since, type_filter)
         # @return [Array<Object>] collection of model objects
         # @raise [NotImplementedError] if not implemented by including class
-        def list(node: nil, name: nil)
+        def list(node: nil, name: nil, **_options)
           raise NotImplementedError, "#{self.class}#list must be implemented"
         end
 

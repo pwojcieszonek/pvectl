@@ -21,13 +21,13 @@ module Pvectl
 
           def build_resource_repository: (String resource_type) -> untyped
 
+          def service: () -> Services::TaskListing
+
           def task_list_repository: () -> Repositories::TaskList
 
-          def build_task_list_repository: () -> Repositories::TaskList
-
-          def list_all_nodes: (vmid: Integer, limit: Integer, since: String?, until_time: String?, type_filter: String?, status_filter: String?) -> Array[Models::TaskEntry]
-
           def node_repository: () -> Repositories::Node
+
+          def build_connection: () -> Connection
         end
       end
     end

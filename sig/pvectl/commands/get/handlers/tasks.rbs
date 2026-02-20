@@ -1,0 +1,28 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Tasks
+          include ResourceHandler
+
+          @service: Services::TaskListing?
+
+          def initialize: (?service: Services::TaskListing?) -> void
+
+          def list: (?node: String?, ?name: String?, ?limit: Integer,
+                     ?since: String?, ?until_time: String?,
+                     ?type_filter: String?, ?status_filter: String?,
+                     **untyped) -> Array[Models::TaskEntry]
+
+          def presenter: () -> Presenters::TaskEntry
+
+          private
+
+          def service: () -> Services::TaskListing
+
+          def build_service: () -> Services::TaskListing
+        end
+      end
+    end
+  end
+end

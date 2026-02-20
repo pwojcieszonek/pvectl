@@ -178,7 +178,7 @@ class GetCommandRegistryRoutingTest < Minitest::Test
   class MockSuccessHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockModel.new("test-node", "online")]
     end
 
@@ -281,7 +281,7 @@ class GetCommandNormalModeTest < Minitest::Test
         @@last_node
       end
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         @@last_node = node
         []
       end
@@ -313,7 +313,7 @@ class GetCommandNormalModeTest < Minitest::Test
         @@last_args
       end
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         @@last_args = args
         []
       end
@@ -340,7 +340,7 @@ class GetCommandNormalModeTest < Minitest::Test
   class MockHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockModel.new("test", "running")]
     end
 
@@ -401,7 +401,7 @@ class GetCommandWatchModeTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      define_method(:list) do |node: nil, name: nil, args: [], storage: nil|
+      define_method(:list) do |node: nil, name: nil, args: [], storage: nil, **_options|
         execution_count += 1
         []
       end
@@ -456,7 +456,7 @@ class GetCommandWatchModeTest < Minitest::Test
   class MockHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       []
     end
 
@@ -506,7 +506,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -532,7 +532,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise Errno::ECONNREFUSED, "Connection refused"
       end
 
@@ -557,7 +557,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise SocketError, "getaddrinfo: Name or service not known"
       end
 
@@ -582,7 +582,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -608,7 +608,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise ArgumentError, "At least one VMID is required"
       end
 
@@ -633,7 +633,7 @@ class GetCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         raise ArgumentError, "At least one VMID is required"
       end
 
@@ -758,7 +758,7 @@ class GetCommandOutputFormatTest < Minitest::Test
   class MockHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockModel.new("test-item", "running", "extra-data")]
     end
 
@@ -832,7 +832,7 @@ class GetCommandArgsTest < Minitest::Test
         @@last_args
       end
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         @@last_args = args
         []
       end
@@ -865,7 +865,7 @@ class GetCommandArgsTest < Minitest::Test
         @@last_args
       end
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         @@last_args = args
         []
       end
@@ -897,7 +897,7 @@ class GetCommandArgsTest < Minitest::Test
         @@last_args
       end
 
-      def list(node: nil, name: nil, args: [], storage: nil)
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
         @@last_args = args
         []
       end
@@ -992,7 +992,7 @@ class GetCommandColorSupportTest < Minitest::Test
   class MockHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockModel.new("test", "running")]
     end
 

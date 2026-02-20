@@ -109,6 +109,7 @@ pvectl config view                  # Show config (secrets masked)
 | storage | stor | yes | yes | - | - | - | - | - | - | - | - | - |
 | snapshots | snapshot, snap | yes | - | - | - | - | yes | yes | - | - | - | - |
 | backups | backup | yes | - | - | - | - | yes | yes | - | - | - | - |
+| tasks | task | yes | - | - | - | - | - | - | - | - | - | - |
 
 ## Usage Examples
 
@@ -121,6 +122,12 @@ pvectl get containers --node pve1     # Containers on specific node
 pvectl get storage                    # List storage pools
 pvectl get snapshots 100              # Snapshots for VM 100
 pvectl get backups --storage nfs      # Backups on specific storage
+pvectl get tasks                      # Task history across all nodes
+pvectl get tasks --node pve1          # Tasks on specific node
+pvectl get tasks --type vzdump        # Filter by task type
+pvectl get tasks --status ok          # Filter by status
+pvectl get tasks --since 2026-01-01   # Filter by date
+pvectl get tasks --limit 20           # Limit number of entries
 ```
 
 ### Output Formats

@@ -1,0 +1,13 @@
+module Pvectl
+  module Services
+    class TaskListing
+      def initialize: (task_list_repository: untyped, node_repository: untyped) -> void
+
+      def list: (?node: String?, ?vmid: Integer?, ?limit: Integer, ?since: String?, ?until_time: String?, ?type_filter: String?, ?status_filter: String?) -> Array[Models::TaskEntry]
+
+      private
+
+      def list_all_nodes: (vmid: Integer?, limit: Integer, since: String?, until_time: String?, type_filter: String?, status_filter: String?) -> Array[Models::TaskEntry]
+    end
+  end
+end
