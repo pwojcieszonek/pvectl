@@ -483,3 +483,81 @@ class ArgvPreprocessorSecurityTest < Minitest::Test
     assert_includes result, long_arg
   end
 end
+
+class ArgvPreprocessorCommandFlagReorderTest < Minitest::Test
+  # Tests for reordering command flags placed after positional arguments.
+  # GLI requires flags before positional args; preprocessor should fix this.
+
+  def test_delete_yes_after_positional_args
+    argv = %w[delete vm 103 --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[delete --yes vm 103], result
+  end
+
+  def test_delete_force_and_yes_after_positional_args
+    argv = %w[delete vm 103 --force --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[delete --force --yes vm 103], result
+  end
+
+  def test_stop_async_and_timeout_after_positional_args
+    argv = %w[stop vm 100 101 --async --timeout 30]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[stop --async --timeout 30 vm 100 101], result
+  end
+
+  def test_get_node_flag_after_resource_type
+    argv = %w[get vms --node pve1]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[get --node pve1 vms], result
+  end
+
+  def test_template_yes_and_force_after_positional_args
+    argv = %w[template vm 100 --yes --force]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[template --yes --force vm 100], result
+  end
+
+  def test_combined_global_and_command_flags_after_positional_args
+    argv = %w[delete vm 103 --yes -o json]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[-o json delete --yes vm 103], result
+  end
+
+  def test_short_flags_after_positional_args
+    argv = %w[delete vm 103 -y -f]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[delete -y -f vm 103], result
+  end
+
+  def test_selector_flag_after_positional_args
+    argv = %w[stop vm -l status=running --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[stop -l status=running --yes vm], result
+  end
+
+  def test_command_flags_with_double_dash_separator
+    argv = %w[delete vm 103 -- --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    # --yes after -- should NOT be moved
+    assert_equal %w[delete vm 103 -- --yes], result
+  end
+
+  def test_migrate_flags_after_positional_args
+    argv = %w[migrate vm 100 --target pve2 --online --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[migrate --target pve2 --online --yes vm 100], result
+  end
+
+  def test_flags_already_before_positional_args
+    argv = %w[delete --yes vm 103]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[delete --yes vm 103], result
+  end
+
+  def test_create_flags_after_positional_args
+    argv = %w[create vm 100 --cores 4 --memory 8192 --yes]
+    result = Pvectl::ArgvPreprocessor.process(argv)
+    assert_equal %w[create --cores 4 --memory 8192 --yes vm 100], result
+  end
+end
