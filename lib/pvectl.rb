@@ -213,6 +213,7 @@ require_relative "pvectl/commands/get/handlers/containers"
 require_relative "pvectl/commands/get/handlers/snapshots"
 require_relative "pvectl/commands/get/handlers/backups"
 require_relative "pvectl/commands/get/handlers/tasks"
+require_relative "pvectl/commands/get/handlers/templates"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
