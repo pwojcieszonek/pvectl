@@ -70,7 +70,7 @@ module Pvectl
 
         result = service.execute(
           ctid: ctid,
-          new_ctid: @options[:vmid]&.to_i,
+          new_ctid: @options[:newid]&.to_i,
           hostname: @options[:name],
           target_node: @options[:target],
           storage: @options[:storage],
