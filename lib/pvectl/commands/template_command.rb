@@ -110,17 +110,26 @@ module Pvectl
       # @return [Array<Models::OperationResult>] results
       def perform_service_call(resources, connection)
         repo = build_repository(connection)
+        @task_repository = Pvectl::Repositories::Task.new(connection) if @options[:force]
         resources.map do |resource|
           convert_single(repo, resource)
         end
       end
 
       # Converts a single resource to template.
+      # Handles running resources: errors without --force, stops with --force.
       #
       # @param repo [Repositories::Base] repository
       # @param resource [Models::Vm, Models::Container] resource to convert
       # @return [Models::OperationResult] result
       def convert_single(repo, resource)
+        if resource.status == "running"
+          return running_error(resource) unless @options[:force]
+
+          stop_result = stop_resource(repo, resource)
+          return stop_result if stop_result.failed?
+        end
+
         if resource_type_symbol == :vm
           repo.convert_to_template(resource.vmid, resource.node, disk: @options[:disk])
         else
@@ -130,6 +139,32 @@ module Pvectl
         build_success_result(resource)
       rescue StandardError => e
         build_error_result(resource, e.message)
+      end
+
+      # Returns error result for a running resource without --force.
+      #
+      # @param resource [Models::Vm, Models::Container] resource
+      # @return [Models::OperationResult] failed result
+      def running_error(resource)
+        type_name = resource_type_symbol == :vm ? "VM" : "Container"
+        build_error_result(resource, "#{type_name} #{resource.vmid} is running. Stop it first or use --force")
+      end
+
+      # Stops a running resource before template conversion.
+      #
+      # @param repo [Repositories::Base] repository
+      # @param resource [Models::Vm, Models::Container] resource
+      # @return [Models::OperationResult] result
+      def stop_resource(repo, resource)
+        upid = repo.stop(resource.vmid, resource.node)
+        timeout = @options[:timeout] || 60
+        task = @task_repository.wait(upid, timeout: timeout)
+
+        if task.successful?
+          build_success_result(resource)
+        else
+          build_error_result(resource, "Failed to stop: #{task.exitstatus}")
+        end
       end
 
       # Builds a successful operation result.
