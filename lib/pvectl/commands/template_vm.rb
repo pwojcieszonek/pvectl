@@ -5,16 +5,20 @@ module Pvectl
     # Handler for the `pvectl template vm` command.
     #
     # Converts one or more VMs to templates (irreversible).
-    # Always requires confirmation (--force to skip).
+    # Always requires confirmation (--yes to skip).
+    # Running VMs must be stopped first or use --force.
     #
     # @example Convert a single VM
-    #   pvectl template vm 100 --force
+    #   pvectl template vm 100 --yes
     #
     # @example Convert multiple VMs
-    #   pvectl template vm 100 101 102 --force
+    #   pvectl template vm 100 101 102 --yes
+    #
+    # @example Force convert running VM (stops it first)
+    #   pvectl template vm 100 --force --yes
     #
     # @example Convert specific disk only
-    #   pvectl template vm 100 --disk scsi0 --force
+    #   pvectl template vm 100 --disk scsi0 --yes
     #
     class TemplateVm
       include TemplateCommand
@@ -28,6 +32,9 @@ module Pvectl
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :template do |c|
           c.desc "Skip confirmation prompt"
+          c.switch [:yes, :y], negatable: false
+
+          c.desc "Force stop running VM/container before conversion"
           c.switch [:force, :f], negatable: false
 
           c.desc "Filter by node name"

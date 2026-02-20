@@ -11,6 +11,8 @@ module Pvectl
       def irreversibility_warning: () -> String
       def perform_service_call: (Array[Models::Vm | Models::Container] resources, Pvectl::Connection connection) -> Array[Models::OperationResult]
       def convert_single: (Repositories::Base repo, Models::Vm | Models::Container resource) -> Models::OperationResult
+      def running_error: (Models::Vm | Models::Container resource) -> Models::OperationResult
+      def stop_resource: (Repositories::Base repo, Models::Vm | Models::Container resource) -> Models::OperationResult
       def build_success_result: (Models::Vm | Models::Container resource) -> Models::OperationResult
       def build_error_result: (Models::Vm | Models::Container resource, String error_message) -> Models::OperationResult
       def build_presenter: () -> Presenters::Base
