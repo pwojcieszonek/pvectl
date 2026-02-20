@@ -26,7 +26,7 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Create a resource"
-        cli.arg_name "RESOURCE_TYPE [VMID...]"
+        cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :create do |c|
           # Snapshot-specific flags
           c.desc "Snapshot name (required for snapshots)"

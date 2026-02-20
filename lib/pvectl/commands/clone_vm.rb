@@ -24,13 +24,13 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Clone a resource"
-        cli.arg_name "RESOURCE_TYPE VMID"
+        cli.arg_name "RESOURCE_TYPE ID"
         cli.command :clone do |c|
           c.desc "Name/hostname for the new resource"
           c.flag [:name, :n], arg_name: "NAME"
 
           c.desc "ID for the new resource (auto-selected if not specified)"
-          c.flag [:vmid], type: Integer, arg_name: "ID"
+          c.flag [:newid], type: Integer, arg_name: "ID"
 
           c.desc "Target node for the clone"
           c.flag [:target, :t], arg_name: "NODE"
@@ -124,7 +124,7 @@ module Pvectl
 
         result = service.execute(
           vmid: vmid,
-          new_vmid: @options[:vmid]&.to_i,
+          new_vmid: @options[:newid]&.to_i,
           name: @options[:name],
           target_node: @options[:target],
           storage: @options[:storage],

@@ -21,7 +21,7 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Reset virtual machines (hard reset)"
-        cli.arg_name "RESOURCE_TYPE [VMID...]"
+        cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :reset do |c|
           SharedFlags.lifecycle(c)
 
