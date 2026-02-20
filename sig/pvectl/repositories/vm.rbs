@@ -27,6 +27,8 @@ module Pvectl
 
       def clone: (Integer | String vmid, String node, Integer new_vmid, ?Hash[Symbol, untyped] options) -> String
 
+      def convert_to_template: (Integer | String vmid, String node, ?disk: String?) -> void
+
       def create: (String node, Integer vmid, ?Hash[Symbol, untyped] params) -> String
 
       def update: (Integer | String vmid, String node, ?Hash[Symbol, untyped] params) -> nil

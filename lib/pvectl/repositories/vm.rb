@@ -192,6 +192,21 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/clone"].post(params)
       end
 
+      # Converts a VM to a template.
+      #
+      # This is an irreversible operation. The VM will become read-only
+      # and can only be used as a source for cloning.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] Node name
+      # @param disk [String, nil] specific disk to convert (e.g., "scsi0")
+      # @return [void]
+      def convert_to_template(vmid, node, disk: nil)
+        params = {}
+        params[:disk] = disk if disk
+        connection.client["nodes/#{node}/qemu/#{vmid}/template"].post(params)
+      end
+
       # Creates a new VM on the specified node.
       #
       # Posts to `/nodes/{node}/qemu` with the VM configuration parameters.
