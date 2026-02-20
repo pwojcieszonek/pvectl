@@ -91,7 +91,7 @@ class DescribeCommandMissingArgumentsTest < Minitest::Test
   class MockDescribeHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       []
     end
 
@@ -213,7 +213,7 @@ class DescribeCommandNotFoundTest < Minitest::Test
   class NotFoundHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       []
     end
 
@@ -349,7 +349,7 @@ class DescribeCommandSuccessTest < Minitest::Test
   class SuccessHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockNode.new("pve-node1", "online")]
     end
 

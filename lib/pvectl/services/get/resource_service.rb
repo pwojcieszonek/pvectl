@@ -36,9 +36,10 @@ module Pvectl
         # @param name [String, nil] filter by resource name
         # @param args [Array<String>] additional positional arguments (e.g., VMIDs for snapshots)
         # @param storage [String, nil] filter by storage (for backups)
+        # @param options [Hash] additional options passed through to handler (e.g., limit, since, type_filter)
         # @return [String] formatted output string
-        def list(node: nil, name: nil, args: [], storage: nil)
-          models = @handler.list(node: node, name: name, args: args, storage: storage)
+        def list(node: nil, name: nil, args: [], storage: nil, **options)
+          models = @handler.list(node: node, name: name, args: args, storage: storage, **options)
           presenter = @handler.presenter
           format_output(models, presenter)
         end

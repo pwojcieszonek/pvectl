@@ -27,7 +27,7 @@ module Pvectl
           # @param args [Array<String>] optional VMID filter (first arg only)
           # @param storage [String, nil] filter by storage
           # @return [Array<Models::Backup>] collection of backup models
-          def list(node: nil, name: nil, args: [], storage: nil)
+          def list(node: nil, name: nil, args: [], storage: nil, **_options)
             vmid = args.first&.to_i
             vmid = nil if vmid&.zero?
 

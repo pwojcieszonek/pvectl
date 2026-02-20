@@ -34,7 +34,7 @@ module Pvectl
           # @param args [Array<String>] unused, for interface compatibility
           # @param storage [String, nil] unused, for interface compatibility (storage is filtered via name)
           # @return [Array<Models::Storage>] collection of Storage models
-          def list(node: nil, name: nil, args: [], storage: nil)
+          def list(node: nil, name: nil, args: [], storage: nil, **_options)
             storage_pools = repository.list(node: node)
             storage_pools = storage_pools.select { |s| s.name == name } if name
             storage_pools

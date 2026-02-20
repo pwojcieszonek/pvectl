@@ -364,7 +364,7 @@ class GetResourceServiceTest < Minitest::Test
       @last_name_param = nil
     end
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       @list_called = true
       @last_node_param = node
       @last_name_param = name
@@ -385,7 +385,7 @@ class GetResourceServiceTest < Minitest::Test
   class EmptyHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       []
     end
 
@@ -405,7 +405,7 @@ class GetResourceServiceTest < Minitest::Test
       @last_describe_name = nil
     end
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       [MockModel.new("model-1", "running", "extra")]
     end
 
@@ -485,7 +485,7 @@ class GetResourceServiceTest < Minitest::Test
       @last_args_param = nil
     end
 
-    def list(node: nil, name: nil, args: [], storage: nil)
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
       @last_node_param = node
       @last_name_param = name
       @last_args_param = args

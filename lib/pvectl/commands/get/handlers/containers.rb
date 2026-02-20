@@ -53,7 +53,7 @@ module Pvectl
           # @param storage [String, nil] unused, for interface compatibility
           # @param sort [String, nil] sort field (name, node, cpu, memory, disk, netin, netout)
           # @return [Array<Models::Container>] collection of Container models
-          def list(node: nil, name: nil, args: [], storage: nil, sort: nil)
+          def list(node: nil, name: nil, args: [], storage: nil, sort: nil, **_options)
             containers = repository.list(node: node)
             containers = containers.select { |c| c.name == name } if name
             containers = apply_sort(containers, sort) if sort

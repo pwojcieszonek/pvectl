@@ -51,7 +51,7 @@ module Pvectl
           # @param sort [String, nil] sort field (name, status, cpu, memory, disk, guests, uptime)
           # @param include_details [Boolean] fetch extended details (version, load), default true
           # @return [Array<Models::Node>] collection of Node models
-          def list(node: nil, name: nil, args: [], storage: nil, filter: nil, sort: nil, include_details: true)
+          def list(node: nil, name: nil, args: [], storage: nil, filter: nil, sort: nil, include_details: true, **_options)
             nodes = repository.list(include_details: include_details)
 
             # Filter by name
