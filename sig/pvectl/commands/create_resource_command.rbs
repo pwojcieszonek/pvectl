@@ -1,0 +1,53 @@
+module Pvectl
+  module Commands
+    module CreateResourceCommand
+      module ClassMethods
+        def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      def self.included: (Class base) -> void
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def resource_label: () -> String
+
+      def resource_id_label: () -> String
+
+      def required_params_missing?: () -> bool
+
+      def build_params_from_flags: () -> Hash[Symbol, untyped]
+
+      def build_wizard: () -> untyped
+
+      def build_create_service: (untyped connection, untyped task_repo) -> untyped
+
+      def output_result: (untyped result) -> void
+
+      def display_resource_summary: (Hash[Symbol, untyped] params) -> void
+
+      def interactive_mode?: () -> bool
+
+      def perform_interactive: () -> Integer
+
+      def perform_create: () -> Integer
+
+      def perform_create_with_params: (Hash[Symbol, untyped] params) -> Integer
+
+      def display_summary_and_confirm: (Hash[Symbol, untyped] params) -> Symbol?
+
+      def display_summary: (Hash[Symbol, untyped] params) -> void
+
+      def resolve_default_node: () -> String?
+
+      def load_config: () -> void
+
+      def service_options: () -> Hash[Symbol, untyped]
+
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

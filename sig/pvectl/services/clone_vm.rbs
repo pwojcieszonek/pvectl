@@ -1,0 +1,23 @@
+module Pvectl
+  module Services
+    class CloneVm
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (vm_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (vmid: Integer, ?node: String?, ?new_vmid: Integer?, ?name: String?, ?target_node: String?, ?storage: String?, ?linked: bool, ?pool: String?, ?description: String?) -> Models::VmOperationResult
+
+      private
+
+      def generate_name: (Models::Vm source_vm) -> String
+
+      def build_clone_options: (name: String, target_node: String?, storage: String?, linked: bool, pool: String?, description: String?) -> Hash[Symbol, untyped]
+
+      def timeout: () -> Integer
+
+      def vm_not_found_error: (Integer vmid) -> Models::VmOperationResult
+
+      def linked_clone_error: (Models::Vm source_vm) -> Models::VmOperationResult
+    end
+  end
+end

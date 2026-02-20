@@ -1,0 +1,39 @@
+module Pvectl
+  module Commands
+    class Ping
+      def self.register: (untyped cli) -> void
+
+      def self.execute: (Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      attr_reader global_options: Hash[Symbol, untyped]
+      attr_reader output_format: String
+      attr_reader color_flag: bool?
+
+      def load_config: () -> void
+
+      def server_url: () -> String
+
+      def measure_ping: (untyped connection) -> Hash[Symbol, untyped]
+
+      def output_result: (Hash[Symbol, untyped] result, String server) -> void
+
+      def output_simple: (String server) -> void
+
+      def output_wide: (Hash[Symbol, untyped] result, String server) -> void
+
+      def output_json: (Hash[Symbol, untyped] result, String server) -> void
+
+      def output_yaml: (Hash[Symbol, untyped] result, String server) -> void
+
+      def output_error: (String message, String server) -> void
+
+      def extract_host: (String server_url) -> String
+    end
+  end
+end

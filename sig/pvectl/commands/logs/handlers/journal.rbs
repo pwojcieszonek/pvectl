@@ -1,0 +1,21 @@
+module Pvectl
+  module Commands
+    module Logs
+      module Handlers
+        class Journal
+          include Logs::ResourceHandler
+
+          def initialize: (?repository: Repositories::Journal?) -> void
+
+          def list: (node: String, ?limit: Integer, ?since: String?, ?until_time: String?, **untyped) -> Array[Models::JournalEntry]
+
+          def presenter: () -> Presenters::JournalEntry
+
+          private
+
+          def repository: () -> Repositories::Journal
+        end
+      end
+    end
+  end
+end

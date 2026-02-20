@@ -1,0 +1,11 @@
+module Pvectl
+  module Commands
+    class DeleteContainer
+      include DeleteCommand
+
+      RESOURCE_TYPE: Symbol
+
+      SUPPORTED_RESOURCES: Array[String]
+    end
+  end
+end

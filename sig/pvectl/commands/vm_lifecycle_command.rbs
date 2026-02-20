@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module VmLifecycleCommand
+      include ResourceLifecycleCommand
+
+      def self.included: (Class base) -> void
+
+      private
+
+      def supported_resources: () -> Array[String]
+
+      def resource_label: () -> String
+
+      def resource_id_label: () -> String
+
+      def build_repository: (untyped connection) -> Repositories::Vm
+
+      def build_service: (untyped repo, untyped task_repo, Hash[Symbol, untyped] options) -> Services::VmLifecycle
+
+      def build_presenter: () -> Presenters::VmOperationResult
+
+      def build_selector: (Array[String] strings) -> Selectors::Vm
+    end
+  end
+end

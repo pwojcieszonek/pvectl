@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Snapshots
+          include ResourceHandler
+
+          VMID_PATTERN: Regexp
+
+          def initialize: (?service: untyped) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Snapshot]
+
+          def presenter: () -> Presenters::Snapshot
+
+          private
+
+          def service: () -> untyped
+
+          def build_service: () -> untyped
+        end
+      end
+    end
+  end
+end

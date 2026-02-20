@@ -1,0 +1,19 @@
+module Pvectl
+  module Commands
+    class ResourceRegistry
+      self.@handlers: Hash[String, singleton(ResourceRegistry)]
+
+      def self.inherited: (singleton(ResourceRegistry) subclass) -> void
+
+      def self.register: (String | Symbol resource_type, untyped handler_class, ?aliases: Array[String | Symbol]) -> void
+
+      def self.for: (String | Symbol | nil resource_type) -> untyped
+
+      def self.registered_types: () -> Array[String]
+
+      def self.registered?: (String | Symbol resource_type) -> bool
+
+      def self.reset!: () -> void
+    end
+  end
+end

@@ -1,0 +1,9 @@
+module Pvectl
+  module Commands
+    class RestartContainer
+      include ContainerLifecycleCommand
+
+      OPERATION: Symbol
+    end
+  end
+end

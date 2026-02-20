@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Storage
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Storage?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Storage]
+
+          def presenter: () -> Presenters::Storage
+
+          def describe: (name: String, ?node: String?) -> (Models::Storage | Array[Models::Storage])
+
+          private
+
+          attr_reader repository: Repositories::Storage
+
+          def build_repository: () -> Repositories::Storage
+        end
+      end
+    end
+  end
+end

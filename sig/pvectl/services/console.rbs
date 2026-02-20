@@ -1,0 +1,23 @@
+module Pvectl
+  module Services
+    class Console
+      class ResourceNotRunningError < Pvectl::Error
+      end
+
+      class AuthenticationError < Pvectl::Error
+      end
+
+      def build_websocket_url: (server: String, node: String, resource_path: String, port: Integer, ticket: String) -> String
+
+      def validate_resource_running!: (Models::Vm | Models::Container resource) -> void
+
+      def run: (resource: Models::Vm | Models::Container, resource_path: String, server: String, username: String, password: String, verify_ssl: bool) -> void
+
+      private
+
+      def authenticate_with_client: (untyped client, String username, String password) -> Hash[Symbol, String]
+
+      def open_termproxy: (untyped client, Hash[Symbol, String] auth, node: String, resource_path: String) -> Hash[Symbol, untyped]
+    end
+  end
+end

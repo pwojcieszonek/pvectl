@@ -1,0 +1,11 @@
+module Pvectl
+  module Commands
+    module Top
+      module ResourceHandler
+        def list: (**untyped options) -> Array[untyped]
+
+        def presenter: () -> Presenters::Base
+      end
+    end
+  end
+end

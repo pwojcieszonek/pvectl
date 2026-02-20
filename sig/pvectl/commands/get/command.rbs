@@ -1,0 +1,40 @@
+module Pvectl
+  module Commands
+    module Get
+      class Command
+        def self.register: (untyped cli) -> void
+
+        def self.execute: (String? resource_type, Array[String]? args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+        def initialize: (String? resource_type, Array[String]? args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?registry: Class) -> void
+
+        def execute: () -> Integer
+
+        private
+
+        attr_reader resource_type: String?
+        attr_reader args: Array[String]
+        attr_reader options: Hash[Symbol, untyped]
+        attr_reader global_options: Hash[Symbol, untyped]
+
+        def normalize_args: (String | Array[String] | nil args) -> Array[String]
+
+        def missing_resource_type_error: () -> Integer
+
+        def unknown_resource_error: () -> Integer
+
+        def output_connection_error: (String message) -> void
+
+        def output_usage_error: (String message) -> void
+
+        def run_once: (untyped handler) -> void
+
+        def run_watch_mode: (untyped handler) -> void
+
+        def build_service: (untyped handler) -> Services::Get::ResourceService
+
+        def determine_color_enabled: () -> bool
+      end
+    end
+  end
+end

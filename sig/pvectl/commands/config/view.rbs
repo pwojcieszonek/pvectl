@@ -1,0 +1,11 @@
+module Pvectl
+  module Commands
+    module Config
+      class View
+        def self.register_subcommand: (untyped parent) -> void
+
+        def self.execute: (Hash[Symbol, untyped] global_options) -> Integer
+      end
+    end
+  end
+end

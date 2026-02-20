@@ -1,0 +1,17 @@
+module Pvectl
+  module Services
+    class EditContainer
+      def initialize: (container_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (ctid: Integer) -> Models::ContainerOperationResult?
+
+      private
+
+      def build_update_params: (Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::ContainerOperationResult
+
+      def not_found_result: (Integer ctid) -> Models::ContainerOperationResult
+    end
+  end
+end

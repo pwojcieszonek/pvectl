@@ -1,0 +1,19 @@
+module Pvectl
+  module Commands
+    class EditVm
+      include EditResourceCommand
+
+      def self.register: (untyped cli) -> void
+
+      private
+
+      def resource_label: () -> String
+
+      def resource_id_label: () -> String
+
+      def execute_params: (Integer resource_id) -> Hash[Symbol, untyped]
+
+      def build_edit_service: (untyped connection) -> Services::EditVm
+    end
+  end
+end

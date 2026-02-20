@@ -1,0 +1,13 @@
+module Pvectl
+  module Commands
+    class MigrateVm
+      include MigrateCommand
+
+      RESOURCE_TYPE: Symbol
+
+      SUPPORTED_RESOURCES: Array[String]
+
+      def self.register: (untyped cli) -> void
+    end
+  end
+end

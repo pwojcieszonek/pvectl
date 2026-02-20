@@ -1,0 +1,31 @@
+module Pvectl
+  module Commands
+    module Top
+      class Command
+        SHOW_ALL_RESOURCE_TYPES: Array[String]
+
+        def self.register: (untyped cli) -> void
+
+        def self.execute: (String? resource_type, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+        def initialize: (String? resource_type, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?handler: untyped?, ?registry: Class) -> void
+
+        def execute: () -> Integer
+
+        private
+
+        def missing_resource_type_error: () -> Integer
+
+        def unknown_resource_error: () -> Integer
+
+        def filter_running: (Array[untyped] models) -> Array[untyped]
+
+        def output_connection_error: (String message) -> void
+
+        def format_output: (Array[untyped] models, untyped presenter) -> String
+
+        def determine_color_enabled: () -> bool
+      end
+    end
+  end
+end

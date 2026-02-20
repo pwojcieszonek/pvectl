@@ -1,0 +1,72 @@
+module Pvectl
+  module Services
+    class CreateVm
+      DEFAULT_TIMEOUT: Integer
+      START_TIMEOUT: Integer
+
+      def initialize: (vm_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (
+        ?vmid: Integer?,
+        name: String,
+        node: String,
+        ?cores: Integer?,
+        ?sockets: Integer?,
+        ?cpu_type: String?,
+        ?numa: bool?,
+        ?memory: Integer?,
+        ?balloon: Integer?,
+        ?disks: Array[Hash[Symbol, untyped]]?,
+        ?scsihw: String?,
+        ?cdrom: String?,
+        ?nets: Array[Hash[Symbol, untyped]]?,
+        ?bios: String?,
+        ?boot_order: String?,
+        ?machine: String?,
+        ?efidisk: String?,
+        ?cloud_init: Hash[Symbol, untyped]?,
+        ?agent: bool?,
+        ?ostype: String?,
+        ?description: String?,
+        ?tags: String?,
+        ?pool: String?
+      ) -> Models::VmOperationResult
+
+      private
+
+      def build_params: (
+        name: String,
+        cores: Integer?,
+        sockets: Integer?,
+        cpu_type: String?,
+        numa: bool?,
+        memory: Integer?,
+        balloon: Integer?,
+        disks: Array[Hash[Symbol, untyped]]?,
+        scsihw: String?,
+        cdrom: String?,
+        nets: Array[Hash[Symbol, untyped]]?,
+        bios: String?,
+        boot_order: String?,
+        machine: String?,
+        efidisk: String?,
+        cloud_init: Hash[Symbol, untyped]?,
+        agent: bool?,
+        ostype: String?,
+        description: String?,
+        tags: String?,
+        pool: String?
+      ) -> Hash[Symbol, untyped]
+
+      def add_disk_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, untyped]] disks) -> void
+
+      def add_net_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, untyped]] nets) -> void
+
+      def start_vm: (Integer vmid, String node) -> void
+
+      def timeout: () -> Integer
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::VmOperationResult
+    end
+  end
+end

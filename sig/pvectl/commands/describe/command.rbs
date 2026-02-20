@@ -1,0 +1,27 @@
+module Pvectl
+  module Commands
+    module Describe
+      class Command
+        def self.register: (untyped cli) -> void
+
+        def self.execute: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+        def initialize: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?registry: Class) -> void
+
+        def execute: () -> Integer
+
+        private
+
+        def missing_resource_type_error: () -> Integer
+
+        def missing_resource_name_error: () -> Integer
+
+        def unknown_resource_error: () -> Integer
+
+        def run_describe: (untyped handler) -> void
+
+        def determine_color_enabled: () -> bool
+      end
+    end
+  end
+end

@@ -1,0 +1,21 @@
+module Pvectl
+  module Commands
+    module Top
+      module Handlers
+        class Vms
+          include Top::ResourceHandler
+
+          def initialize: (?get_handler: Get::Handlers::Vms?) -> void
+
+          def list: (?sort: String?, **untyped) -> Array[Models::Vm]
+
+          def presenter: () -> Presenters::TopVm
+
+          private
+
+          def get_handler: () -> Get::Handlers::Vms
+        end
+      end
+    end
+  end
+end
