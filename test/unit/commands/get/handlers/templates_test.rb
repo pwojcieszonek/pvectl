@@ -129,6 +129,17 @@ class GetHandlersTemplatesTest < Minitest::Test
     assert_equal "lxc", templates.first.type
   end
 
+  def test_list_raises_on_unknown_type_filter
+    handler = create_handler(
+      vms: [@vm_template],
+      containers: [@ct_template]
+    )
+
+    error = assert_raises(ArgumentError) { handler.list(type_filter: "bogus") }
+    assert_match(/Unknown type: bogus/, error.message)
+    assert_match(/Valid types:/, error.message)
+  end
+
   def test_list_with_sort_by_name
     vm_t1 = Pvectl::Models::Vm.new(vmid: 100, name: "zebra", type: "qemu", node: "pve1", template: 1)
     vm_t2 = Pvectl::Models::Vm.new(vmid: 101, name: "alpha", type: "qemu", node: "pve1", template: 1)

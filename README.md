@@ -73,7 +73,7 @@ Context name: [default] production
 |---------|-------------|---------|
 | `create` | Create VM, container, snapshot, or backup | `pvectl create vm --cores 4 --memory 8192` |
 | `delete` | Delete resources | `pvectl delete vm 100 --yes` |
-| `template` | Convert VM/container to template | `pvectl template vm 100 --yes` |
+| `template` | Convert VM/container to template | `pvectl template vm 100 --force` |
 | `edit` | Edit config in $EDITOR | `pvectl edit vm 100` |
 | `clone` | Clone VM or container | `pvectl clone vm 100 --name clone-01` |
 | `migrate` | Migrate between nodes | `pvectl migrate vm 100 --target pve2` |
@@ -267,10 +267,10 @@ pvectl migrate vm --all --node pve1 --target pve2 --yes
 pvectl template vm 100
 
 # Convert container to template (skip confirmation)
-pvectl template ct 200 --yes
+pvectl template ct 200 --force
 
 # Convert multiple VMs at once
-pvectl template vm 100 101 102 --yes
+pvectl template vm 100 101 102 --force
 ```
 
 ### Editing Configuration

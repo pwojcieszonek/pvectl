@@ -24,6 +24,7 @@ module Pvectl
           def container_repository: () -> Repositories::Container
           def build_vm_repository: () -> Repositories::Vm
           def build_container_repository: () -> Repositories::Container
+          def validate_type_filter!: (String? type_filter) -> void
           def skip_vms?: (String? type_filter) -> bool
           def skip_containers?: (String? type_filter) -> bool
           def apply_sort: (Array[Models::Vm | Models::Container] templates, String sort_field) -> Array[Models::Vm | Models::Container]

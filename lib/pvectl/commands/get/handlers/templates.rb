@@ -53,8 +53,11 @@ module Pvectl
           # @param type_filter [String, nil] filter by type (vm, ct, qemu, lxc)
           # @param sort [String, nil] sort field
           # @param name [String, nil] unused, interface compatibility
+          # @raise [ArgumentError] if type_filter is not a recognized type
           # @return [Array<Models::Vm, Models::Container>] template models
           def list(node: nil, name: nil, type_filter: nil, sort: nil, **_options)
+            validate_type_filter!(type_filter)
+
             templates = []
 
             unless skip_vms?(type_filter)
@@ -79,6 +82,19 @@ module Pvectl
           end
 
           private
+
+          # Validates type_filter value against known types.
+          #
+          # @param type_filter [String, nil] type filter value
+          # @raise [ArgumentError] if type_filter is not a recognized type
+          # @return [void]
+          def validate_type_filter!(type_filter)
+            return if type_filter.nil?
+            return if TYPE_MAP.key?(type_filter)
+
+            valid_types = TYPE_MAP.keys.join(", ")
+            raise ArgumentError, "Unknown type: #{type_filter}. Valid types: #{valid_types}"
+          end
 
           # Returns VM repository, creating it if necessary.
           #
