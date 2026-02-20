@@ -104,7 +104,6 @@ class ConfigServiceLoadTest < Minitest::Test
 
   def test_load_uses_default_path_when_not_specified
     # This test checks that when no config is specified, default path is used
-    service = Pvectl::Config::Service.new
     # When config file doesn't exist at default path, it should raise
     # (unless wizard runs, but we're mocking that away)
 

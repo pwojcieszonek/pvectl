@@ -39,7 +39,7 @@ module Pvectl
 
       def test_execute_allows_restart_flag_for_container
         # Should NOT return --restart error; should fail on something else (e.g., config)
-        result = MigrateContainer.execute(["200"], { target: "pve2", restart: true }, {})
+        MigrateContainer.execute(["200"], { target: "pve2", restart: true }, {})
 
         refute_includes $stderr.string, "--restart is only supported for containers"
       end
