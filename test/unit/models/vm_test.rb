@@ -292,6 +292,20 @@ class ModelsVmTest < Minitest::Test
     assert_equal "before-update", vm.describe_data[:snapshots][0][:name]
   end
 
+  # ---------------------------
+  # Type Attribute
+  # ---------------------------
+
+  def test_type_returns_qemu_when_set
+    vm = Pvectl::Models::Vm.new(vmid: 100, type: "qemu")
+    assert_equal "qemu", vm.type
+  end
+
+  def test_type_returns_nil_when_not_set
+    vm = Pvectl::Models::Vm.new(vmid: 100)
+    assert_nil vm.type
+  end
+
   def test_describe_data_contains_agent_ips_nil_when_agent_unavailable
     describe_data = {
       config: { cores: 4 },

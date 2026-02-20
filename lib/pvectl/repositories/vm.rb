@@ -290,7 +290,8 @@ module Pvectl
           tags: data[:tags],
           hastate: data[:hastate],
           netin: data[:netin],
-          netout: data[:netout]
+          netout: data[:netout],
+          type: data[:type]
         )
       end
 
@@ -402,6 +403,7 @@ module Pvectl
           hastate: basic_data[:hastate],
           netin: basic_data[:netin],
           netout: basic_data[:netout],
+          type: basic_data[:type],
           describe_data: describe_data
         )
       end
