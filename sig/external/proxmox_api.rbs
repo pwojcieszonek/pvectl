@@ -1,0 +1,10 @@
+module ProxmoxAPI
+  class ApiClient
+    def initialize: (String uri, ?Hash[Symbol, untyped] options) -> void
+    def []: (String path) -> untyped
+    def get: (?params: Hash[Symbol, untyped]) -> untyped
+    def post: (?Hash[Symbol, untyped] params) -> untyped
+    def put: (?Hash[Symbol, untyped] params) -> untyped
+    def delete: (?Hash[Symbol, untyped] params) -> untyped
+  end
+end
