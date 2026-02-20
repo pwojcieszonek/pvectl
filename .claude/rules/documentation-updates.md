@@ -71,9 +71,10 @@ Format: briefly describe what changed and suggest specific edits. Wait for user 
 
 ```
 1. Implement changes
-2. Verify (tests pass, linter clean)
-3. Update CHANGELOG.md
-4. Update README.md (if user-facing)
-5. Propose CLAUDE.md update (if architecture changed)
-6. Commit
+2. Update RBS signatures (see rbs-signatures.md)
+3. Verify (tests pass, rbs parse clean)
+4. Update CHANGELOG.md
+5. Update README.md (if user-facing)
+6. Propose CLAUDE.md update (if architecture changed)
+7. Commit
 ```
