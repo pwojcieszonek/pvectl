@@ -64,7 +64,7 @@ module Pvectl
         )
 
         upid = @vm_repository.clone(vmid, node, new_vmid, clone_options)
-        resource_info = { new_vmid: new_vmid, name: name }
+        resource_info = { new_vmid: new_vmid, name: name, node: target_node || node }
 
         if @options[:async]
           Models::VmOperationResult.new(

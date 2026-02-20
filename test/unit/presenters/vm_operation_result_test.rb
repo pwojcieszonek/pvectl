@@ -82,6 +82,81 @@ class PresentersVmOperationResultTest < Minitest::Test
     assert_equal "VM-200", row[1]
   end
 
+  # --- Clone operation: displays new VM data ---
+
+  def test_to_row_shows_new_vm_data_for_clone_operation
+    result = Pvectl::Models::VmOperationResult.new(
+      vm: @vm,
+      operation: :clone,
+      success: true,
+      resource: { new_vmid: 200, name: "test-clone", node: "pve2" }
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_equal "200", row[0]
+    assert_equal "test-clone", row[1]
+    assert_equal "pve2", row[2]
+  end
+
+  def test_to_row_clone_falls_back_to_source_node_when_resource_node_nil
+    result = Pvectl::Models::VmOperationResult.new(
+      vm: @vm,
+      operation: :clone,
+      success: true,
+      resource: { new_vmid: 200, name: "test-clone", node: nil }
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_equal "pve1", row[2]
+  end
+
+  def test_to_row_clone_falls_back_to_vm_name_format_when_name_nil
+    result = Pvectl::Models::VmOperationResult.new(
+      vm: @vm,
+      operation: :clone,
+      success: true,
+      resource: { new_vmid: 200, name: nil, node: "pve1" }
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_equal "VM-200", row[1]
+  end
+
+  def test_to_hash_shows_new_vm_data_for_clone_operation
+    result = Pvectl::Models::VmOperationResult.new(
+      vm: @vm,
+      operation: :clone,
+      task: @task_success,
+      success: true,
+      resource: { new_vmid: 200, name: "test-clone", node: "pve2" }
+    )
+
+    hash = @presenter.to_hash(result)
+
+    assert_equal 200, hash["vmid"]
+    assert_equal "test-clone", hash["name"]
+    assert_equal "pve2", hash["node"]
+    assert_equal "Success", hash["status"]
+    assert_equal "UPID:pve1:ABC", hash["task_upid"]
+  end
+
+  def test_to_row_shows_source_vm_for_non_clone_operations
+    result = Pvectl::Models::VmOperationResult.new(
+      vm: @vm,
+      operation: :start,
+      success: true
+    )
+
+    row = @presenter.to_row(result)
+
+    assert_equal "100", row[0]
+    assert_equal "test-vm", row[1]
+    assert_equal "pve1", row[2]
+  end
+
   def test_extra_values_returns_task_and_duration
     result = Pvectl::Models::VmOperationResult.new(
       vm: @vm,
