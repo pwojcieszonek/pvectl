@@ -27,3 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **services**: Extract `Services::TaskListing` from `Logs::Handlers::TaskLogs` for shared multi-node task listing logic
 - **cli**: Refactored all command definitions from inline `cli.rb` to self-registration via `.register(cli)` class methods
 - **cli**: `cli.rb` reduced from ~930 lines to ~96 lines (globals, error handling, PluginLoader)
+- **cli**: `ArgvPreprocessor` refactored to use dynamic GLI reflection instead of static flag maps — automatically discovers all registered flags and switches
+
+### Fixed
+- **cli**: Command flags placed after positional arguments are now correctly reordered (e.g., `pvectl delete vm 103 --yes` now works as expected)
