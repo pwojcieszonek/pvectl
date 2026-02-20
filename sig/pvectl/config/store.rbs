@@ -1,0 +1,14 @@
+module Pvectl
+  module Config
+    class Store
+      SECURE_MODE: Integer
+      SECURE_DIR_MODE: Integer
+
+      def save: (String path, Hash[String, untyped] config) -> void
+      def update_current_context: (String path, String context_name) -> void
+      def upsert_context: (String path, Models::Context context) -> void
+      def upsert_cluster: (String path, Models::Cluster cluster) -> void
+      def upsert_user: (String path, Models::User user) -> void
+    end
+  end
+end

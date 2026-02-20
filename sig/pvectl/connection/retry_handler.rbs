@@ -1,0 +1,31 @@
+module Pvectl
+  class Connection
+    class RetryHandler
+      RETRYABLE_EXCEPTIONS: Array[singleton(StandardError)]
+
+      READ_METHODS: Array[Symbol]
+
+      attr_reader max_retries: Integer
+
+      attr_reader base_delay: Numeric
+
+      attr_reader max_delay: Numeric
+
+      attr_reader retry_writes: bool
+
+      attr_reader logger: untyped
+
+      def initialize: (max_retries: Integer, base_delay: Numeric, max_delay: Numeric, ?retry_writes: bool, ?logger: untyped) -> void
+
+      def with_retry: [T] (?method: Symbol) { () -> T } -> T
+
+      private
+
+      def should_retry?: (Symbol method, Integer attempts) -> bool
+
+      def calculate_delay: (Integer attempt) -> Numeric
+
+      def log_retry: (Integer attempt, Numeric delay, Exception error) -> void
+    end
+  end
+end

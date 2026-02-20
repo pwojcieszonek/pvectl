@@ -1,0 +1,40 @@
+module Pvectl
+  module Config
+    class Provider
+      ENV_VARS: Hash[String, Symbol]
+      INTEGER_VARS: Array[Symbol]
+      BOOLEAN_VARS: Array[Symbol]
+
+      def file_exists?: (String path) -> bool
+      def insecure_permissions?: (String path) -> bool
+      def load_file: (String path) -> Hash[String, untyped]
+      def load_env: () -> Hash[Symbol, untyped]
+      def resolve_context_name: (cli_options: Hash[Symbol, untyped], ?file_config: Hash[String, untyped]) -> String?
+
+      def resolve: (
+        config_path: String,
+        cli_options: Hash[Symbol, untyped],
+        ?cluster_override: String?
+      ) -> Models::ResolvedConfig
+
+      private
+
+      def parse_env_value: (Symbol key, String value) -> untyped
+      def parse_boolean_env: (String value) -> bool
+      def parse_integer_env: (Symbol key, String value) -> Integer
+      def find_context: (Hash[String, untyped] config, String name) -> Models::Context
+      def find_cluster: (Hash[String, untyped] config, String name) -> Models::Cluster
+      def find_user: (Hash[String, untyped] config, String name) -> Models::User
+
+      def build_resolved_config: (
+        context: Models::Context,
+        cluster: Models::Cluster,
+        user: Models::User,
+        env_config: Hash[Symbol, untyped],
+        cli_options: Hash[Symbol, untyped]
+      ) -> Models::ResolvedConfig
+
+      def resolve_auth: (Models::User user, Hash[Symbol, untyped] env_config) -> [Symbol, String?, String?, String?, String?]
+    end
+  end
+end

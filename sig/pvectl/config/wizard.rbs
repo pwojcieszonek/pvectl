@@ -1,0 +1,44 @@
+module Pvectl
+  module Config
+    class Wizard
+      def self.available?: () -> bool
+
+      def initialize: (?prompt: untyped?) -> void
+
+      def run: () -> Hash[String, untyped]
+
+      private
+
+      attr_reader prompt: untyped
+
+      def create_default_prompt: () -> untyped
+      def prompt_server: () -> String
+      def prompt_ssl: () -> bool
+      def prompt_auth_type: () -> Symbol
+      def prompt_credentials: (Symbol auth_type) -> Hash[Symbol, String]
+      def prompt_context_name: () -> String
+
+      def build_config: (
+        server: String,
+        verify_ssl: bool,
+        auth_type: Symbol,
+        credentials: Hash[Symbol, String],
+        context_name: String
+      ) -> Hash[String, untyped]
+
+      def build_user_config: (String name, Symbol auth_type, Hash[Symbol, String] credentials) -> Hash[String, untyped]
+      def valid_server_url?: (String url) -> bool
+      def valid_token_id?: (String token_id) -> bool
+    end
+
+    class SimplePrompt
+      def ask: (String question, ?default: String?) -> String?
+      def yes?: (String question, **untyped) -> bool
+      def select: (String question, Array[untyped] choices, **untyped) -> untyped
+      def mask: (String question, **untyped) -> String?
+      def ok: (untyped message) -> void
+      def warn: (untyped message) -> void
+      def error: (untyped message) -> void
+    end
+  end
+end

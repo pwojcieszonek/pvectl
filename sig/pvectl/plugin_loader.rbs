@@ -1,0 +1,25 @@
+module Pvectl
+  class PluginLoader
+    BUILTIN_COMMANDS: Array[untyped]
+
+    self.@registered_plugins: Array[untyped]
+
+    def self.register_plugin: (untyped klass) -> void
+
+    def self.registered_plugins: () -> Array[untyped]
+
+    def self.load_all: (untyped cli) -> void
+
+    def self.load_builtins: (untyped cli) -> void
+
+    def self.load_gem_plugins: (untyped cli) -> void
+
+    def self.load_directory_plugins: (untyped cli) -> void
+
+    def self.directory_plugins_path: () -> String
+
+    def self.flush_registered_plugins: (untyped cli) -> void
+
+    def self.reset!: () -> void
+  end
+end

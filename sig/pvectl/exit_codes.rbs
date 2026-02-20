@@ -1,0 +1,19 @@
+module Pvectl
+  module ExitCodes
+    SUCCESS: Integer
+
+    GENERAL_ERROR: Integer
+
+    USAGE_ERROR: Integer
+
+    CONFIG_ERROR: Integer
+
+    CONNECTION_ERROR: Integer
+
+    NOT_FOUND: Integer
+
+    PERMISSION_DENIED: Integer
+
+    INTERRUPTED: Integer
+  end
+end

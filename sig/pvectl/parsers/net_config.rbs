@@ -1,0 +1,19 @@
+module Pvectl
+  module Parsers
+    class NetConfig
+      VALID_KEYS: Array[String]
+
+      REQUIRED_KEYS: Array[String]
+
+      OPTIONAL_FLAGS: Array[String]
+
+      def self.parse: (String string) -> Hash[Symbol, String]
+
+      def self.to_proxmox: (Hash[Symbol, String] config) -> String
+
+      private
+
+      def self.validate!: (Hash[Symbol, String] config) -> void
+    end
+  end
+end

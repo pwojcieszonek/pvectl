@@ -1,0 +1,31 @@
+module Pvectl
+  module Config
+    module Models
+      class User
+        SECRET_MASK: String
+
+        attr_reader name: String
+        attr_reader token_id: String?
+        attr_reader token_secret: String?
+        attr_reader username: String?
+        attr_reader password: String?
+
+        def initialize: (
+          name: String,
+          ?token_id: String?,
+          ?token_secret: String?,
+          ?username: String?,
+          ?password: String?
+        ) -> void
+
+        def token_auth?: () -> bool
+        def password_auth?: () -> bool
+        def valid?: () -> bool
+
+        def self.from_hash: (Hash[String, untyped]) -> User
+
+        def to_hash: (?mask_secrets: bool) -> Hash[String, untyped]
+      end
+    end
+  end
+end

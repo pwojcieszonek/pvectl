@@ -1,0 +1,51 @@
+module Pvectl
+  module Config
+    module Models
+      class ResolvedConfig
+        DEFAULT_TIMEOUT: Integer
+        DEFAULT_RETRY_COUNT: Integer
+        DEFAULT_RETRY_DELAY: Integer
+        DEFAULT_MAX_RETRY_DELAY: Integer
+        DEFAULT_RETRY_WRITES: bool
+
+        attr_reader context_name: String
+        attr_reader server: String
+        attr_reader verify_ssl: bool
+        attr_reader certificate_authority: String?
+        attr_reader auth_type: Symbol
+        attr_reader token_id: String?
+        attr_reader token_secret: String?
+        attr_reader username: String?
+        attr_reader password: String?
+        attr_reader default_node: String?
+        attr_reader timeout: Integer
+        attr_reader retry_count: Integer
+        attr_reader retry_delay: Integer
+        attr_reader max_retry_delay: Integer
+        attr_reader retry_writes: bool
+
+        def initialize: (
+          context_name: String,
+          server: String,
+          auth_type: Symbol,
+          ?verify_ssl: bool,
+          ?certificate_authority: String?,
+          ?token_id: String?,
+          ?token_secret: String?,
+          ?username: String?,
+          ?password: String?,
+          ?default_node: String?,
+          ?timeout: Integer?,
+          ?retry_count: Integer?,
+          ?retry_delay: Integer?,
+          ?max_retry_delay: Integer?,
+          ?retry_writes: bool?
+        ) -> void
+
+        def token_auth?: () -> bool
+        def password_auth?: () -> bool
+        def to_connection_options: () -> Hash[Symbol, untyped]
+      end
+    end
+  end
+end

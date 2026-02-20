@@ -1,0 +1,15 @@
+module Pvectl
+  module Utils
+    class ResourceResolver
+      def initialize: (Connection connection) -> void
+
+      def resolve: (Integer | String vmid) -> Hash[Symbol, untyped]?
+
+      def resolve_multiple: (Array[Integer | String] vmids) -> Array[Hash[Symbol, untyped]]
+
+      private
+
+      def load_resources: () -> void
+    end
+  end
+end

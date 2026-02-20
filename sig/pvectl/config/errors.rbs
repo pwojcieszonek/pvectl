@@ -1,0 +1,24 @@
+module Pvectl
+  module Config
+    class ConfigError < StandardError
+    end
+
+    class ConfigNotFoundError < ConfigError
+    end
+
+    class InvalidConfigError < ConfigError
+    end
+
+    class ContextNotFoundError < ConfigError
+    end
+
+    class ClusterNotFoundError < ConfigError
+    end
+
+    class UserNotFoundError < ConfigError
+    end
+
+    class MissingCredentialsError < ConfigError
+    end
+  end
+end

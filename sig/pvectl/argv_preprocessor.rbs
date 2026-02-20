@@ -1,0 +1,57 @@
+module Pvectl
+  class ArgvPreprocessor
+    MAX_ARGUMENTS: Integer
+
+    MAX_ARGUMENT_LENGTH: Integer
+
+    GLOBAL_FLAGS: Hash[Symbol, Hash[Symbol, String | bool]]
+
+    PASSTHROUGH_FLAGS: Array[String]
+
+    SUBCOMMAND_FLAGS: Hash[String, Hash[Symbol, Hash[Symbol, String | bool]]]
+
+    class DuplicateFlagError < Pvectl::Error
+      def initialize: (Symbol flag_name, (String | bool) existing_value, (String | bool) new_value) -> void
+    end
+
+    def self.process: (Array[String] argv) -> Array[String]
+
+    def initialize: (Array[String] argv) -> void
+
+    def call: () -> Array[String]
+
+    private
+
+    @argv: Array[String]
+
+    @extracted_flags: Hash[Symbol, String | bool]
+
+    @remaining_args: Array[String]
+
+    def validate_input_limits!: () -> void
+
+    def passthrough_mode?: () -> bool
+
+    def process_arguments: () -> void
+
+    def process_single_argument: (String arg, Integer index) -> Integer
+
+    def find_flag_config: (String arg) -> Hash[Symbol, String | bool]?
+
+    def process_global_flag: (String arg, Integer index, Hash[Symbol, String | bool] config) -> Integer
+
+    def store_flag: (Symbol name, String | bool value) -> void
+
+    def validate_value!: (String | bool value, Symbol flag_name) -> void
+
+    def build_result: () -> Array[String]
+
+    def reorder_subcommand_flags: (Array[String] args) -> Array[String]
+
+    def find_subcommand_key: (Array[String] args) -> [String, Integer]?
+
+    def reorder_flags_after_subcommand: (Array[String] args, Integer cmd_start_index, Integer subcommand_end_index, Hash[Symbol, Hash[Symbol, String | bool]] flags_config, Integer? double_dash_pos) -> Array[String]
+
+    def find_subcommand_flag: (String arg, Hash[Symbol, Hash[Symbol, String | bool]] flags_config) -> Hash[Symbol, String | bool]?
+  end
+end
