@@ -14,6 +14,15 @@ class CommandsResourceLifecycleCommandTest < Minitest::Test
 end
 
 class CommandsVmLifecycleCommandTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @original_stderr
+  end
+
   def test_module_exists
     assert_kind_of Module, Pvectl::Commands::VmLifecycleCommand
   end

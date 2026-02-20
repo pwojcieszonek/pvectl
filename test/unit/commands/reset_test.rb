@@ -3,6 +3,15 @@
 require "test_helper"
 
 class CommandsResetTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @original_stderr
+  end
+
   def test_class_exists
     assert_kind_of Class, Pvectl::Commands::Reset
   end

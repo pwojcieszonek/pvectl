@@ -983,7 +983,6 @@ class RepositoriesNodeStorageRefactorTest < Minitest::Test
     nodes = @mock_nodes_response
     resources = @mock_resources_response
 
-    mock_resource = Object.new
     mock_client = Object.new
 
     mock_client.define_singleton_method(:[]) do |path|

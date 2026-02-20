@@ -83,7 +83,7 @@ module Pvectl
             result = service.execute(vmid: 100, new_vmid: 200)
 
             # Verify clone was called with auto-generated name
-            clone_call = vm_repo.verify
+            vm_repo.verify
             assert result.successful?
             assert_equal "web-server-clone", result.resource[:name]
           end

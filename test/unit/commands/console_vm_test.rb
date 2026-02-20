@@ -4,6 +4,15 @@ require "test_helper"
 require_relative "../../../lib/pvectl/commands/console_vm"
 
 class CommandsConsoleVmTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @original_stderr
+  end
+
   def test_class_exists
     assert_kind_of Class, Pvectl::Commands::ConsoleVm
   end

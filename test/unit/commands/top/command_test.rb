@@ -80,13 +80,31 @@ class TopCommandUnknownResourceTypeTest < Minitest::Test
   end
 
   def test_accepts_nodes_resource_type
-    exit_code = Pvectl::Commands::Top::Command.execute("nodes", {}, {})
+    handler = stub_top_handler
+    exit_code = Pvectl::Commands::Top::Command.new("nodes", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_node_alias
-    exit_code = Pvectl::Commands::Top::Command.execute("node", {}, {})
+    handler = stub_top_handler
+    exit_code = Pvectl::Commands::Top::Command.new("node", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
+  end
+
+  private
+
+  def stub_top_handler
+    node = Pvectl::Models::Node.new(
+      name: "pve1", status: "online", cpu: 0.1, maxcpu: 4,
+      mem: 1_073_741_824, maxmem: 4_294_967_296,
+      disk: 5_368_709_120, maxdisk: 53_687_091_200,
+      uptime: 3600, guests_vms: 1, guests_cts: 0,
+      loadavg: [0.1, 0.2, 0.3], swap_used: 0, swap_total: 1_073_741_824
+    )
+    mock = Minitest::Mock.new
+    mock.expect :list, [node], [], sort: nil
+    mock.expect :presenter, Pvectl::Presenters::TopNode.new
+    mock
   end
 end
 
@@ -108,33 +126,63 @@ class TopCommandVmResourceTest < Minitest::Test
   end
 
   def test_accepts_vms_resource_type
-    exit_code = Pvectl::Commands::Top::Command.execute("vms", {}, {})
+    handler = stub_vm_handler
+    exit_code = Pvectl::Commands::Top::Command.new("vms", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_vm_alias
-    exit_code = Pvectl::Commands::Top::Command.execute("vm", {}, {})
+    handler = stub_vm_handler
+    exit_code = Pvectl::Commands::Top::Command.new("vm", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_containers_resource_type
-    exit_code = Pvectl::Commands::Top::Command.execute("containers", {}, {})
+    handler = stub_container_handler
+    exit_code = Pvectl::Commands::Top::Command.new("containers", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_container_alias
-    exit_code = Pvectl::Commands::Top::Command.execute("container", {}, {})
+    handler = stub_container_handler
+    exit_code = Pvectl::Commands::Top::Command.new("container", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_ct_alias
-    exit_code = Pvectl::Commands::Top::Command.execute("ct", {}, {})
+    handler = stub_container_handler
+    exit_code = Pvectl::Commands::Top::Command.new("ct", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_accepts_cts_alias
-    exit_code = Pvectl::Commands::Top::Command.execute("cts", {}, {})
+    handler = stub_container_handler
+    exit_code = Pvectl::Commands::Top::Command.new("cts", {}, {}, handler: handler).execute
     refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
+  end
+
+  private
+
+  def stub_vm_handler
+    vm = Pvectl::Models::Vm.new(
+      vmid: 100, name: "web", status: "running", node: "pve1",
+      cpu: 0.5, maxcpu: 4, mem: 2_147_483_648, maxmem: 4_294_967_296
+    )
+    mock = Minitest::Mock.new
+    mock.expect :list, [vm], [], sort: nil
+    mock.expect :presenter, Pvectl::Presenters::TopVm.new
+    mock
+  end
+
+  def stub_container_handler
+    ct = Pvectl::Models::Container.new(
+      ctid: 200, name: "app", status: "running", node: "pve1",
+      cpu: 0.2, maxcpu: 2, mem: 536_870_912, maxmem: 1_073_741_824
+    )
+    mock = Minitest::Mock.new
+    mock.expect :list, [ct], [], sort: nil
+    mock.expect :presenter, Pvectl::Presenters::TopContainer.new
+    mock
   end
 end
 

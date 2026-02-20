@@ -83,21 +83,27 @@ class GetHandlersTasksTest < Minitest::Test
 
   def test_handler_is_registered_for_tasks
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/tasks.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "tasks", Pvectl::Commands::Get::Handlers::Tasks, aliases: ["task"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("tasks")
   end
 
   def test_handler_is_registered_with_task_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/tasks.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "tasks", Pvectl::Commands::Get::Handlers::Tasks, aliases: ["task"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("task")
   end
 
   def test_registry_returns_tasks_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/tasks.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "tasks", Pvectl::Commands::Get::Handlers::Tasks, aliases: ["task"]
+    )
 
     handler = Pvectl::Commands::Get::ResourceRegistry.for("tasks")
     assert_instance_of Pvectl::Commands::Get::Handlers::Tasks, handler

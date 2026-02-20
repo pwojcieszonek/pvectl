@@ -4,6 +4,15 @@ require "test_helper"
 require "stringio"
 
 class CommandsContainerLifecycleCommandTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @original_stderr
+  end
+
   def test_module_exists
     assert_kind_of Module, Pvectl::Commands::ContainerLifecycleCommand
   end
@@ -42,6 +51,15 @@ class CommandsContainerLifecycleCommandTest < Minitest::Test
 end
 
 class CommandsStartContainerTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+  end
+
+  def teardown
+    $stderr = @original_stderr
+  end
+
   def test_class_exists
     assert_kind_of Class, Pvectl::Commands::StartContainer
   end

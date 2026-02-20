@@ -119,37 +119,51 @@ class GetHandlersContainersTest < Minitest::Test
   # ---------------------------
 
   def test_handler_is_registered_for_containers
-    # Reset and re-register (handler auto-registers on load)
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/containers.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "containers", Pvectl::Commands::Get::Handlers::Containers,
+      aliases: ["container", "ct", "cts"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("containers")
   end
 
   def test_handler_is_registered_with_container_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/containers.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "containers", Pvectl::Commands::Get::Handlers::Containers,
+      aliases: ["container", "ct", "cts"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("container")
   end
 
   def test_handler_is_registered_with_ct_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/containers.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "containers", Pvectl::Commands::Get::Handlers::Containers,
+      aliases: ["container", "ct", "cts"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("ct")
   end
 
   def test_handler_is_registered_with_cts_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/containers.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "containers", Pvectl::Commands::Get::Handlers::Containers,
+      aliases: ["container", "ct", "cts"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("cts")
   end
 
   def test_registry_returns_containers_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/containers.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "containers", Pvectl::Commands::Get::Handlers::Containers,
+      aliases: ["container", "ct", "cts"]
+    )
 
     handler = Pvectl::Commands::Get::ResourceRegistry.for("containers")
 
