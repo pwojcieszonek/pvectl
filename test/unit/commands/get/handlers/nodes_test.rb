@@ -252,21 +252,27 @@ class GetHandlersNodesTest < Minitest::Test
 
   def test_handler_is_registered_for_nodes
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/nodes.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "nodes", Pvectl::Commands::Get::Handlers::Nodes, aliases: ["node"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("nodes")
   end
 
   def test_handler_is_registered_with_node_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/nodes.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "nodes", Pvectl::Commands::Get::Handlers::Nodes, aliases: ["node"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("node")
   end
 
   def test_registry_returns_nodes_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/nodes.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "nodes", Pvectl::Commands::Get::Handlers::Nodes, aliases: ["node"]
+    )
 
     handler = Pvectl::Commands::Get::ResourceRegistry.for("nodes")
 

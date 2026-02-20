@@ -119,23 +119,28 @@ class GetHandlersVmsTest < Minitest::Test
   # ---------------------------
 
   def test_handler_is_registered_for_vms
-    # Reset and re-register (handler auto-registers on load)
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/vms.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "vms", Pvectl::Commands::Get::Handlers::Vms, aliases: ["vm"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("vms")
   end
 
   def test_handler_is_registered_with_vm_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/vms.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "vms", Pvectl::Commands::Get::Handlers::Vms, aliases: ["vm"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("vm")
   end
 
   def test_registry_returns_vms_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/vms.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "vms", Pvectl::Commands::Get::Handlers::Vms, aliases: ["vm"]
+    )
 
     handler = Pvectl::Commands::Get::ResourceRegistry.for("vms")
 

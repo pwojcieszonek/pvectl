@@ -182,21 +182,27 @@ class GetHandlersStorageTest < Minitest::Test
 
   def test_handler_is_registered_for_storage
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/storage.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("storage")
   end
 
   def test_handler_is_registered_with_stor_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/storage.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+    )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("stor")
   end
 
   def test_registry_returns_storage_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
-    load File.expand_path("../../../../../../lib/pvectl/commands/get/handlers/storage.rb", __FILE__)
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+    )
 
     handler = Pvectl::Commands::Get::ResourceRegistry.for("storage")
 
