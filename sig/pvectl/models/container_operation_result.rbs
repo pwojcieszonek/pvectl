@@ -1,0 +1,9 @@
+module Pvectl
+  module Models
+    class ContainerOperationResult < OperationResult
+      attr_reader container: Models::Container?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+    end
+  end
+end

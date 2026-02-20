@@ -1,0 +1,20 @@
+module Pvectl
+  module Models
+    class NetworkInterface < Base
+      attr_reader iface: String?
+      attr_reader type: String?
+      attr_reader address: String?
+      attr_reader gateway: String?
+      attr_reader active: Integer?
+      attr_reader autostart: Integer?
+      attr_reader bridge_ports: String?
+      attr_reader comments: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def active?: () -> bool
+      def has_gateway?: () -> bool
+      def ip_without_cidr: () -> String?
+    end
+  end
+end

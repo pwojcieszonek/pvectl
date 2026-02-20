@@ -1,0 +1,31 @@
+module Pvectl
+  module Models
+    class Vm < Base
+      attr_reader vmid: Integer
+      attr_reader name: String?
+      attr_reader status: String
+      attr_reader node: String
+      attr_reader cpu: Float?
+      attr_reader maxcpu: Integer?
+      attr_reader mem: Integer?
+      attr_reader maxmem: Integer?
+      attr_reader disk: Integer?
+      attr_reader maxdisk: Integer?
+      attr_reader uptime: Integer?
+      attr_reader template: Integer?
+      attr_reader tags: String?
+      attr_reader hastate: String?
+      attr_reader netin: Integer?
+      attr_reader netout: Integer?
+      attr_reader describe_data: Hash[untyped, untyped]?
+      attr_reader pool: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def running?: () -> bool
+      def stopped?: () -> bool
+      def paused?: () -> bool
+      def template?: () -> bool
+    end
+  end
+end

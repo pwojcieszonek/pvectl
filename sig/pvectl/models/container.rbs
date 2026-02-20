@@ -1,0 +1,42 @@
+module Pvectl
+  module Models
+    class Container < Base
+      attr_reader vmid: Integer
+      attr_reader name: String?
+      attr_reader node: String
+      attr_reader status: String
+      attr_reader cpu: Float?
+      attr_reader maxcpu: Integer?
+      attr_reader mem: Integer?
+      attr_reader maxmem: Integer?
+      attr_reader swap: Integer?
+      attr_reader maxswap: Integer?
+      attr_reader disk: Integer?
+      attr_reader maxdisk: Integer?
+      attr_reader uptime: Integer?
+      attr_reader template: Integer?
+      attr_reader tags: String?
+      attr_reader pool: String?
+      attr_reader lock: String?
+      attr_reader netin: Integer?
+      attr_reader netout: Integer?
+      attr_reader ostype: String?
+      attr_reader arch: String?
+      attr_reader unprivileged: Integer?
+      attr_reader features: String?
+      attr_reader rootfs: String?
+      attr_reader network_interfaces: Array[Hash[untyped, untyped]]
+      attr_reader description: String?
+      attr_reader hostname: String?
+      attr_reader pid: Integer?
+      attr_reader ha: Hash[untyped, untyped]?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def running?: () -> bool
+      def stopped?: () -> bool
+      def template?: () -> bool
+      def unprivileged?: () -> bool
+    end
+  end
+end

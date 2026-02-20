@@ -1,0 +1,9 @@
+module Pvectl
+  module Models
+    class VmOperationResult < OperationResult
+      attr_reader vm: Models::Vm?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+    end
+  end
+end

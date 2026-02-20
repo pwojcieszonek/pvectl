@@ -1,0 +1,31 @@
+module Pvectl
+  module Models
+    class Backup < Base
+      attr_reader volid: String?
+      attr_reader vmid: Integer?
+      attr_reader node: String?
+      attr_reader storage: String?
+      attr_reader resource_type: Symbol?
+      attr_reader format: String?
+      attr_reader size: Integer?
+      attr_reader ctime: Integer?
+      attr_reader notes: String?
+      attr_reader protected: bool
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def created_at: () -> Time?
+      def vm?: () -> bool
+      def container?: () -> bool
+      def filename: () -> String?
+      def human_size: () -> String?
+      def protected?: () -> bool
+
+      private
+
+      def extract_storage: () -> String?
+      def detect_resource_type: () -> Symbol?
+      def format_bytes: (Integer bytes) -> String
+    end
+  end
+end
