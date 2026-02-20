@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **rbs**: Full RBS type signatures for the entire codebase (175 files, ~4300 lines under `sig/`)
+- **rbs**: External stubs for GLI and ProxmoxAPI gems (`sig/external/`)
+- **rbs**: Pragmatic typing strategy — strict types for domain layer, `untyped` at gem boundaries
 - **console**: Interactive terminal session for VMs and containers via `pvectl console vm|ct <ID>`
 - **console**: WebSocket-based xtermjs protocol with native Ruby implementation (websocket-driver gem)
 - **console**: Session authentication with interactive credential prompt when API token is insufficient
