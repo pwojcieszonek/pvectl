@@ -1,0 +1,32 @@
+module Pvectl
+  module Commands
+    module IrreversibleCommand
+      module ClassMethods
+        def execute: (String? resource_type, Array[String] | String? resource_ids, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      def initialize: (String? resource_type, Array[String] | String? resource_ids, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+
+      def resource_type_symbol: () -> Symbol
+      def supported_types: () -> Array[String]
+      def supported_resource?: () -> bool
+      def perform_operation: () -> Integer
+      def resolve_resources: (Pvectl::Connection connection) -> Array[Models::Vm | Models::Container]
+      def build_repository: (Pvectl::Connection connection) -> Repositories::Base
+      def selector_strings: () -> Array[String]
+      def apply_selectors: (Array[Models::Vm | Models::Container] resources) -> Array[Models::Vm | Models::Container]
+      def confirm_operation: (Array[Models::Vm | Models::Container] resources) -> bool
+      def perform_service_call: (Array[Models::Vm | Models::Container] resources, Pvectl::Connection connection) -> Array[Models::OperationResult]
+      def build_presenter: () -> Presenters::Base
+      def load_config: () -> void
+      def service_options: () -> Hash[Symbol, untyped]
+      def output_results: (Array[Models::OperationResult] results) -> void
+      def determine_exit_code: (Array[Models::OperationResult] results) -> Integer
+      def usage_error: (String message) -> Integer
+      def no_resources_found: () -> Integer
+    end
+  end
+end
