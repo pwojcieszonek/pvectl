@@ -396,4 +396,18 @@ class ModelsContainerTest < Minitest::Test
     container = Pvectl::Models::Container.new(@running_container_attrs)
     assert_nil container.unprivileged
   end
+
+  # ---------------------------
+  # Type Attribute
+  # ---------------------------
+
+  def test_type_returns_lxc_when_set
+    ct = Pvectl::Models::Container.new(vmid: 200, type: "lxc")
+    assert_equal "lxc", ct.type
+  end
+
+  def test_type_returns_nil_when_not_set
+    ct = Pvectl::Models::Container.new(vmid: 200)
+    assert_nil ct.type
+  end
 end

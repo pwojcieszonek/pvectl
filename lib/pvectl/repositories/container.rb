@@ -257,7 +257,8 @@ module Pvectl
           pool: data[:pool],
           lock: data[:lock],
           netin: data[:netin],
-          netout: data[:netout]
+          netout: data[:netout],
+          type: data[:type]
         )
       end
 
@@ -334,6 +335,7 @@ module Pvectl
           name: basic_data[:name],
           status: basic_data[:status],
           node: basic_data[:node],
+          type: basic_data[:type],
           cpu: basic_data[:cpu],
           maxcpu: basic_data[:maxcpu],
           mem: basic_data[:mem],
