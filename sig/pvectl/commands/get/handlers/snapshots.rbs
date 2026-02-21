@@ -11,6 +11,8 @@ module Pvectl
 
           def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Snapshot]
 
+          def describe: (name: String, ?node: String?, ?args: Array[String]) -> Models::SnapshotDescription
+
           def presenter: () -> Presenters::Snapshot
 
           private
