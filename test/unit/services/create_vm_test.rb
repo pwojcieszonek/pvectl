@@ -159,6 +159,57 @@ module Pvectl
             assert_equal "virtio-scsi-pci", created_params[:scsihw]
           end
 
+          it "sends agent=1 when agent is true" do
+            vm_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            vm_repo.expect(:create, "UPID:pve1:create") do |_node, _vmid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            service.execute(vmid: 100, name: "web", node: "pve1", agent: true)
+
+            assert_equal "1", created_params[:agent]
+          end
+
+          it "sends agent=0 when agent is false" do
+            vm_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            vm_repo.expect(:create, "UPID:pve1:create") do |_node, _vmid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            service.execute(vmid: 100, name: "web", node: "pve1", agent: false)
+
+            assert_equal "0", created_params[:agent]
+          end
+
+          it "omits agent param when agent is nil" do
+            vm_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            vm_repo.expect(:create, "UPID:pve1:create") do |_node, _vmid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            service.execute(vmid: 100, name: "web", node: "pve1")
+
+            refute created_params.key?(:agent)
+          end
+
           it "includes cloud-init params" do
             vm_repo, task_repo = build_mocks
             task = build_task

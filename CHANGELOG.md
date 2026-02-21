@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **wiki**: Created comprehensive GitHub Wiki with 10 pages: Home, Getting Started, Command Reference, Configuration Guide, Selectors & Filtering, Output Formats, Workflows, Plugin Development, Troubleshooting, FAQ
 
 ### Changed
+- **cli**: boolean config flags (`--start`, `--numa`, `--agent`, `--privileged`, `--onboot`) now support negation (`--no-start`, `--no-agent`, etc.) in `create` and `clone` commands
 - **cli**: Unified snapshot CLI syntax — snapshot name is now a positional argument, VMIDs use `--vmid` flag (repeatable), `--node` filters by node, `--all` deletes all snapshots (**breaking change**)
 - **cli**: `create snapshot` and `delete snapshot` are now GLI sub-commands with dedicated flags
 - **cli**: `get snapshots` and `describe snapshot` accept `--vmid` and `--node` flags
@@ -22,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **services**: Added `delete_all` method for removing all snapshots from VMs
 
 ### Fixed
+- **services**: `--agent` and `--onboot` now correctly send disable value to API when negated (previously only supported enabling)
+- **services**: `create container` no longer forces `unprivileged: 1` when `--privileged` flag is not specified (respects API defaults)
 - **cli**: `--status` flag now correctly filters VMs and containers by status in `get` command (previously ignored for VM/CT resources)
 
 ### Added

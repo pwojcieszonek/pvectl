@@ -504,6 +504,75 @@ module Pvectl
             vm_repo.verify
           end
 
+          it "sends agent=1 when agent is true" do
+            vm_repo, task_repo = build_mocks
+            vm = build_vm
+            task = build_task
+
+            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            vm_repo.expect(:update, nil) do |vmid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { agent: true }
+            service = CloneVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            result = service.execute(vmid: 100, new_vmid: 200, config_params: config_params)
+
+            assert result.successful?
+            assert_equal "1", update_params[:agent]
+          end
+
+          it "sends agent=0 when agent is false" do
+            vm_repo, task_repo = build_mocks
+            vm = build_vm
+            task = build_task
+
+            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            vm_repo.expect(:update, nil) do |vmid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { agent: false }
+            service = CloneVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            result = service.execute(vmid: 100, new_vmid: 200, config_params: config_params)
+
+            assert result.successful?
+            assert_equal "0", update_params[:agent]
+          end
+
+          it "omits agent param when agent is nil" do
+            vm_repo, task_repo = build_mocks
+            vm = build_vm
+            task = build_task
+
+            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            vm_repo.expect(:update, nil) do |vmid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { cores: 2, agent: nil }
+            service = CloneVm.new(vm_repository: vm_repo, task_repository: task_repo)
+            result = service.execute(vmid: 100, new_vmid: 200, config_params: config_params)
+
+            assert result.successful?
+            refute update_params.key?(:agent)
+          end
+
           it "starts VM after config update when --start set" do
             vm_repo, task_repo = build_mocks
             vm = build_vm

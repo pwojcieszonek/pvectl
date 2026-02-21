@@ -103,14 +103,14 @@ module Pvectl
         params[:cores] = cores if cores
         params[:memory] = memory if memory
         params[:swap] = swap if swap
-        params[:unprivileged] = privileged ? 0 : 1
+        params[:unprivileged] = privileged ? 0 : 1 unless privileged.nil?
         params[:rootfs] = Parsers::LxcMountConfig.to_proxmox(rootfs) if rootfs
         add_mountpoint_params(params, mountpoints) if mountpoints
         add_net_params(params, nets) if nets
         params[:features] = features if features
         params[:password] = password if password
         params[:"ssh-public-keys"] = ssh_public_keys if ssh_public_keys
-        params[:onboot] = 1 if onboot
+        params[:onboot] = onboot ? 1 : 0 unless onboot.nil?
         params[:startup] = startup if startup
         params[:description] = description if description
         params[:tags] = tags if tags
