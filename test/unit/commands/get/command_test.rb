@@ -1024,3 +1024,202 @@ class GetCommandColorSupportTest < Minitest::Test
     end
   end
 end
+
+# =============================================================================
+# Commands::Get::Command Tests - Selector Filtering
+# =============================================================================
+
+class GetCommandSelectorFilteringTest < Minitest::Test
+  # Tests for -l selector and --status shortcut filtering
+
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+    @original_stdout = $stdout
+    $stdout = StringIO.new
+
+    Pvectl::Commands::Get::ResourceRegistry.reset!
+    Pvectl::Commands::Get::ResourceRegistry.register("vms", SelectorMockVmHandler, aliases: ["vm"])
+    Pvectl::Commands::Get::ResourceRegistry.register("tasks", SelectorMockTaskHandler, aliases: ["task"])
+  end
+
+  def teardown
+    $stderr = @original_stderr
+    $stdout = @original_stdout
+    Pvectl::Commands::Get::ResourceRegistry.reset!
+  end
+
+  # ---------------------------
+  # --status shortcut for VMs
+  # ---------------------------
+
+  def test_status_flag_filters_vms_by_status
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      { status: "running" },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert data.all? { |item| item["status"] == "running" },
+           "All returned VMs should have status=running, got: #{data.map { |i| i['status'] }}"
+  end
+
+  def test_status_flag_excludes_non_matching_vms
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      { status: "running" },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 2, data.length, "Should return only 2 running VMs out of 3"
+  end
+
+  # ---------------------------
+  # -l selector for VMs
+  # ---------------------------
+
+  def test_selector_flag_filters_vms_by_status
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      { selector: ["status=running"] },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 2, data.length
+    assert data.all? { |item| item["status"] == "running" }
+  end
+
+  def test_selector_flag_filters_vms_by_name
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      { selector: ["name=web-1"] },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 1, data.length
+    assert_equal "web-1", data.first["name"]
+  end
+
+  # ---------------------------
+  # Combined --status and -l
+  # ---------------------------
+
+  def test_status_and_selector_combined
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      { status: "running", selector: ["name=web-1"] },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 1, data.length
+    assert_equal "web-1", data.first["name"]
+    assert_equal "running", data.first["status"]
+  end
+
+  # ---------------------------
+  # --status for tasks (passthrough, no selector)
+  # ---------------------------
+
+  def test_status_flag_passes_through_for_tasks
+    Pvectl::Commands::Get::Command.execute(
+      "tasks",
+      nil,
+      { status: "running" },
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 1, data.length
+    assert_equal "running", data.first["status"]
+  end
+
+  # ---------------------------
+  # No filtering when no flags
+  # ---------------------------
+
+  def test_no_selector_returns_all_results
+    Pvectl::Commands::Get::Command.execute(
+      "vms",
+      nil,
+      {},
+      { output: "json" }
+    )
+
+    data = JSON.parse($stdout.string)
+    assert_equal 3, data.length
+  end
+
+  private
+
+  # Mock VM handler that declares selector_class
+  class SelectorMockVmHandler
+    include Pvectl::Commands::Get::ResourceHandler
+
+    def selector_class
+      Pvectl::Selectors::Vm
+    end
+
+    def list(node: nil, name: nil, args: [], storage: nil, **_options)
+      [
+        SelectorMockModel.new("web-1", "running"),
+        SelectorMockModel.new("web-2", "running"),
+        SelectorMockModel.new("db-1", "stopped")
+      ]
+    end
+
+    def presenter
+      SelectorMockPresenter.new
+    end
+  end
+
+  # Mock tasks handler without selector_class (uses status_filter directly)
+  class SelectorMockTaskHandler
+    include Pvectl::Commands::Get::ResourceHandler
+
+    def list(node: nil, name: nil, args: [], storage: nil, status_filter: nil, **_options)
+      tasks = [
+        SelectorMockModel.new("qmstart", "running"),
+        SelectorMockModel.new("vzdump", "ok")
+      ]
+      tasks = tasks.select { |t| t.status == status_filter } if status_filter
+      tasks
+    end
+
+    def presenter
+      SelectorMockPresenter.new
+    end
+  end
+
+  class SelectorMockModel
+    attr_reader :name, :status
+
+    def initialize(name, status)
+      @name = name
+      @status = status
+    end
+  end
+
+  class SelectorMockPresenter < Pvectl::Presenters::Base
+    def columns
+      ["NAME", "STATUS"]
+    end
+
+    def to_row(model, **_context)
+      [model.name, model.status]
+    end
+
+    def to_hash(model)
+      { "name" => model.name, "status" => model.status }
+    end
+  end
+end

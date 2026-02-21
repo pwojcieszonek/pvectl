@@ -239,6 +239,53 @@ class GetResourceServiceTest < Minitest::Test
   end
 
   # ---------------------------
+  # #list Method - Selector Application
+  # ---------------------------
+
+  def test_list_applies_selector_to_filter_results
+    handler = MockHandler.new
+    service = Pvectl::Services::Get::ResourceService.new(handler: handler, format: "json")
+    selector = Pvectl::Selectors::Vm.parse("status=running")
+
+    result = service.list(selector: selector)
+
+    data = JSON.parse(result)
+    assert_equal 1, data.length
+    assert_equal "running", data.first["status"]
+  end
+
+  def test_list_without_selector_returns_all_results
+    handler = MockHandler.new
+    service = Pvectl::Services::Get::ResourceService.new(handler: handler, format: "json")
+
+    result = service.list
+
+    data = JSON.parse(result)
+    assert_equal 2, data.length
+  end
+
+  def test_list_with_nil_selector_returns_all_results
+    handler = MockHandler.new
+    service = Pvectl::Services::Get::ResourceService.new(handler: handler, format: "json")
+
+    result = service.list(selector: nil)
+
+    data = JSON.parse(result)
+    assert_equal 2, data.length
+  end
+
+  def test_list_with_empty_selector_returns_all_results
+    handler = MockHandler.new
+    service = Pvectl::Services::Get::ResourceService.new(handler: handler, format: "json")
+    selector = Pvectl::Selectors::Vm.new([])
+
+    result = service.list(selector: selector)
+
+    data = JSON.parse(result)
+    assert_equal 2, data.length
+  end
+
+  # ---------------------------
   # #list Method - Empty Results
   # ---------------------------
 
