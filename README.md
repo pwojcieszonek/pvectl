@@ -83,8 +83,8 @@ Context name: [default] production
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `create snapshot` | Create snapshot | `pvectl create snapshot 100 --name before-update` |
-| `delete snapshot` | Delete snapshot | `pvectl delete snapshot 100 before-update --yes` |
+| `create snapshot` | Create snapshot (VMIDs or cluster-wide) | `pvectl create snapshot 100 --name before-update` |
+| `delete snapshot` | Delete snapshot (VMIDs or cluster-wide) | `pvectl delete snapshot 100 before-update --yes` |
 | `rollback` | Rollback to snapshot | `pvectl rollback snapshot 100 before-update --yes` |
 | `create backup` | Create backup (vzdump) | `pvectl create backup 100 --storage nfs-backup` |
 | `delete backup` | Delete backup | `pvectl delete backup local:backup/... --yes` |
@@ -123,6 +123,7 @@ pvectl get nodes                      # List cluster nodes
 pvectl get vms                        # List all VMs
 pvectl get containers --node pve1     # Containers on specific node
 pvectl get storage                    # List storage pools
+pvectl get snapshots                  # All snapshots cluster-wide
 pvectl get snapshots 100              # Snapshots for VM 100
 pvectl get backups --storage nfs      # Backups on specific storage
 pvectl get templates                  # List all templates (VMs and containers)

@@ -36,7 +36,7 @@ module Pvectl
       # @param vmids [Array<Integer>] VM/container IDs
       # @return [Array<Models::Snapshot>] all snapshots
       def list(vmids)
-        resources = @resolver.resolve_multiple(vmids)
+        resources = vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
         return [] if resources.empty?
 
         resources.flat_map do |r|
@@ -71,15 +71,15 @@ module Pvectl
         Models::SnapshotDescription.new(entries: entries)
       end
 
-      # Creates snapshots for given VMIDs.
+      # Creates snapshots for given VMIDs, or all cluster resources when vmids is empty.
       #
-      # @param vmids [Array<Integer>] VM/container IDs
+      # @param vmids [Array<Integer>] VM/container IDs (empty = all cluster)
       # @param name [String] snapshot name
       # @param description [String, nil] optional description
       # @param vmstate [Boolean] save VM memory state
       # @return [Array<Models::OperationResult>] results for each resource
       def create(vmids, name:, description: nil, vmstate: false)
-        resources = @resolver.resolve_multiple(vmids)
+        resources = vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
         return [] if resources.empty?
 
         execute_multi(resources, :create) do |r|
@@ -87,14 +87,14 @@ module Pvectl
         end
       end
 
-      # Deletes snapshots from given VMIDs.
+      # Deletes snapshots from given VMIDs, or all cluster resources when vmids is empty.
       #
-      # @param vmids [Array<Integer>] VM/container IDs
+      # @param vmids [Array<Integer>] VM/container IDs (empty = all cluster)
       # @param snapname [String] snapshot name to delete
       # @param force [Boolean] force removal even if disk snapshot fails
       # @return [Array<Models::OperationResult>] results for each resource
       def delete(vmids, snapname, force: false)
-        resources = @resolver.resolve_multiple(vmids)
+        resources = vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
         return [] if resources.empty?
 
         execute_multi(resources, :delete) do |r|

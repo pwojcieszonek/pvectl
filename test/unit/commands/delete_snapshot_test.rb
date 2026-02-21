@@ -25,9 +25,11 @@ class DeleteSnapshotTest < Minitest::Test
     assert_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
-  def test_returns_usage_error_when_only_one_arg
-    exit_code = Pvectl::Commands::DeleteSnapshot.execute("snapshot", ["100"], { yes: true }, {})
-    assert_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
+  def test_single_arg_is_parsed_as_snapshot_name_for_cluster_wide_delete
+    # Single arg = snapshot name, no VMIDs = cluster-wide delete
+    # Should pass validation (not USAGE_ERROR) — will fail at API connection
+    exit_code = Pvectl::Commands::DeleteSnapshot.execute("snapshot", ["snap1"], { yes: true }, {})
+    refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_returns_usage_error_when_no_args
@@ -49,7 +51,7 @@ class DeleteSnapshotTest < Minitest::Test
     # Should ask for --yes, not complain about missing args
     Pvectl::Commands::DeleteSnapshot.execute("snapshot", ["100", "snap1"], {}, {})
     assert_includes $stderr.string, "--yes"
-    refute_includes $stderr.string, "VMID and snapshot name required"
+    refute_includes $stderr.string, "Snapshot name is required"
   end
 
   def test_parses_multiple_vmids_and_snapshot_name

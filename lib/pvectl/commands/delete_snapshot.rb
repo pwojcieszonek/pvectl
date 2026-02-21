@@ -5,6 +5,7 @@ module Pvectl
     # Handler for the `pvectl delete snapshot` command.
     #
     # Deletes snapshots from one or more VMs/containers.
+    # When no VMIDs are given, deletes from all cluster resources that have it.
     # Requires --yes flag for confirmation.
     #
     # @example Delete single snapshot
@@ -12,6 +13,9 @@ module Pvectl
     #
     # @example Delete snapshot from multiple VMs
     #   pvectl delete snapshot 100 101 102 before-upgrade --yes
+    #
+    # @example Delete snapshot from all cluster VMs/CTs
+    #   pvectl delete snapshot before-upgrade --yes
     #
     # @example Force removal
     #   pvectl delete snapshot 100 before-upgrade --yes --force
@@ -50,7 +54,7 @@ module Pvectl
       def execute
         return usage_error("Resource type required (snapshot)") unless @resource_type
         return usage_error("Unsupported resource: #{@resource_type}") unless SUPPORTED_RESOURCES.include?(@resource_type)
-        return usage_error("At least one VMID and snapshot name required") if @vmids.empty? || @snapshot_name.nil?
+        return usage_error("Snapshot name is required") if @snapshot_name.nil?
         return usage_error("Confirmation required: use --yes to confirm deletion") unless @options[:yes]
 
         perform_operation
@@ -60,11 +64,17 @@ module Pvectl
 
       # Parses arguments: last arg is snapshot name, rest are VMIDs.
       #
+      # With 1 arg: snapshot name only (cluster-wide delete).
+      # With 2+ args: VMIDs followed by snapshot name.
+      #
       # @return [void]
       def parse_args!
         if @args.size >= 2
           @snapshot_name = @args.last
           @vmids = @args[0..-2].map(&:to_i)
+        elsif @args.size == 1
+          @snapshot_name = @args.first
+          @vmids = []
         else
           @snapshot_name = nil
           @vmids = []
