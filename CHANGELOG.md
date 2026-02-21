@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **presenters**: Clone operation output now displays the new (cloned) resource data (VMID/CTID, name, node) instead of the source resource data
+- **config**: `SimplePrompt` fallback now supports `required:`, `convert:`, and extra keyword arguments matching `TTY::Prompt#ask` interface (fixes `unknown keyword: :required` in interactive `create` wizard)
 
 ### Changed
 - **commands**: Extracted `IrreversibleCommand` mixin from `DeleteCommand` for reuse in template and other destructive commands
