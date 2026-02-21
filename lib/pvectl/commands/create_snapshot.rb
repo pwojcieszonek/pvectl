@@ -2,63 +2,97 @@
 
 module Pvectl
   module Commands
-    # Handler for the `pvectl create snapshot` command.
+    # Handler for the `pvectl create snapshot` sub-command.
     #
-    # Creates snapshots for one or more VMs/containers.
-    # When no VMIDs are given, creates on all cluster resources.
-    # Supports multiple VMIDs with optional confirmation prompt.
+    # Creates snapshots for VMs/containers. Snapshot name is the first
+    # positional argument, VMIDs are specified via --vmid flag.
+    # Without --vmid, operates on ALL VMs/CTs in the cluster.
     #
     # @example Create single snapshot
-    #   pvectl create snapshot 100 --name before-upgrade
+    #   pvectl create snapshot before-upgrade --vmid 100
     #
-    # @example Create snapshot for multiple VMs
-    #   pvectl create snapshot 100 101 102 --name before-upgrade --description "Pre-upgrade"
+    # @example Create for multiple VMs
+    #   pvectl create snapshot before-upgrade --vmid 100 --vmid 101
     #
-    # @example Create snapshot for all cluster VMs/CTs
-    #   pvectl create snapshot --name before-upgrade --yes
-    #
-    # @example Create snapshot with VM memory state
-    #   pvectl create snapshot 100 --name with-state --vmstate
+    # @example Create cluster-wide
+    #   pvectl create snapshot before-upgrade --yes
     #
     class CreateSnapshot
-      SUPPORTED_RESOURCES = %w[snapshot].freeze
+      VMID_PATTERN = /\A[1-9]\d{0,8}\z/
+
+      # Registers as a sub-command under the parent create command.
+      #
+      # @param parent [GLI::Command] the parent create command
+      # @return [void]
+      def self.register_subcommand(parent)
+        parent.command :snapshot do |s|
+          s.desc "VM/CT ID (repeatable)"
+          s.flag [:vmid], arg_name: "VMID", multiple: true
+
+          s.desc "Save VM memory state (QEMU only)"
+          s.switch [:vmstate], negatable: false
+
+          s.action do |global_options, options, args|
+            exit_code = execute(args, options, global_options)
+            exit exit_code if exit_code != 0
+          end
+        end
+      end
 
       # Executes the create snapshot command.
       #
-      # @param resource_type [String, nil] resource type (snapshot)
-      # @param resource_ids [Array<String>, String, nil] VM identifiers
+      # @param args [Array<String>] positional args (snapshot name)
       # @param options [Hash] command options
       # @param global_options [Hash] global CLI options
       # @return [Integer] exit code
-      def self.execute(resource_type, resource_ids, options, global_options)
-        new(resource_type, resource_ids, options, global_options).execute
+      def self.execute(args, options, global_options)
+        new(args, options, global_options).execute
       end
 
       # Initializes a create snapshot command.
       #
-      # @param resource_type [String, nil] resource type (snapshot)
-      # @param resource_ids [Array<String>, String, nil] VM identifiers
+      # @param args [Array<String>] positional args (snapshot name)
       # @param options [Hash] command options
       # @param global_options [Hash] global CLI options
-      def initialize(resource_type, resource_ids, options, global_options)
-        @resource_type = resource_type
-        @resource_ids = Array(resource_ids).compact.map(&:to_i)
+      def initialize(args, options, global_options)
+        @args = Array(args)
         @options = options
         @global_options = global_options
+        @snapshot_name = @args.first
+        @vmids = parse_vmids(options[:vmid])
+        @node = options[:node]
       end
 
       # Executes the create snapshot command.
       #
       # @return [Integer] exit code
       def execute
-        return usage_error("Resource type required (snapshot)") unless @resource_type
-        return usage_error("Unsupported resource: #{@resource_type}") unless SUPPORTED_RESOURCES.include?(@resource_type)
-        return usage_error("--name is required") unless @options[:name]
+        return usage_error("Snapshot name required") unless @snapshot_name
+        return usage_error("Invalid VMID: #{invalid_vmid}") if invalid_vmid
 
         perform_operation
       end
 
       private
+
+      # Parses --vmid flag values to integer array.
+      #
+      # @param vmid_values [Array<String>, nil] raw vmid values
+      # @return [Array<Integer>] parsed VMIDs
+      def parse_vmids(vmid_values)
+        return [] if vmid_values.nil? || vmid_values.empty?
+
+        Array(vmid_values).map(&:to_i)
+      end
+
+      # Finds first invalid VMID in options.
+      #
+      # @return [String, nil] invalid VMID value or nil
+      def invalid_vmid
+        return nil if @options[:vmid].nil? || @options[:vmid].empty?
+
+        Array(@options[:vmid]).find { |v| !VMID_PATTERN.match?(v.to_s) }
+      end
 
       # Performs the snapshot creation operation.
       #
@@ -81,10 +115,11 @@ module Pvectl
         return ExitCodes::SUCCESS unless confirm_operation
 
         results = service.create(
-          @resource_ids,
-          name: @options[:name],
+          @vmids,
+          name: @snapshot_name,
           description: @options[:description],
-          vmstate: @options[:vmstate] || false
+          vmstate: @options[:vmstate] || false,
+          node: @node
         )
 
         output_results(results)
@@ -100,18 +135,18 @@ module Pvectl
         ExitCodes::GENERAL_ERROR
       end
 
-      # Confirms multi-VMID or cluster-wide operation with user.
+      # Confirms operation with user prompt.
       #
       # @return [Boolean] true if operation should proceed
       def confirm_operation
-        return true if @resource_ids.size == 1
+        return true if @vmids.size == 1
         return true if @options[:yes]
 
-        if @resource_ids.empty?
-          $stdout.puts "You are about to create snapshot '#{@options[:name]}' for ALL VMs/CTs in the cluster."
+        if @vmids.empty?
+          $stdout.puts "You are about to create snapshot '#{@snapshot_name}' for ALL VMs/CTs in the cluster."
         else
-          $stdout.puts "You are about to create snapshot '#{@options[:name]}' for #{@resource_ids.size} VMs:"
-          @resource_ids.each { |vmid| $stdout.puts "  - #{vmid}" }
+          $stdout.puts "You are about to create snapshot '#{@snapshot_name}' for #{@vmids.size} VMs:"
+          @vmids.each { |vmid| $stdout.puts "  - #{vmid}" }
         end
         $stdout.puts ""
         $stdout.print "Proceed? [y/N]: "
@@ -120,7 +155,7 @@ module Pvectl
         %w[y yes].include?(response)
       end
 
-      # Loads configuration from file or environment.
+      # Loads configuration.
       #
       # @return [void]
       def load_config
@@ -129,7 +164,7 @@ module Pvectl
         @config = service.current_config
       end
 
-      # Builds service options from command options.
+      # Builds service options.
       #
       # @return [Hash] service options
       def service_options
@@ -140,9 +175,9 @@ module Pvectl
         opts
       end
 
-      # Outputs operation results using the configured formatter.
+      # Outputs operation results.
       #
-      # @param results [Array<Models::OperationResult>] operation results
+      # @param results [Array<Models::OperationResult>] results
       # @return [void]
       def output_results(results)
         presenter = Pvectl::Presenters::SnapshotOperationResult.new
@@ -154,9 +189,9 @@ module Pvectl
         puts output
       end
 
-      # Determines exit code based on results.
+      # Determines exit code.
       #
-      # @param results [Array<Models::OperationResult>] operation results
+      # @param results [Array<Models::OperationResult>] results
       # @return [Integer] exit code
       def determine_exit_code(results)
         return ExitCodes::SUCCESS if results.all?(&:successful?)
@@ -165,7 +200,7 @@ module Pvectl
         ExitCodes::GENERAL_ERROR
       end
 
-      # Outputs usage error and returns exit code.
+      # Outputs usage error.
       #
       # @param message [String] error message
       # @return [Integer] exit code
