@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Documentation
+- **cli**: Added `long_desc` man-page style help text to all commands (~25 commands) with DESCRIPTION, EXAMPLES, NOTES, and SEE ALSO sections
+- **cli**: Enabled `wrap_help_text :verbatim` for proper formatting of code examples in help output
+- **cli**: Enabled `sort_help :manually` to display commands in logical declaration order
+- **readme**: Transformed README from 529-line reference into ~130-line landing page with links to GitHub Wiki
+- **wiki**: Created comprehensive GitHub Wiki with 10 pages: Home, Getting Started, Command Reference, Configuration Guide, Selectors & Filtering, Output Formats, Workflows, Plugin Development, Troubleshooting, FAQ
+
 ### Changed
 - **cli**: Unified snapshot CLI syntax — snapshot name is now a positional argument, VMIDs use `--vmid` flag (repeatable), `--node` filters by node, `--all` deletes all snapshots (**breaking change**)
 - **cli**: `create snapshot` and `delete snapshot` are now GLI sub-commands with dedicated flags
