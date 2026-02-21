@@ -66,6 +66,38 @@ module Pvectl
         @mock_resolver.verify
       end
 
+      def test_list_searches_all_resources_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "snap1", vmid: 100, node: "pve1", resource_type: :qemu)
+        ], [100, "pve1", :qemu])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "snap2", vmid: 101, node: "pve2", resource_type: :lxc)
+        ], [101, "pve2", :lxc])
+
+        result = @service.list([])
+
+        assert_equal 2, result.length
+        assert_equal "snap1", result[0].name
+        assert_equal "snap2", result[1].name
+        @mock_resolver.verify
+        @mock_snapshot_repo.verify
+      end
+
+      def test_list_returns_empty_when_no_resources_in_cluster
+        @mock_resolver.expect(:resolve_all, [])
+
+        result = @service.list([])
+
+        assert_equal [], result
+        @mock_resolver.verify
+      end
+
       # --- create tests ---
 
       def test_create_returns_success_result

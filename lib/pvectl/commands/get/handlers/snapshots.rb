@@ -4,13 +4,15 @@ module Pvectl
   module Commands
     module Get
       module Handlers
-        # Handler for listing snapshots.
+        # Handler for listing and describing snapshots.
         #
-        # Unlike other handlers, Snapshots requires VMIDs to be passed via args.
+        # VMIDs can be passed via args to scope the operation.
+        # When args is empty, operates on all cluster resources.
         # The node: and name: parameters are ignored.
         #
         # @example Usage
         #   handler.list(node: nil, name: nil, args: ["100", "101"])
+        #   handler.list(node: nil, name: nil, args: [])  # all cluster snapshots
         #
         class Snapshots
           include ResourceHandler
@@ -21,20 +23,17 @@ module Pvectl
             @service = service
           end
 
-          # Lists snapshots for given VMIDs.
+          # Lists snapshots for given VMIDs, or all cluster snapshots when args is empty.
           #
           # Conforms to the standard ResourceHandler interface but uses args for VMIDs.
           # The node: and name: parameters are ignored for snapshots.
           #
           # @param node [String, nil] ignored for snapshots
           # @param name [String, nil] ignored for snapshots
-          # @param args [Array<String>] VM/container IDs as strings
+          # @param args [Array<String>] VM/container IDs as strings (empty = all cluster)
           # @param storage [String, nil] unused, for interface compatibility
           # @return [Array<Models::Snapshot>] collection of snapshot models
-          # @raise [ArgumentError] if args is empty (no VMIDs provided)
           def list(node: nil, name: nil, args: [], storage: nil, **_options)
-            raise ArgumentError, "At least one VMID is required" if args.empty?
-
             parsed_vmids = args.map(&:to_i)
             service.list(parsed_vmids)
           end

@@ -71,17 +71,17 @@ module Pvectl
             assert_instance_of Presenters::Snapshot, presenter
           end
 
-          def test_requires_vmids_in_args
-            assert_raises(ArgumentError) do
-              @handler.list(node: nil, name: nil, args: [])
-            end
-          end
+          def test_list_with_empty_args_lists_all_snapshots
+            snapshots = [
+              Models::Snapshot.new(name: "snap1", vmid: 100),
+              Models::Snapshot.new(name: "snap2", vmid: 101)
+            ]
+            @mock_service.expect(:list, snapshots, [[]])
 
-          def test_error_message_when_no_vmids
-            error = assert_raises(ArgumentError) do
-              @handler.list(node: nil, name: nil, args: [])
-            end
-            assert_equal "At least one VMID is required", error.message
+            result = @handler.list(node: nil, name: nil, args: [])
+
+            assert_equal 2, result.length
+            @mock_service.verify
           end
 
           def test_converts_string_vmids_to_integers

@@ -123,6 +123,7 @@ pvectl get nodes                      # List cluster nodes
 pvectl get vms                        # List all VMs
 pvectl get containers --node pve1     # Containers on specific node
 pvectl get storage                    # List storage pools
+pvectl get snapshots                  # All snapshots cluster-wide
 pvectl get snapshots 100              # Snapshots for VM 100
 pvectl get backups --storage nfs      # Backups on specific storage
 pvectl get templates                  # List all templates (VMs and containers)
