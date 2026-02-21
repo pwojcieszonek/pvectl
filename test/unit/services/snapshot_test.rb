@@ -227,6 +227,108 @@ module Pvectl
         assert_match(/not found/i, result.error)
         @mock_resolver.verify
       end
+
+      # --- describe tests ---
+
+      def test_describe_finds_snapshot_by_name_on_specific_vmid
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ], [[100]])
+
+        snapshots = [
+          Models::Snapshot.new(name: "before-upgrade", vmid: 100, node: "pve1", resource_type: :qemu, snaptime: 1706800000, parent: nil),
+          Models::Snapshot.new(name: "after-upgrade", vmid: 100, node: "pve1", resource_type: :qemu, snaptime: 1706900000, parent: "before-upgrade")
+        ]
+        @mock_snapshot_repo.expect(:list, snapshots, [100, "pve1", :qemu])
+
+        result = @service.describe([100], "before-upgrade")
+
+        assert_instance_of Models::SnapshotDescription, result
+        assert result.single?
+        assert_equal "before-upgrade", result.entries.first.snapshot.name
+        assert_equal 2, result.entries.first.siblings.length
+        @mock_resolver.verify
+        @mock_snapshot_repo.verify
+      end
+
+      def test_describe_finds_snapshot_across_multiple_vmids
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ], [[100, 101]])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "before-upgrade", vmid: 100, node: "pve1", resource_type: :qemu)
+        ], [100, "pve1", :qemu])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "before-upgrade", vmid: 101, node: "pve2", resource_type: :lxc),
+          Models::Snapshot.new(name: "other-snap", vmid: 101, node: "pve2", resource_type: :lxc)
+        ], [101, "pve2", :lxc])
+
+        result = @service.describe([100, 101], "before-upgrade")
+
+        refute result.single?
+        assert_equal 2, result.entries.length
+        assert_equal 100, result.entries[0].snapshot.vmid
+        assert_equal 101, result.entries[1].snapshot.vmid
+        @mock_resolver.verify
+        @mock_snapshot_repo.verify
+      end
+
+      def test_describe_raises_not_found_when_snapshot_missing
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ], [[100]])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "other-snap", vmid: 100)
+        ], [100, "pve1", :qemu])
+
+        assert_raises(Pvectl::ResourceNotFoundError) do
+          @service.describe([100], "nonexistent")
+        end
+      end
+
+      def test_describe_raises_not_found_when_no_resources_resolved
+        @mock_resolver.expect(:resolve_multiple, [], [[999]])
+
+        assert_raises(Pvectl::ResourceNotFoundError) do
+          @service.describe([999], "snap1")
+        end
+      end
+
+      def test_describe_searches_all_resources_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "target", vmid: 100, node: "pve1", resource_type: :qemu)
+        ], [100, "pve1", :qemu])
+
+        @mock_snapshot_repo.expect(:list, [], [101, "pve2", :lxc])
+
+        result = @service.describe([], "target")
+
+        assert result.single?
+        assert_equal 100, result.entries.first.snapshot.vmid
+      end
+
+      def test_describe_raises_not_found_when_cluster_scan_finds_nothing
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "other", vmid: 100)
+        ], [100, "pve1", :qemu])
+
+        assert_raises(Pvectl::ResourceNotFoundError) do
+          @service.describe([], "nonexistent")
+        end
+      end
     end
   end
 end

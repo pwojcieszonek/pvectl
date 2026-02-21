@@ -92,6 +92,54 @@ module Pvectl
 
             @mock_service.verify
           end
+
+          # ---------------------------
+          # Describe tests
+          # ---------------------------
+
+          def test_describe_delegates_to_service_with_vmids
+            description = Models::SnapshotDescription.new(entries: [
+              Models::SnapshotDescription::Entry.new(
+                snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
+                siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
+              )
+            ])
+            @mock_service.expect(:describe, description, [[100], "snap1"])
+
+            result = @handler.describe(name: "snap1", node: nil, args: ["100"])
+
+            assert_instance_of Models::SnapshotDescription, result
+            @mock_service.verify
+          end
+
+          def test_describe_with_empty_args_passes_empty_vmids
+            description = Models::SnapshotDescription.new(entries: [
+              Models::SnapshotDescription::Entry.new(
+                snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
+                siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
+              )
+            ])
+            @mock_service.expect(:describe, description, [[], "snap1"])
+
+            result = @handler.describe(name: "snap1", node: nil, args: [])
+
+            assert_instance_of Models::SnapshotDescription, result
+            @mock_service.verify
+          end
+
+          def test_describe_converts_string_vmids_to_integers
+            description = Models::SnapshotDescription.new(entries: [
+              Models::SnapshotDescription::Entry.new(
+                snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
+                siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
+              )
+            ])
+            @mock_service.expect(:describe, description, [[100, 101], "snap1"])
+
+            @handler.describe(name: "snap1", node: nil, args: ["100", "101"])
+
+            @mock_service.verify
+          end
         end
       end
     end

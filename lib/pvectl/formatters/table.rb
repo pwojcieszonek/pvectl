@@ -101,7 +101,7 @@ module Pvectl
         prefix = "  " * indent
 
         # Calculate max key length for alignment (only for non-nested values)
-        simple_keys = hash.select { |_, v| !v.is_a?(Hash) && !(v.is_a?(Array) && v.first.is_a?(Hash)) }
+        simple_keys = hash.select { |_, v| !v.is_a?(Hash) && !(v.is_a?(Array) && v.first.is_a?(Hash)) && !v.to_s.include?("\n") }
         max_key_length = simple_keys.keys.map { |k| k.to_s.length }.max || 0
 
         hash.each do |key, value|
@@ -122,10 +122,19 @@ module Pvectl
             formatted_key = "#{human_key}:".ljust(max_key_length + 2)
             lines << "#{prefix}#{formatted_key}-"
           else
-            # Simple key-value
-            formatted_key = "#{human_key}:".ljust(max_key_length + 2)
             formatted_value = format_describe_value(value, key.to_s, pastel)
-            lines << "#{prefix}#{formatted_key}#{formatted_value}"
+            if formatted_value.include?("\n")
+              # Multi-line value: render as block section
+              lines << ""
+              lines << "#{prefix}#{human_key}:"
+              formatted_value.each_line do |line|
+                lines << "#{prefix}  #{line.chomp}"
+              end
+            else
+              # Simple key-value
+              formatted_key = "#{human_key}:".ljust(max_key_length + 2)
+              lines << "#{prefix}#{formatted_key}#{formatted_value}"
+            end
           end
         end
 

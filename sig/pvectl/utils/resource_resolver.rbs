@@ -7,6 +7,8 @@ module Pvectl
 
       def resolve_multiple: (Array[Integer | String] vmids) -> Array[Hash[Symbol, untyped]]
 
+      def resolve_all: () -> Array[Hash[Symbol, untyped]]
+
       private
 
       def load_resources: () -> void

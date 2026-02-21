@@ -44,6 +44,33 @@ module Pvectl
         end
       end
 
+      # Describes a snapshot by name across given VMIDs.
+      #
+      # When vmids is empty, searches all resources in the cluster.
+      # Returns a SnapshotDescription with entries for each VM/CT that has the snapshot.
+      #
+      # @param vmids [Array<Integer>] VM/container IDs (empty = search all)
+      # @param name [String] snapshot name to find
+      # @return [Models::SnapshotDescription] description with entries per VM
+      # @raise [ResourceNotFoundError] when snapshot not found
+      def describe(vmids, name)
+        resources = vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
+
+        if resources.empty?
+          message = vmids.empty? ? "no resources found in cluster" : "resource #{vmids.first} not found"
+          raise ResourceNotFoundError, message
+        end
+
+        entries = build_describe_entries(resources, name)
+
+        if entries.empty?
+          message = vmids.empty? ? "snapshot '#{name}' not found in cluster" : "snapshot '#{name}' not found on VM #{vmids.join(', ')}"
+          raise ResourceNotFoundError, message
+        end
+
+        Models::SnapshotDescription.new(entries: entries)
+      end
+
       # Creates snapshots for given VMIDs.
       #
       # @param vmids [Array<Integer>] VM/container IDs
@@ -99,6 +126,23 @@ module Pvectl
       end
 
       private
+
+      def build_describe_entries(resources, name)
+        entries = []
+
+        resources.each do |r|
+          siblings = @snapshot_repo.list(r[:vmid], r[:node], r[:type])
+          target = siblings.find { |s| s.name == name }
+          next unless target
+
+          entries << Models::SnapshotDescription::Entry.new(
+            snapshot: target,
+            siblings: siblings
+          )
+        end
+
+        entries
+      end
 
       def execute_multi(resources, operation)
         results = []

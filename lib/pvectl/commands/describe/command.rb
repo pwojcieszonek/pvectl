@@ -28,7 +28,8 @@ module Pvectl
             c.action do |global_options, options, args|
               resource_type = args[0]
               resource_name = args[1]
-              exit_code = execute(resource_type, resource_name, options, global_options)
+              extra_args = args[2..] || []
+              exit_code = execute(resource_type, resource_name, options, global_options, extra_args: extra_args)
               exit exit_code if exit_code != 0
             end
           end
@@ -41,8 +42,8 @@ module Pvectl
         # @param options [Hash] command-specific options
         # @param global_options [Hash] global CLI options
         # @return [Integer] exit code
-        def self.execute(resource_type, resource_name, options, global_options)
-          new(resource_type, resource_name, options, global_options).execute
+        def self.execute(resource_type, resource_name, options, global_options, extra_args: [])
+          new(resource_type, resource_name, options, global_options, extra_args: extra_args).execute
         end
 
         # Creates a new Describe command instance.
@@ -53,11 +54,12 @@ module Pvectl
         # @param global_options [Hash] global CLI options
         # @param registry [Class] registry class for dependency injection
         def initialize(resource_type, resource_name, options, global_options,
-                       registry: Get::ResourceRegistry)
+                       extra_args: [], registry: Get::ResourceRegistry)
           @resource_type = resource_type
           @resource_name = resource_name
           @options = options
           @global_options = global_options
+          @extra_args = extra_args
           @registry = registry
         end
 
@@ -125,7 +127,7 @@ module Pvectl
             format: @global_options[:output] || "table",
             color_enabled: determine_color_enabled
           )
-          output = service.describe(name: @resource_name, node: @options[:node])
+          output = service.describe(name: @resource_name, node: @options[:node], args: @extra_args)
           puts output
         end
 

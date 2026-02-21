@@ -39,6 +39,21 @@ module Pvectl
             service.list(parsed_vmids)
           end
 
+          # Describes a snapshot by name.
+          #
+          # Finds the named snapshot across given VMIDs (or all VMs if args is empty).
+          # Returns a SnapshotDescription with target + siblings for tree building.
+          #
+          # @param name [String] snapshot name to find
+          # @param node [String, nil] unused for snapshots
+          # @param args [Array<String>] VM/container IDs as strings (empty = search all)
+          # @return [Models::SnapshotDescription] snapshot description
+          # @raise [ResourceNotFoundError] if snapshot not found
+          def describe(name:, node: nil, args: [])
+            parsed_vmids = args.map(&:to_i)
+            service.describe(parsed_vmids, name)
+          end
+
           # Returns presenter for snapshots.
           #
           # @return [Presenters::Snapshot] snapshot presenter instance

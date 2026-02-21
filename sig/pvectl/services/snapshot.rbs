@@ -7,6 +7,8 @@ module Pvectl
 
       def list: (Array[Integer] vmids) -> Array[Models::Snapshot]
 
+      def describe: (Array[Integer] vmids, String name) -> Models::SnapshotDescription
+
       def create: (Array[Integer] vmids, name: String, ?description: String?, ?vmstate: bool) -> Array[Models::OperationResult]
 
       def delete: (Array[Integer] vmids, String snapname, ?force: bool) -> Array[Models::OperationResult]
@@ -14,6 +16,8 @@ module Pvectl
       def rollback: (Integer vmid, String snapname, ?start: bool) -> Models::OperationResult
 
       private
+
+      def build_describe_entries: (Array[Hash[Symbol, untyped]] resources, String name) -> Array[Models::SnapshotDescription::Entry]
 
       def execute_multi: (Array[Hash[Symbol, untyped]] resources, Symbol operation) { (Hash[Symbol, untyped]) -> String } -> Array[Models::OperationResult]
 

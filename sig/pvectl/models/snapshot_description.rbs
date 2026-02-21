@@ -1,0 +1,18 @@
+module Pvectl
+  module Models
+    class SnapshotDescription
+      class Entry
+        attr_accessor snapshot: Models::Snapshot
+        attr_accessor siblings: Array[Models::Snapshot]
+
+        def initialize: (snapshot: Models::Snapshot, siblings: Array[Models::Snapshot]) -> void
+      end
+
+      attr_reader entries: Array[Entry]
+
+      def initialize: (entries: Array[Entry]) -> void
+
+      def single?: () -> bool
+    end
+  end
+end
