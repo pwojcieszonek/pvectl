@@ -7,56 +7,45 @@ module Pvectl
     module Resize
       class ResizeDiskVmTest < Minitest::Test
         describe "argument validation" do
+          before do
+            @original_stderr = $stderr
+            $stderr = StringIO.new
+          end
+
+          after do
+            $stderr = @original_stderr
+          end
+
           it "returns usage error when VMID is missing" do
             cmd = ResizeDiskVm.new([], {}, {})
-            captured = StringIO.new
-            original_stderr = $stderr
-            $stderr = captured
-
             exit_code = cmd.execute
 
-            $stderr = original_stderr
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes captured.string, "VMID"
+            assert_includes $stderr.string, "VMID"
           end
 
           it "returns usage error when disk is missing" do
             cmd = ResizeDiskVm.new(["100"], {}, {})
-            captured = StringIO.new
-            original_stderr = $stderr
-            $stderr = captured
-
             exit_code = cmd.execute
 
-            $stderr = original_stderr
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes captured.string, "DISK"
+            assert_includes $stderr.string, "DISK"
           end
 
           it "returns usage error when size is missing" do
             cmd = ResizeDiskVm.new(["100", "scsi0"], {}, {})
-            captured = StringIO.new
-            original_stderr = $stderr
-            $stderr = captured
-
             exit_code = cmd.execute
 
-            $stderr = original_stderr
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes captured.string, "SIZE"
+            assert_includes $stderr.string, "SIZE"
           end
 
           it "returns usage error for invalid size format" do
             cmd = ResizeDiskVm.new(["100", "scsi0", "abc"], {}, {})
-            captured = StringIO.new
-            original_stderr = $stderr
-            $stderr = captured
-
             exit_code = cmd.execute
 
-            $stderr = original_stderr
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes captured.string, "Invalid size"
+            assert_includes $stderr.string, "Invalid size"
           end
         end
 
