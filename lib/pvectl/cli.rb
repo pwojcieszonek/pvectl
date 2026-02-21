@@ -32,6 +32,12 @@ module Pvectl
     program_desc "CLI tool for managing Proxmox clusters with kubectl-like syntax"
     version Pvectl::VERSION
 
+    # Help formatting: preserve whitespace for code examples in long_desc
+    wrap_help_text :verbatim
+
+    # Display commands in declaration order (not alphabetical)
+    sort_help :manually
+
     # Enable normal flag processing in subcommands
     # Note: We do NOT use 'arguments :strict' to allow flexible flag/argument ordering
     subcommand_option_handling :normal
