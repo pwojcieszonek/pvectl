@@ -77,6 +77,7 @@ Context name: [default] production
 | `edit` | Edit config in $EDITOR | `pvectl edit vm 100` |
 | `clone` | Clone VM or container | `pvectl clone vm 100 --name clone-01` |
 | `migrate` | Migrate between nodes | `pvectl migrate vm 100 --target pve2` |
+| `resize disk` | Resize VM/container disk | `pvectl resize disk vm 100 scsi0 +10G` |
 
 ### Snapshot & Backup Commands
 
@@ -281,6 +282,18 @@ pvectl template vm 100 101 102 --yes
 # Force convert running VM (stops it first, skips confirmation)
 pvectl template vm 100 --force --yes
 ```
+
+### Resizing Disks
+
+```bash
+pvectl resize disk vm 100 scsi0 +10G          # Add 10GB to VM disk
+pvectl resize disk ct 200 rootfs +5G           # Add 5GB to container rootfs
+pvectl resize disk vm 100 scsi0 50G --yes      # Set to 50GB, skip confirmation
+pvectl resize disk vm 100 scsi0 +10G --node pve1  # Specify node explicitly
+```
+
+> **Note:** Disk resize is irreversible — Proxmox does not support shrinking disks.
+> A confirmation prompt is shown unless `--yes` is specified.
 
 ### Editing Configuration
 

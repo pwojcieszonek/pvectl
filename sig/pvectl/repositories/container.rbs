@@ -31,6 +31,8 @@ module Pvectl
 
       def update: (Integer | String ctid, String node, ?Hash[Symbol, untyped] params) -> nil
 
+      def resize: (Integer | String ctid, String node, disk: String, size: String) -> nil
+
       def fetch_config: (String node, Integer ctid) -> Hash[Symbol, untyped]
 
       private

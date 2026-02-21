@@ -635,6 +635,44 @@ class RepositoriesContainerTest < Minitest::Test
   end
 
   # ---------------------------
+  # resize() Method
+  # ---------------------------
+
+  def test_resize_puts_to_correct_endpoint
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ disk: "rootfs", size: "+5G" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/lxc/200/resize"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    result = repo.resize(200, "pve1", disk: "rootfs", size: "+5G")
+
+    assert_nil result
+    mock_resource.verify
+    mock_client.verify
+  end
+
+  def test_resize_passes_disk_and_size_params
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ disk: "mp0", size: "50G" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve2/lxc/300/resize"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    repo.resize(300, "pve2", disk: "mp0", size: "50G")
+
+    mock_resource.verify
+  end
+
+  # ---------------------------
   # fetch_config() Public Access
   # ---------------------------
 

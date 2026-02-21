@@ -1,0 +1,16 @@
+module Pvectl
+  module Commands
+    module Resize
+      class ResizeDiskCt
+        include ResizeDiskCommand
+
+        private
+
+        def resource_label: () -> String
+        def resource_id_label: () -> String
+        def build_resize_service: (Connection connection) -> Services::ResizeDisk
+        def build_presenter: () -> Presenters::ContainerOperationResult
+      end
+    end
+  end
+end

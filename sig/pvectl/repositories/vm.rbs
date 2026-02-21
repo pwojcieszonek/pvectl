@@ -33,6 +33,8 @@ module Pvectl
 
       def update: (Integer | String vmid, String node, ?Hash[Symbol, untyped] params) -> nil
 
+      def resize: (Integer | String vmid, String node, disk: String, size: String) -> nil
+
       def fetch_config: (String node, Integer vmid) -> Hash[Symbol, untyped]
 
       def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String

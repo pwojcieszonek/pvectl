@@ -22,7 +22,8 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     expected_commands = %i[get top logs describe ping start stop shutdown
                           restart reset suspend resume create delete edit
-                          clone migrate rollback restore config console template]
+                          clone migrate rollback restore config console template
+                          resize]
 
     expected_commands.each do |cmd|
       assert test_app.commands.key?(cmd),
@@ -38,9 +39,9 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     Pvectl::PluginLoader.load_builtins(test_app)
 
-    # GLI adds :help and :_doc by default, plus our 22 built-in commands
+    # GLI adds :help and :_doc by default, plus our 23 built-in commands
     user_commands = test_app.commands.keys - [:help, :_doc]
-    expected_count = 22
+    expected_count = 23
     assert_equal expected_count, user_commands.size,
                  "Expected #{expected_count} user commands, got #{user_commands.size}: #{user_commands.sort}"
   end
