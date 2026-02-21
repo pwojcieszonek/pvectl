@@ -16,5 +16,11 @@ jobs:
           ruby-version: .ruby-version
           bundler-cache: true
 
+      - name: Set up test config
+        run: |
+          mkdir -p ~/.pvectl
+          cp test/fixtures/config/valid_config.yml ~/.pvectl/config
+          chmod 600 ~/.pvectl/config
+
       - name: Run tests
         run: bundle exec rake test
