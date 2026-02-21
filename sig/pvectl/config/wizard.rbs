@@ -32,13 +32,17 @@ module Pvectl
     end
 
     class SimplePrompt
-      def ask: (String question, ?default: String?) -> String?
+      def ask: (String question, ?default: untyped, ?required: bool, ?convert: Symbol?, **untyped) -> untyped
       def yes?: (String question, **untyped) -> bool
       def select: (String question, Array[untyped] choices, **untyped) -> untyped
       def mask: (String question, **untyped) -> String?
       def ok: (untyped message) -> void
       def warn: (untyped message) -> void
       def error: (untyped message) -> void
+
+      private
+
+      def convert_value: (untyped value, Symbol? type) -> untyped
     end
   end
 end

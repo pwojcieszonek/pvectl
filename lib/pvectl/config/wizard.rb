@@ -216,13 +216,24 @@ module Pvectl
       # Asks a question and returns the answer.
       #
       # @param question [String] question to ask
-      # @param default [String, nil] default value
-      # @return [String] user input
-      def ask(question, default: nil)
-        print "#{question} "
-        print "[#{default}] " if default
-        input = $stdin.gets&.chomp
-        input.nil? || input.empty? ? default : input
+      # @param default [Object, nil] default value
+      # @param required [Boolean] whether a non-empty answer is required
+      # @param convert [Symbol, nil] type conversion (+:int+, +:float+, +:bool+)
+      # @return [Object] user input (converted if requested)
+      def ask(question, default: nil, required: false, convert: nil, **)
+        loop do
+          print "#{question} "
+          print "[#{default}] " if default
+          input = $stdin.gets&.chomp
+          value = input.nil? || input.empty? ? default : input
+
+          if required && (value.nil? || value.to_s.empty?)
+            puts "Value is required."
+            next
+          end
+
+          return convert_value(value, convert)
+        end
       end
 
       # Asks a yes/no question.
@@ -273,6 +284,26 @@ module Pvectl
       def warn(_message); end
 
       def error(_message); end
+
+      private
+
+      # Converts a string value to the requested type.
+      #
+      # @param value [Object] raw value
+      # @param type [Symbol, nil] target type (+:int+, +:float+, +:bool+)
+      # @return [Object] converted value
+      def convert_value(value, type)
+        return value if type.nil? || value.nil?
+
+        case type
+        when :int, :integer then value.to_s.empty? ? value : Integer(value)
+        when :float         then value.to_s.empty? ? value : Float(value)
+        when :bool, :boolean
+          %w[y yes true 1].include?(value.to_s.downcase)
+        else
+          value
+        end
+      end
     end
   end
 end
