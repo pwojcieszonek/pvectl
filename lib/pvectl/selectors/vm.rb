@@ -5,7 +5,7 @@ module Pvectl
     # Selector for filtering VMs.
     #
     # Extends Base with VM-specific field extraction.
-    # Supports: status, tags, pool, name.
+    # Supports: status, tags, pool, name, template.
     #
     # @example Filter running VMs
     #   selector = Vm.parse("status=running")
@@ -20,7 +20,7 @@ module Pvectl
     #   web_vms = selector.apply(all_vms)
     #
     class Vm < Base
-      SUPPORTED_FIELDS = %w[status tags pool name].freeze
+      SUPPORTED_FIELDS = %w[status tags pool name template].freeze
 
       # Applies selector to VM collection.
       #
@@ -37,7 +37,7 @@ module Pvectl
       # Extracts field value from VM model.
       #
       # @param vm [Models::Vm] VM model
-      # @param field [String] Field name (status, tags, pool, name)
+      # @param field [String] Field name (status, tags, pool, name, template)
       # @return [String, nil] Field value
       # @raise [ArgumentError] if field is not supported
       def extract_value(vm, field)
@@ -50,6 +50,8 @@ module Pvectl
           vm.pool
         when "name"
           vm.name
+        when "template"
+          vm.template? ? "yes" : "no"
         else
           raise ArgumentError, "Unknown field: #{field}. Supported: #{SUPPORTED_FIELDS.join(', ')}"
         end

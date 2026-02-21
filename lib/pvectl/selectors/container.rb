@@ -5,7 +5,7 @@ module Pvectl
     # Selector for filtering containers.
     #
     # Extends Base with container-specific field extraction.
-    # Supports: status, tags, pool, name.
+    # Supports: status, tags, pool, name, template.
     #
     # @example Filter running containers
     #   selector = Container.parse("status=running")
@@ -20,7 +20,7 @@ module Pvectl
     #   web_containers = selector.apply(all_containers)
     #
     class Container < Base
-      SUPPORTED_FIELDS = %w[status tags pool name].freeze
+      SUPPORTED_FIELDS = %w[status tags pool name template].freeze
 
       # Applies selector to container collection.
       #
@@ -37,7 +37,7 @@ module Pvectl
       # Extracts field value from Container model.
       #
       # @param container [Models::Container] Container model
-      # @param field [String] Field name (status, tags, pool, name)
+      # @param field [String] Field name (status, tags, pool, name, template)
       # @return [String, nil] Field value
       # @raise [ArgumentError] if field is not supported
       def extract_value(container, field)
@@ -50,6 +50,8 @@ module Pvectl
           container.pool
         when "name"
           container.name
+        when "template"
+          container.template? ? "yes" : "no"
         else
           raise ArgumentError, "Unknown field: #{field}. Supported: #{SUPPORTED_FIELDS.join(', ')}"
         end
