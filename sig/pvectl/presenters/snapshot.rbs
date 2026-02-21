@@ -9,9 +9,25 @@ module Pvectl
 
       def extra_values: (untyped model, **untyped context) -> Array[String]
 
-      def to_hash: (untyped model) -> Hash[String, untyped]
+      def to_hash: (untyped model) -> (Hash[String, untyped] | Array[Hash[String, untyped]])
+
+      def to_description: (untyped model) -> Hash[String, untyped]
 
       private
+
+      def snapshot_to_hash: (Models::Snapshot model) -> Hash[String, untyped]
+
+      def build_single_description: (Models::SnapshotDescription::Entry entry) -> Hash[String, untyped]
+
+      def build_multi_description: (Array[Models::SnapshotDescription::Entry] entries) -> Hash[String, untyped]
+
+      def build_tree_string: (Models::SnapshotDescription::Entry entry) -> String
+
+      def render_tree_node: (String name, Hash[String, Array[String]] children_map, String target, String prefix, bool last, Array[String] lines) -> void
+
+      def build_children_map: (Array[Models::Snapshot] siblings) -> Hash[String, Array[String]]
+
+      def build_tree_data: (Models::SnapshotDescription::Entry entry) -> Array[Hash[String, untyped]]
 
       def format_time: (Time? time) -> String
     end
