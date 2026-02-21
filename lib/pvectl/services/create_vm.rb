@@ -122,7 +122,7 @@ module Pvectl
         params[:machine] = machine if machine
         params[:efidisk0] = efidisk if efidisk
         params.merge!(cloud_init) if cloud_init
-        params[:agent] = "1" if agent
+        params[:agent] = agent ? "1" : "0" unless agent.nil?
         params[:ostype] = ostype if ostype
         params[:description] = description if description
         params[:tags] = tags if tags
