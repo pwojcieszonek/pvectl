@@ -1,0 +1,19 @@
+module Pvectl
+  module Commands
+    module SharedConfigParsers
+      def parse_vm_disks: () -> Array[Hash[Symbol, String]]
+
+      def parse_vm_nets: () -> Array[Hash[Symbol, String]]
+
+      def parse_vm_cloud_init: () -> Hash[Symbol, untyped]
+
+      def parse_ct_mountpoints: () -> Array[Hash[Symbol, String]]
+
+      def parse_ct_nets: () -> Array[Hash[Symbol, String]]
+
+      def build_vm_config_params: () -> Hash[Symbol, untyped]
+
+      def build_ct_config_params: () -> Hash[Symbol, untyped]
+    end
+  end
+end

@@ -200,6 +200,7 @@ require_relative "pvectl/services/task_listing"
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
+require_relative "pvectl/commands/shared_config_parsers"
 
 # Commands - Get
 require_relative "pvectl/commands/get/resource_handler"

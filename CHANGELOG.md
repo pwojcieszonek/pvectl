@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **plugins**: Plugin system with gem-based (`pvectl-plugin-*`) and directory-based (`~/.pvectl/plugins/*.rb`) discovery
 - **plugins**: `PluginLoader` class for automatic plugin loading with graceful error handling
 - **commands**: `SharedFlags` module for reusable flag definitions across commands
+- **commands**: `SharedConfigParsers` mixin module for shared CLI flag parsing (disks, nets, cloud-init, mountpoints) across create and clone commands
 
 ### Fixed
 - **wizards**: Remove duplicate confirmation prompt in `create vm` and `create ct` interactive wizards — wizard no longer asks "Create this VM/container?" before showing the summary; only the summary-based confirmation remains
