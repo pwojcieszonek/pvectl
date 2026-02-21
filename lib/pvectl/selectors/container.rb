@@ -66,11 +66,26 @@ module Pvectl
       # @return [Boolean] true if matches
       def match_condition?(container, condition)
         return match_tags_condition?(container, condition) if condition[:field] == "tags"
+        return super(container, normalize_boolean_condition(condition)) if condition[:field] == "template"
 
         super
       end
 
       private
+
+      # Normalizes boolean condition values for template field.
+      # Accepts: yes/no, true/false, 1/0
+      #
+      # @param condition [Hash] Condition with :value key
+      # @return [Hash] Condition with normalized value
+      def normalize_boolean_condition(condition)
+        normalized = case condition[:value]
+                     when "true", "1" then "yes"
+                     when "false", "0" then "no"
+                     else condition[:value]
+                     end
+        condition.merge(value: normalized)
+      end
 
       # Special matching for tags field.
       # Proxmox tags are semicolon-separated, so we check if the value
