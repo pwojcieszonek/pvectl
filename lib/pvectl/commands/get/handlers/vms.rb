@@ -74,7 +74,7 @@ module Pvectl
           # @return [Models::Vm] VM model with full details
           # @raise [ArgumentError] if VMID format is invalid
           # @raise [Pvectl::ResourceNotFoundError] if VM not found
-          def describe(name:, node: nil, args: [])
+          def describe(name:, node: nil, args: [], vmid: nil)
             raise ArgumentError, "Invalid VMID: must be positive integer (1-999999999)" unless valid_vmid?(name)
 
             vmid = name.to_i

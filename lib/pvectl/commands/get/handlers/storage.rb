@@ -60,7 +60,7 @@ module Pvectl
           # @return [Models::Storage, Array<Models::Storage>] Storage model or array of instances
           # @raise [ArgumentError] if storage name is invalid
           # @raise [Pvectl::ResourceNotFoundError] if storage not found
-          def describe(name:, node: nil, args: [])
+          def describe(name:, node: nil, args: [], vmid: nil)
             raise ArgumentError, "Invalid storage name" if name.nil? || name.empty?
 
             # Check if storage exists on multiple nodes (local storage)

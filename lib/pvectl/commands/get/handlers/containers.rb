@@ -74,7 +74,7 @@ module Pvectl
           # @return [Models::Container] Container model with full details
           # @raise [ArgumentError] if CTID format is invalid
           # @raise [Pvectl::ResourceNotFoundError] if container not found
-          def describe(name:, node: nil, args: [])
+          def describe(name:, node: nil, args: [], vmid: nil)
             raise ArgumentError, "Invalid CTID: must be positive integer (100-999999999)" unless valid_ctid?(name)
 
             ctid = name.to_i

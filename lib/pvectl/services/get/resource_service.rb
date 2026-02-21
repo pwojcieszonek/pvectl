@@ -36,10 +36,11 @@ module Pvectl
         # @param name [String, nil] filter by resource name
         # @param args [Array<String>] additional positional arguments (e.g., VMIDs for snapshots)
         # @param storage [String, nil] filter by storage (for backups)
+        # @param vmid [Array<String>, nil] filter by VM/CT IDs
         # @param options [Hash] additional options passed through to handler (e.g., limit, since, type_filter)
         # @return [String] formatted output string
-        def list(node: nil, name: nil, args: [], storage: nil, **options)
-          models = @handler.list(node: node, name: name, args: args, storage: storage, **options)
+        def list(node: nil, name: nil, args: [], storage: nil, vmid: nil, **options)
+          models = @handler.list(node: node, name: name, args: args, storage: storage, vmid: vmid, **options)
           presenter = @handler.presenter
           format_output(models, presenter)
         end
@@ -51,9 +52,10 @@ module Pvectl
         #
         # @param name [String] resource name
         # @param node [String, nil] filter by node name (for local storage)
+        # @param vmid [Array<String>, nil] filter by VM/CT IDs
         # @return [String] formatted output string
-        def describe(name:, node: nil, args: [])
-          result = @handler.describe(name: name, node: node, args: args)
+        def describe(name:, node: nil, args: [], vmid: nil)
+          result = @handler.describe(name: name, node: node, args: args, vmid: vmid)
           presenter = @handler.presenter
 
           if result.is_a?(Array)

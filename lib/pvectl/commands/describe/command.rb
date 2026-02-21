@@ -25,6 +25,9 @@ module Pvectl
             c.desc "Filter by node name (required for local storage)"
             c.flag [:node], arg_name: "NODE"
 
+            c.desc "Filter by VM/CT ID (repeatable)"
+            c.flag [:vmid], arg_name: "VMID", multiple: true
+
             c.action do |global_options, options, args|
               resource_type = args[0]
               resource_name = args[1]
@@ -127,7 +130,7 @@ module Pvectl
             format: @global_options[:output] || "table",
             color_enabled: determine_color_enabled
           )
-          output = service.describe(name: @resource_name, node: @options[:node], args: @extra_args)
+          output = service.describe(name: @resource_name, node: @options[:node], args: @extra_args, vmid: @options[:vmid])
           puts output
         end
 

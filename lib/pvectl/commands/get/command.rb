@@ -35,6 +35,9 @@ module Pvectl
             c.desc "Filter by node name"
             c.flag [:node], arg_name: "NODE"
 
+            c.desc "Filter by VM/CT ID (repeatable)"
+            c.flag [:vmid], arg_name: "VMID", multiple: true
+
             c.desc "Filter by storage (for backups)"
             c.flag [:storage], arg_name: "STORAGE"
 
@@ -195,6 +198,7 @@ module Pvectl
             name: nil,
             args: args,
             storage: options[:storage],
+            vmid: options[:vmid],
             limit: options[:limit],
             since: options[:since],
             until_time: options[:until],
