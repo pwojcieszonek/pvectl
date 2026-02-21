@@ -185,6 +185,9 @@ require_relative "pvectl/services/edit_vm"
 # Services - Edit Container
 require_relative "pvectl/services/edit_container"
 
+# Services - Resize Disk
+require_relative "pvectl/services/resize_disk"
+
 # Services - Clone Container
 require_relative "pvectl/services/clone_container"
 

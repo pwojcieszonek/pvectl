@@ -1,0 +1,47 @@
+module Pvectl
+  module Services
+    class ResizeDisk
+      class DiskNotFoundError < StandardError
+      end
+
+      class SizeTooSmallError < StandardError
+      end
+
+      class ParsedSize < Struct[untyped]
+        attr_reader relative: bool
+        attr_reader value: String
+        attr_reader raw: String
+
+        def relative?: () -> bool
+      end
+
+      SIZE_PATTERN: Regexp
+
+      UNIT_MULTIPLIERS: Hash[String, (Integer | Float)]
+
+      def self.parse_size: (String? size_str) -> ParsedSize
+
+      def initialize: (repository: untyped) -> void
+
+      def preflight: (Integer id, String disk, ParsedSize parsed_size, node: String) -> Hash[Symbol, String]
+
+      def perform: (Integer id, String disk, String raw_size, node: String) -> Models::OperationResult
+
+      private
+
+      def extract_disk_size: (Hash[Symbol, untyped] config, String disk, Integer id) -> String
+
+      def calculate_new_size: (String current_size, ParsedSize parsed_size) -> String
+
+      def validate_new_size!: (String current_size, String new_size, ParsedSize parsed_size) -> void
+
+      def parse_size_components: (String size) -> [Float, String]
+
+      def convert_to_unit: (Float value, String from_unit, String to_unit) -> Float
+
+      def format_size: (Float value, String suffix) -> String
+
+      def size_to_bytes: (String size) -> Float
+    end
+  end
+end
