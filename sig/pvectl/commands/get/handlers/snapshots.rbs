@@ -5,17 +5,17 @@ module Pvectl
         class Snapshots
           include ResourceHandler
 
-          VMID_PATTERN: Regexp
-
           def initialize: (?service: untyped) -> void
 
-          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Snapshot]
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?vmid: Array[String]?) -> Array[Models::Snapshot]
 
-          def describe: (name: String, ?node: String?, ?args: Array[String]) -> Models::SnapshotDescription
+          def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: Array[String]?) -> Models::SnapshotDescription
 
           def presenter: () -> Presenters::Snapshot
 
           private
+
+          def parse_vmids: (Array[String]? vmid) -> Array[Integer]
 
           def service: () -> untyped
 
