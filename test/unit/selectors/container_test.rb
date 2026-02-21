@@ -20,7 +20,11 @@ class SelectorsContainerTest < Minitest::Test
       vmid: 203, name: "cache-staging", status: "stopped",
       node: "pve2", tags: nil, pool: nil
     )
-    @all_containers = [@ct1, @ct2, @ct3, @ct4]
+    @ct5 = Pvectl::Models::Container.new(
+      vmid: 9000, name: "debian-template", status: "stopped",
+      node: "pve1", tags: "template", pool: nil, template: 1
+    )
+    @all_containers = [@ct1, @ct2, @ct3, @ct4, @ct5]
   end
 
   # Class structure
@@ -33,7 +37,7 @@ class SelectorsContainerTest < Minitest::Test
   end
 
   def test_supported_fields_constant
-    assert_equal %w[status tags pool name], Pvectl::Selectors::Container::SUPPORTED_FIELDS
+    assert_equal %w[status tags pool name template], Pvectl::Selectors::Container::SUPPORTED_FIELDS
   end
 
   # Status filtering
@@ -47,21 +51,21 @@ class SelectorsContainerTest < Minitest::Test
   def test_filter_by_status_stopped
     selector = Pvectl::Selectors::Container.parse("status=stopped")
     result = selector.apply(@all_containers)
-    assert_equal 2, result.size
-    assert_equal [202, 203], result.map(&:vmid)
+    assert_equal 3, result.size
+    assert_equal [202, 203, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_status_not_equal
     selector = Pvectl::Selectors::Container.parse("status!=running")
     result = selector.apply(@all_containers)
-    assert_equal 2, result.size
-    assert_equal [202, 203], result.map(&:vmid)
+    assert_equal 3, result.size
+    assert_equal [202, 203, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_status_in
     selector = Pvectl::Selectors::Container.parse("status in (running,stopped)")
     result = selector.apply(@all_containers)
-    assert_equal 4, result.size
+    assert_equal 5, result.size
   end
 
   # Tags filtering
@@ -75,8 +79,8 @@ class SelectorsContainerTest < Minitest::Test
   def test_filter_by_tag_not_equal
     selector = Pvectl::Selectors::Container.parse("tags!=prod")
     result = selector.apply(@all_containers)
-    assert_equal 2, result.size
-    assert_equal [202, 203], result.map(&:vmid)
+    assert_equal 3, result.size
+    assert_equal [202, 203, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_tag_pattern
@@ -110,7 +114,7 @@ class SelectorsContainerTest < Minitest::Test
   def test_filter_by_pool_not_equal
     selector = Pvectl::Selectors::Container.parse("pool!=production")
     result = selector.apply(@all_containers)
-    assert_equal 2, result.size
+    assert_equal 3, result.size
   end
 
   # Name filtering
@@ -131,7 +135,7 @@ class SelectorsContainerTest < Minitest::Test
   def test_filter_by_name_not_equal
     selector = Pvectl::Selectors::Container.parse("name!=db-dev")
     result = selector.apply(@all_containers)
-    assert_equal 3, result.size
+    assert_equal 4, result.size
   end
 
   # Multiple conditions (AND)
@@ -151,12 +155,40 @@ class SelectorsContainerTest < Minitest::Test
   def test_empty_selector_returns_all
     selector = Pvectl::Selectors::Container.parse("")
     result = selector.apply(@all_containers)
-    assert_equal 4, result.size
+    assert_equal 5, result.size
   end
 
   # parse_all
   def test_parse_all_combines_selector_strings
     selector = Pvectl::Selectors::Container.parse_all(["status=running", "tags=prod"])
+    result = selector.apply(@all_containers)
+    assert_equal 2, result.size
+    assert_equal [200, 201], result.map(&:vmid)
+  end
+
+  # Template filtering
+  def test_filter_by_template_yes
+    selector = Pvectl::Selectors::Container.parse("template=yes")
+    result = selector.apply(@all_containers)
+    assert_equal 1, result.size
+    assert_equal 9000, result.first.vmid
+  end
+
+  def test_filter_by_template_no
+    selector = Pvectl::Selectors::Container.parse("template=no")
+    result = selector.apply(@all_containers)
+    assert_equal 4, result.size
+    assert_equal [200, 201, 202, 203], result.map(&:vmid)
+  end
+
+  def test_filter_by_template_not_equal
+    selector = Pvectl::Selectors::Container.parse("template!=yes")
+    result = selector.apply(@all_containers)
+    assert_equal 4, result.size
+  end
+
+  def test_filter_combined_template_and_status
+    selector = Pvectl::Selectors::Container.parse("template=no,status=running")
     result = selector.apply(@all_containers)
     assert_equal 2, result.size
     assert_equal [200, 201], result.map(&:vmid)
