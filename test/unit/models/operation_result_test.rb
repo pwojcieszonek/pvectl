@@ -103,7 +103,42 @@ class ModelsOperationResultTest < Minitest::Test
     refute result.pending?
   end
 
+  # partial?
+  def test_partial_returns_true_when_success_is_partial
+    result = Pvectl::Models::OperationResult.new(
+      operation: :clone, success: :partial, error: "Config update failed"
+    )
+
+    assert result.partial?
+    refute result.successful?
+    refute result.pending?
+  end
+
+  def test_partial_returns_false_when_success_is_true
+    result = Pvectl::Models::OperationResult.new(
+      operation: :clone, success: true
+    )
+
+    refute result.partial?
+  end
+
+  def test_failed_returns_true_when_success_is_partial
+    result = Pvectl::Models::OperationResult.new(
+      operation: :clone, success: :partial
+    )
+
+    assert result.failed?
+  end
+
   # status_text
+  def test_status_text_returns_partial_for_partial_success
+    result = Pvectl::Models::OperationResult.new(
+      operation: :clone, success: :partial
+    )
+
+    assert_equal "Partial", result.status_text
+  end
+
   def test_status_text_returns_pending_when_pending
     result = Pvectl::Models::OperationResult.new(success: :pending)
     assert_equal "Pending", result.status_text
@@ -138,5 +173,10 @@ class ModelsOperationResultTest < Minitest::Test
   def test_message_returns_status_text_as_fallback
     result = Pvectl::Models::OperationResult.new(success: true)
     assert_equal "Success", result.message
+  end
+
+  def test_message_returns_partial_when_no_error_set
+    result = Pvectl::Models::OperationResult.new(success: :partial)
+    assert_equal "Partial", result.message
   end
 end

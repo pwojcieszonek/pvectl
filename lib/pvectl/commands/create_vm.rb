@@ -19,6 +19,7 @@ module Pvectl
     #
     class CreateVm
       include CreateResourceCommand
+      include SharedConfigParsers
 
       # Registers the create command with the CLI.
       #
@@ -66,66 +67,13 @@ module Pvectl
           c.desc "Stop on first error (default: continue and report all)"
           c.switch [:"fail-fast"], negatable: false
 
-          # Shared VM/container flags
-          c.desc "Number of CPU cores"
-          c.flag [:cores], type: Integer, arg_name: "N"
-
-          c.desc "Number of CPU sockets (VM)"
-          c.flag [:sockets], type: Integer, arg_name: "N"
-
-          c.desc "CPU model type (VM)"
-          c.flag [:"cpu-type"], arg_name: "TYPE"
-
-          c.desc "Enable NUMA (VM)"
-          c.switch [:numa], negatable: false
-
-          c.desc "Memory in MB"
-          c.flag [:memory], type: Integer, arg_name: "MB"
-
-          c.desc "Balloon minimum memory in MB (VM)"
-          c.flag [:balloon], type: Integer, arg_name: "MB"
-
-          c.desc "Disk config (VM, repeatable): storage=X,size=Y[,format=Z,...]"
-          c.flag [:disk], arg_name: "CONFIG", multiple: true
-
-          c.desc "SCSI controller type (VM)"
-          c.flag [:scsihw], arg_name: "TYPE"
-
-          c.desc "CD-ROM/ISO path (VM): storage:iso/name.iso"
-          c.flag [:cdrom], arg_name: "ISO"
-
-          c.desc "Network config (repeatable): VM: bridge=X[,model=Y,tag=Z], CT: bridge=X[,name=Y,ip=Z]"
-          c.flag [:net], arg_name: "CONFIG", multiple: true
-
-          c.desc "BIOS firmware (VM): seabios or ovmf"
-          c.flag [:bios], arg_name: "TYPE"
-
-          c.desc "Boot order (VM)"
-          c.flag [:"boot-order"], arg_name: "ORDER"
-
-          c.desc "Machine type (VM): q35, pc"
-          c.flag [:machine], arg_name: "TYPE"
-
-          c.desc "EFI disk config (VM): storage=X[,size=Y]"
-          c.flag [:efidisk], arg_name: "CONFIG"
-
-          c.desc "Cloud-init config (VM): user=X,password=Y,ip=dhcp,..."
-          c.flag [:"cloud-init"], arg_name: "CONFIG"
-
-          c.desc "Enable QEMU guest agent (VM)"
-          c.switch [:agent], negatable: false
-
-          c.desc "OS type (VM): l26, win11, other, etc."
-          c.flag [:ostype], arg_name: "TYPE"
-
-          c.desc "Tags (comma-separated)"
-          c.flag [:tags], arg_name: "TAGS"
+          # Shared config flags (VM + container)
+          SharedFlags.common_config(c)
+          SharedFlags.vm_config(c)
+          SharedFlags.container_config(c)
 
           c.desc "Resource pool"
           c.flag [:pool], arg_name: "POOL"
-
-          c.desc "Start resource after creation"
-          c.switch [:start], negatable: false
 
           c.desc "Force interactive wizard mode"
           c.switch [:interactive], negatable: true
@@ -133,42 +81,12 @@ module Pvectl
           c.desc "Show what would happen without creating"
           c.switch [:"dry-run"], negatable: false
 
-          c.desc "Target node"
-          c.flag [:node], arg_name: "NODE"
-
-          # Container-specific flags
+          # Container-specific create flags
           c.desc "Container hostname (container)"
           c.flag [:hostname], arg_name: "NAME"
 
           c.desc "OS template path (container): storage:vztmpl/name.tar.zst"
           c.flag [:ostemplate], arg_name: "TEMPLATE"
-
-          c.desc "Root filesystem (container): storage=X,size=Y"
-          c.flag [:rootfs], arg_name: "CONFIG"
-
-          c.desc "Mountpoint (container, repeatable): mp=/path,storage=X,size=Y"
-          c.flag [:mp], arg_name: "CONFIG", multiple: true
-
-          c.desc "Swap in MB (container)"
-          c.flag [:swap], type: Integer, arg_name: "MB"
-
-          c.desc "Create privileged container (container, default: unprivileged)"
-          c.switch [:privileged], negatable: false
-
-          c.desc "LXC features (container): nesting=1,keyctl=1"
-          c.flag [:features], arg_name: "FEATURES"
-
-          c.desc "Root password (container)"
-          c.flag [:password], arg_name: "PASSWORD"
-
-          c.desc "SSH public keys file (container)"
-          c.flag [:"ssh-public-keys"], arg_name: "FILE"
-
-          c.desc "Start on boot (container)"
-          c.switch [:onboot], negatable: false
-
-          c.desc "Startup order spec (container)"
-          c.flag [:startup], arg_name: "SPEC"
 
           c.action do |global_options, options, args|
             resource_type = args.shift
@@ -255,40 +173,20 @@ module Pvectl
 
       # Extracts CLI options into a service params hash.
       #
-      # Parses +--disk+, +--net+, and +--cloud-init+ flags through
-      # their respective parsers. All nil values are compacted out.
+      # Delegates VM config parsing to SharedConfigParsers#build_vm_config_params,
+      # then adds create-specific parameters.
       #
       # @return [Hash] service-compatible parameters
       # @raise [ArgumentError] if parser validation fails
       def build_params_from_flags
-        params = {
-          name: @options[:name],
-          node: @options[:node] || resolve_default_node,
-          ostype: @options[:ostype],
-          description: @options[:description],
-          tags: @options[:tags],
-          pool: @options[:pool],
-          cores: @options[:cores],
-          sockets: @options[:sockets],
-          cpu_type: @options[:"cpu-type"],
-          numa: @options[:numa],
-          memory: @options[:memory],
-          balloon: @options[:balloon],
-          scsihw: @options[:scsihw],
-          cdrom: @options[:cdrom],
-          bios: @options[:bios],
-          boot_order: @options[:"boot-order"],
-          machine: @options[:machine],
-          efidisk: @options[:efidisk],
-          agent: @options[:agent]
-        }
+        params = build_vm_config_params
+        params[:name] = @options[:name]
+        params[:node] = @options[:node] || resolve_default_node
+        params[:description] = @options[:description]
+        params[:pool] = @options[:pool]
 
         vmid = @args.first
         params[:vmid] = vmid.to_i if vmid
-
-        params[:disks] = parse_disks if @options[:disk]
-        params[:nets] = parse_nets if @options[:net]
-        params[:cloud_init] = parse_cloud_init if @options[:"cloud-init"]
 
         params.compact
       end
@@ -323,31 +221,6 @@ module Pvectl
         $stdout.puts "  Agent:     enabled" if params[:agent]
         $stdout.puts "  Tags:      #{params[:tags]}" if params[:tags]
         $stdout.puts "  Pool:      #{params[:pool]}" if params[:pool]
-      end
-
-      # Parses disk configuration strings through the DiskConfig parser.
-      #
-      # @return [Array<Hash>] parsed disk configurations
-      # @raise [ArgumentError] if any disk string is invalid
-      def parse_disks
-        Array(@options[:disk]).map { |d| Parsers::DiskConfig.parse(d) }
-      end
-
-      # Parses network configuration strings through the NetConfig parser.
-      #
-      # @return [Array<Hash>] parsed network configurations
-      # @raise [ArgumentError] if any net string is invalid
-      def parse_nets
-        Array(@options[:net]).map { |n| Parsers::NetConfig.parse(n) }
-      end
-
-      # Parses cloud-init configuration string and converts to Proxmox params.
-      #
-      # @return [Hash] Proxmox-compatible cloud-init parameters
-      # @raise [ArgumentError] if the cloud-init string is invalid
-      def parse_cloud_init
-        config = Parsers::CloudInitConfig.parse(@options[:"cloud-init"])
-        Parsers::CloudInitConfig.to_proxmox_params(config)
       end
     end
   end

@@ -18,6 +18,8 @@ module Pvectl
     #   pvectl clone vm 100 --linked --target pve2
     #
     class CloneVm
+      include SharedConfigParsers
+
       # Registers the clone command with the CLI.
       #
       # @param cli [GLI::App] the CLI application object
@@ -52,6 +54,14 @@ module Pvectl
 
           c.desc "Async mode (return task ID immediately)"
           c.switch [:async], negatable: false
+
+          c.desc "Skip confirmation prompt"
+          c.switch [:yes, :y], negatable: false
+
+          # Shared config flags for VM/container modification after clone
+          SharedFlags.common_config(c)
+          SharedFlags.vm_config(c)
+          SharedFlags.container_config(c)
 
           c.action do |global_options, options, args|
             resource_type = args.shift
@@ -95,21 +105,39 @@ module Pvectl
 
       # Executes the clone VM command.
       #
+      # Builds config params from shared flags, validates async+config
+      # compatibility, and delegates to the clone operation.
+      #
       # @return [Integer] exit code
       def execute
         vmid = @args.first
         return usage_error("Source VMID required") unless vmid
 
-        perform_clone(vmid.to_i)
+        config_params = build_vm_config_params
+
+        if @options[:async] && !config_params.empty?
+          return usage_error("Config flags require sync mode (remove --async)")
+        end
+
+        perform_clone(vmid.to_i, config_params)
       end
 
       private
 
       # Performs the clone operation.
       #
+      # When config params are present, displays a summary and prompts
+      # for confirmation before proceeding. Passes config_params to the
+      # service for the two-step clone+configure flow.
+      #
       # @param vmid [Integer] source VM identifier
+      # @param config_params [Hash] VM config parameters to apply after clone
       # @return [Integer] exit code
-      def perform_clone(vmid)
+      def perform_clone(vmid, config_params)
+        unless config_params.empty?
+          return ExitCodes::SUCCESS if display_clone_summary(vmid, config_params) == :cancelled
+        end
+
         load_config
         connection = Pvectl::Connection.new(@config)
 
@@ -130,7 +158,8 @@ module Pvectl
           storage: @options[:storage],
           linked: @options[:linked],
           pool: @options[:pool],
-          description: @options[:description]
+          description: @options[:description],
+          config_params: config_params
         )
 
         print_progress(result) if !@options[:async] && result.vm
@@ -176,6 +205,7 @@ module Pvectl
         opts = {}
         opts[:timeout] = @options[:timeout] if @options[:timeout]
         opts[:async] = true if @options[:async]
+        opts[:start] = true if @options[:start]
         opts
       end
 
@@ -191,6 +221,60 @@ module Pvectl
         formatter = Pvectl::Formatters::Registry.for(format)
         output = formatter.format([result], presenter, color: color_flag)
         puts output
+      end
+
+      # Displays clone summary with config changes and prompts for confirmation.
+      #
+      # Only called when config params are present. Shows source/target info
+      # and the config changes that will be applied after cloning.
+      #
+      # @param vmid [Integer] source VM identifier
+      # @param config_params [Hash] config parameters to display
+      # @return [Symbol, nil] +:cancelled+ if user declines, +nil+ otherwise
+      def display_clone_summary(vmid, config_params)
+        $stdout.puts ""
+        $stdout.puts "  Clone VM - Summary"
+        $stdout.puts "  #{'─' * 40}"
+        $stdout.puts "  Source:    #{vmid}"
+        $stdout.puts "  New ID:    #{@options[:newid] || '(auto)'}"
+        $stdout.puts "  Name:      #{@options[:name] || '(auto)'}"
+        target_display = @options[:target] ? "→ #{@options[:target]}" : "(same)"
+        $stdout.puts "  Node:      #{target_display}"
+        $stdout.puts "  Storage:   #{@options[:storage]}" if @options[:storage]
+        display_config_changes(config_params)
+        $stdout.puts "  #{'─' * 40}"
+        $stdout.puts ""
+
+        return nil if @options[:yes]
+
+        $stdout.print "Clone and configure this VM? [y/N] "
+        $stdout.flush
+        answer = $stdin.gets&.strip&.downcase
+        answer == "y" ? nil : :cancelled
+      end
+
+      # Displays the config changes section of the clone summary.
+      #
+      # @param params [Hash] config parameters
+      # @return [void]
+      def display_config_changes(params)
+        $stdout.puts "  ── Config changes #{'─' * 23}"
+        $stdout.puts "  CPU:       #{params[:cores]} cores" if params[:cores]
+        $stdout.puts "  Sockets:   #{params[:sockets]}" if params[:sockets]
+        $stdout.puts "  Memory:    #{params[:memory]} MB" if params[:memory]
+        if params[:disks]
+          params[:disks].each_with_index do |d, i|
+            $stdout.puts "  Disk#{i}:     #{d[:storage]}, #{d[:size]}"
+          end
+        end
+        if params[:nets]
+          params[:nets].each_with_index do |n, i|
+            $stdout.puts "  Net#{i}:      #{n[:bridge]}"
+          end
+        end
+        $stdout.puts "  OS Type:   #{params[:ostype]}" if params[:ostype]
+        $stdout.puts "  Agent:     enabled" if params[:agent]
+        $stdout.puts "  Tags:      #{params[:tags]}" if params[:tags]
       end
 
       # Outputs usage error and returns exit code.

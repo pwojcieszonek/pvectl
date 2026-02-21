@@ -45,6 +45,111 @@ module Pvectl
         command.desc "Filter VMs by selector (e.g., status=running,tags=prod)"
         command.flag [:l, :selector], arg_name: "SELECTOR", multiple: true
       end
+
+      # Defines config flags shared between VM and container operations.
+      #
+      # @param command [GLI::Command] the command to add flags to
+      # @return [void]
+      def self.common_config(command)
+        command.desc "Number of CPU cores"
+        command.flag [:cores], type: Integer, arg_name: "N"
+
+        command.desc "Memory in MB"
+        command.flag [:memory], type: Integer, arg_name: "MB"
+
+        command.desc "Network config (repeatable): VM: bridge=X[,model=Y,tag=Z], CT: bridge=X[,name=Y,ip=Z]"
+        command.flag [:net], arg_name: "CONFIG", multiple: true
+
+        command.desc "Tags (comma-separated)"
+        command.flag [:tags], arg_name: "TAGS"
+
+        command.desc "Target node"
+        command.flag [:node], arg_name: "NODE"
+
+        command.desc "Start resource after operation"
+        command.switch [:start], negatable: false
+      end
+
+      # Defines VM-specific config flags.
+      #
+      # @param command [GLI::Command] the command to add flags to
+      # @return [void]
+      def self.vm_config(command)
+        command.desc "Number of CPU sockets"
+        command.flag [:sockets], type: Integer, arg_name: "N"
+
+        command.desc "CPU type"
+        command.flag [:"cpu-type"], arg_name: "TYPE"
+
+        command.desc "Enable NUMA"
+        command.switch [:numa], negatable: false
+
+        command.desc "Balloon memory in MB (0 to disable)"
+        command.flag [:balloon], type: Integer, arg_name: "MB"
+
+        command.desc "Disk config (repeatable)"
+        command.flag [:disk], arg_name: "CONFIG", multiple: true
+
+        command.desc "SCSI controller type"
+        command.flag [:scsihw], arg_name: "TYPE"
+
+        command.desc "CD-ROM ISO image"
+        command.flag [:cdrom], arg_name: "ISO"
+
+        command.desc "BIOS type"
+        command.flag [:bios], arg_name: "TYPE"
+
+        command.desc "Boot order"
+        command.flag [:"boot-order"], arg_name: "ORDER"
+
+        command.desc "Machine type"
+        command.flag [:machine], arg_name: "TYPE"
+
+        command.desc "EFI disk config"
+        command.flag [:efidisk], arg_name: "CONFIG"
+
+        command.desc "Cloud-init config"
+        command.flag [:"cloud-init"], arg_name: "CONFIG"
+
+        command.desc "Enable QEMU guest agent"
+        command.switch [:agent], negatable: false
+
+        command.desc "OS type"
+        command.flag [:ostype], arg_name: "TYPE"
+      end
+
+      # Defines container-specific config flags.
+      #
+      # @param command [GLI::Command] the command to add flags to
+      # @return [void]
+      def self.container_config(command)
+        command.desc "Root filesystem config"
+        command.flag [:rootfs], arg_name: "CONFIG"
+
+        command.desc "Mount point config (repeatable)"
+        command.flag [:mp], arg_name: "CONFIG", multiple: true
+
+        command.desc "Swap size in MB"
+        command.flag [:swap], type: Integer, arg_name: "MB"
+
+        command.desc "Create privileged container"
+        command.switch [:privileged], negatable: false
+
+        command.desc "Container features"
+        command.flag [:features], arg_name: "FEATURES"
+
+        command.desc "Root password"
+        command.flag [:password], arg_name: "PASSWORD"
+
+        command.desc "SSH public keys file"
+        command.flag [:"ssh-public-keys"], arg_name: "FILE"
+
+        command.desc "Start at boot"
+        command.switch [:onboot], negatable: false
+
+        command.desc "Startup/shutdown order"
+        command.flag [:startup], arg_name: "SPEC"
+      end
     end
   end
 end

@@ -250,6 +250,12 @@ pvectl create vm 100 --cores 2 --memory 4096 --dry-run
 # Clone VM
 pvectl clone vm 100 --name web-clone --target pve2
 
+# Clone with config changes (two-step: clone then update)
+pvectl clone vm 100 --name web-prod --cores 4 --memory 8192 --net bridge=vmbr1
+
+# Clone container with config
+pvectl clone ct 100 --name db-clone --memory 4096 --swap 1024
+
 # Linked clone (requires template)
 pvectl clone vm 100 --linked --name thin-clone
 

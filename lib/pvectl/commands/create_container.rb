@@ -13,6 +13,7 @@ module Pvectl
     #
     class CreateContainer
       include CreateResourceCommand
+      include SharedConfigParsers
 
       private
 
@@ -71,32 +72,23 @@ module Pvectl
         super
       end
 
-      # @return [Hash] parameters built from CLI flags
+      # Extracts CLI options into a service params hash.
+      #
+      # Delegates container config parsing to SharedConfigParsers#build_ct_config_params,
+      # then adds create-specific parameters.
+      #
+      # @return [Hash] service-compatible parameters
+      # @raise [ArgumentError] if parser validation fails
       def build_params_from_flags
-        params = {
-          hostname: @options[:hostname],
-          node: @options[:node] || resolve_default_node,
-          ostemplate: @options[:ostemplate],
-          cores: @options[:cores],
-          memory: @options[:memory],
-          swap: @options[:swap],
-          description: @options[:description],
-          tags: @options[:tags],
-          pool: @options[:pool],
-          features: @options[:features],
-          password: @options[:password],
-          ssh_public_keys: @options[:"ssh-public-keys"],
-          onboot: @options[:onboot],
-          startup: @options[:startup]
-        }
+        params = build_ct_config_params
+        params[:hostname] = @options[:hostname]
+        params[:node] = @options[:node] || resolve_default_node
+        params[:ostemplate] = @options[:ostemplate]
+        params[:description] = @options[:description]
+        params[:pool] = @options[:pool]
 
         ctid = @args.first
         params[:ctid] = ctid.to_i if ctid
-
-        params[:rootfs] = Parsers::LxcMountConfig.parse(@options[:rootfs]) if @options[:rootfs]
-        params[:mountpoints] = parse_mountpoints if @options[:mp]
-        params[:nets] = parse_nets if @options[:net]
-        params[:privileged] = true if @options[:privileged]
 
         params.compact
       end
@@ -132,20 +124,6 @@ module Pvectl
         $stdout.puts "  Features:  #{params[:features]}" if params[:features]
         $stdout.puts "  Tags:      #{params[:tags]}" if params[:tags]
         $stdout.puts "  Pool:      #{params[:pool]}" if params[:pool]
-      end
-
-      # Parses mountpoint configuration strings.
-      #
-      # @return [Array<Hash>] parsed mountpoint configurations
-      def parse_mountpoints
-        Array(@options[:mp]).map { |m| Parsers::LxcMountConfig.parse(m) }
-      end
-
-      # Parses LXC network configuration strings.
-      #
-      # @return [Array<Hash>] parsed network configurations
-      def parse_nets
-        Array(@options[:net]).map { |n| Parsers::LxcNetConfig.parse(n) }
       end
 
       # Truncates long template paths for display.

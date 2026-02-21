@@ -5,7 +5,7 @@ module Pvectl
       attr_reader operation: Symbol?
       attr_reader task: Models::Task?
       attr_reader task_upid: String?
-      attr_reader success: bool | Symbol
+      attr_reader success: true | false | :pending | :partial
       attr_reader error: String?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
@@ -13,6 +13,7 @@ module Pvectl
       def successful?: () -> bool
       def failed?: () -> bool
       def pending?: () -> bool
+      def partial?: () -> bool
       def status_text: () -> String
       def message: () -> String
     end

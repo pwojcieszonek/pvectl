@@ -2,6 +2,7 @@ module Pvectl
   module Commands
     class CreateContainer
       include CreateResourceCommand
+      include SharedConfigParsers
 
       private
 
@@ -22,10 +23,6 @@ module Pvectl
       def build_params_from_flags: () -> Hash[Symbol, untyped]
 
       def display_resource_summary: (Hash[Symbol, untyped] params) -> void
-
-      def parse_mountpoints: () -> Array[Hash[Symbol, untyped]]
-
-      def parse_nets: () -> Array[Hash[Symbol, untyped]]
 
       def truncate_template: (String template) -> String
     end

@@ -1,6 +1,8 @@
 module Pvectl
   module Commands
     class CloneVm
+      include SharedConfigParsers
+
       def self.register: (untyped cli) -> void
 
       def self.execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
@@ -11,7 +13,7 @@ module Pvectl
 
       private
 
-      def perform_clone: (Integer vmid) -> Integer
+      def perform_clone: (Integer vmid, Hash[Symbol, untyped] config_params) -> Integer
 
       def print_progress: (untyped result) -> void
 
@@ -20,6 +22,10 @@ module Pvectl
       def service_options: () -> Hash[Symbol, untyped]
 
       def output_result: (untyped result) -> void
+
+      def display_clone_summary: (Integer vmid, Hash[Symbol, untyped] config_params) -> Symbol?
+
+      def display_config_changes: (Hash[Symbol, untyped] params) -> void
 
       def usage_error: (String message) -> Integer
     end
