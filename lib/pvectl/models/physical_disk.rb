@@ -13,11 +13,18 @@ module Pvectl
     #     model: "Samsung SSD 970",
     #     size: 500_000_000_000,
     #     type: "ssd",
-    #     health: "PASSED"
+    #     health: "PASSED",
+    #     node: "pve1",
+    #     gpt: 1,
+    #     mounted: 1,
+    #     used: "LVM"
     #   )
     #   disk.ssd?      # => true
     #   disk.healthy?  # => true
     #   disk.size_gb   # => 465.7
+    #   disk.gpt?      # => true
+    #   disk.mounted?  # => true
+    #   disk.osd?      # => false
     #
     # @see Pvectl::Models::Base Base class for all models
     #
@@ -43,6 +50,27 @@ module Pvectl
       # @return [String, nil] disk vendor
       attr_reader :vendor
 
+      # @return [String, nil] Proxmox node name this disk belongs to
+      attr_reader :node
+
+      # @return [Integer, nil] whether disk has a GPT partition table (1 = yes, 0 = no)
+      attr_reader :gpt
+
+      # @return [Integer, nil] whether disk is mounted (1 = yes, 0 = no)
+      attr_reader :mounted
+
+      # @return [String, nil] how the disk is used (e.g., "LVM", "ZFS", "ext4")
+      attr_reader :used
+
+      # @return [String, nil] World Wide Name identifier
+      attr_reader :wwn
+
+      # @return [Integer, nil] Ceph OSD ID (-1 if not an OSD)
+      attr_reader :osdid
+
+      # @return [String, nil] parent device path (e.g., "/dev/sda" for partition "/dev/sda1")
+      attr_reader :parent
+
       # Creates a new PhysicalDisk instance.
       #
       # @param attrs [Hash] disk attributes from API
@@ -53,6 +81,13 @@ module Pvectl
       # @option attrs [String] :health SMART health status
       # @option attrs [String] :serial serial number
       # @option attrs [String] :vendor vendor name
+      # @option attrs [String] :node Proxmox node name
+      # @option attrs [Integer] :gpt GPT partition table flag (1/0)
+      # @option attrs [Integer] :mounted mounted flag (1/0)
+      # @option attrs [String] :used usage type
+      # @option attrs [String] :wwn World Wide Name
+      # @option attrs [Integer] :osdid Ceph OSD ID
+      # @option attrs [String] :parent parent device path
       def initialize(attrs = {})
         super
         @devpath = attributes[:devpath]
@@ -62,6 +97,13 @@ module Pvectl
         @health = attributes[:health]
         @serial = attributes[:serial]
         @vendor = attributes[:vendor]
+        @node = attributes[:node]
+        @gpt = attributes[:gpt]
+        @mounted = attributes[:mounted]
+        @used = attributes[:used]
+        @wwn = attributes[:wwn]
+        @osdid = attributes[:osdid]
+        @parent = attributes[:parent]
       end
 
       # Returns disk size in gigabytes.
@@ -89,6 +131,27 @@ module Pvectl
       # @return [Boolean] true if type is "ssd"
       def ssd?
         type == "ssd"
+      end
+
+      # Checks if disk has a GPT partition table.
+      #
+      # @return [Boolean] true if gpt is 1
+      def gpt?
+        gpt == 1
+      end
+
+      # Checks if disk is currently mounted.
+      #
+      # @return [Boolean] true if mounted is 1
+      def mounted?
+        mounted == 1
+      end
+
+      # Checks if disk is a Ceph OSD.
+      #
+      # @return [Boolean] true if osdid is non-nil and >= 0
+      def osd?
+        !osdid.nil? && osdid >= 0
       end
     end
   end

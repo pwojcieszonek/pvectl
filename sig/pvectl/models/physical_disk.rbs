@@ -8,12 +8,22 @@ module Pvectl
       attr_reader health: String?
       attr_reader serial: String?
       attr_reader vendor: String?
+      attr_reader node: String?
+      attr_reader gpt: Integer?
+      attr_reader mounted: Integer?
+      attr_reader used: String?
+      attr_reader wwn: String?
+      attr_reader osdid: Integer?
+      attr_reader parent: String?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 
       def size_gb: () -> Float?
       def healthy?: () -> bool
       def ssd?: () -> bool
+      def gpt?: () -> bool
+      def mounted?: () -> bool
+      def osd?: () -> bool
     end
   end
 end

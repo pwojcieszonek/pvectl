@@ -48,6 +48,59 @@ module Pvectl
         assert ssd.ssd?
         refute hdd.ssd?
       end
+
+      def test_initializes_with_new_fields
+        disk = PhysicalDisk.new(
+          devpath: "/dev/sda",
+          model: "Samsung SSD 970",
+          size: 500_000_000_000,
+          type: "ssd",
+          health: "PASSED",
+          serial: "S1MZBD0K123",
+          vendor: "Samsung",
+          node: "pve1",
+          gpt: 1,
+          mounted: 1,
+          used: "LVM",
+          wwn: "0x5000c5009abc1234",
+          osdid: -1,
+          parent: nil
+        )
+
+        assert_equal "pve1", disk.node
+        assert_equal 1, disk.gpt
+        assert_equal 1, disk.mounted
+        assert_equal "LVM", disk.used
+        assert_equal "0x5000c5009abc1234", disk.wwn
+        assert_equal(-1, disk.osdid)
+        assert_nil disk.parent
+      end
+
+      def test_gpt_predicate
+        gpt_disk = PhysicalDisk.new(gpt: 1)
+        no_gpt_disk = PhysicalDisk.new(gpt: 0)
+
+        assert gpt_disk.gpt?
+        refute no_gpt_disk.gpt?
+      end
+
+      def test_mounted_predicate
+        mounted = PhysicalDisk.new(mounted: 1)
+        not_mounted = PhysicalDisk.new(mounted: 0)
+
+        assert mounted.mounted?
+        refute not_mounted.mounted?
+      end
+
+      def test_osd_predicate
+        osd_disk = PhysicalDisk.new(osdid: 3)
+        non_osd = PhysicalDisk.new(osdid: -1)
+        nil_osd = PhysicalDisk.new(osdid: nil)
+
+        assert osd_disk.osd?
+        refute non_osd.osd?
+        refute nil_osd.osd?
+      end
     end
   end
 end
