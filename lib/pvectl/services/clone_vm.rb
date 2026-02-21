@@ -192,7 +192,7 @@ module Pvectl
         params[:machine] = config_params[:machine] if config_params[:machine]
         params[:efidisk0] = config_params[:efidisk] if config_params[:efidisk]
         params.merge!(config_params[:cloud_init]) if config_params[:cloud_init]
-        params[:agent] = "1" if config_params[:agent]
+        params[:agent] = config_params[:agent] ? "1" : "0" unless config_params[:agent].nil?
         params[:ostype] = config_params[:ostype] if config_params[:ostype]
         params[:tags] = config_params[:tags] if config_params[:tags]
         params
