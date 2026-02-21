@@ -407,6 +407,146 @@ module Pvectl
           end
         end
 
+        # --- Config params ---
+
+        describe "with config_params" do
+          it "updates container config after successful clone" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            ct_repo.expect(:update, nil) do |ctid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { cores: 4, memory: 8192 }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.successful?
+            assert_equal 4, update_params[:cores]
+            assert_equal 8192, update_params[:memory]
+            ct_repo.verify
+          end
+
+          it "returns partial success when config update fails" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+            ct_repo.expect(:update, nil) do |*_args|
+              raise StandardError, "API error: invalid parameter"
+            end
+
+            config_params = { cores: 4 }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.partial?
+            assert_includes result.error, "Cloned successfully"
+            assert_includes result.error, "config update failed"
+            assert_includes result.error, "API error: invalid parameter"
+          end
+
+          it "skips config update when config_params is empty" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: {})
+
+            assert result.successful?
+            ct_repo.verify
+          end
+
+          it "uses target node for config update on cross-node clone" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container(node: "pve1")
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_node = nil
+            ct_repo.expect(:update, nil) do |ctid, node, params|
+              update_node = node
+              true
+            end
+
+            config_params = { cores: 2 }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, target_node: "pve2",
+                                     config_params: config_params)
+
+            assert result.successful?
+            assert_equal "pve2", update_node
+          end
+
+          it "does not start container when config update fails" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+            ct_repo.expect(:update, nil) do |*_args|
+              raise StandardError, "config error"
+            end
+
+            config_params = { cores: 4 }
+            service = CloneContainer.new(
+              container_repository: ct_repo, task_repository: task_repo,
+              options: { start: true }
+            )
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.partial?
+            # ct_repo.verify ensures no unexpected calls (like start) were made
+            ct_repo.verify
+          end
+
+          it "starts container after config update when --start set" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+            start_task = build_task(upid: "UPID:pve1:start")
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+            ct_repo.expect(:update, nil, [200, "pve1", Hash])
+            ct_repo.expect(:start, "UPID:pve1:start", [200, "pve1"])
+            task_repo.expect(:wait, start_task, ["UPID:pve1:start"], timeout: 60)
+
+            config_params = { cores: 4 }
+            service = CloneContainer.new(
+              container_repository: ct_repo, task_repository: task_repo,
+              options: { start: true }
+            )
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.successful?
+            ct_repo.verify
+            task_repo.verify
+          end
+        end
+
         # --- Error handling ---
 
         describe "error handling" do
