@@ -40,6 +40,7 @@ module Pvectl
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
       Commands::Console,
+      Commands::Resize::Command,
     ].freeze
 
     @registered_plugins = []

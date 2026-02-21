@@ -274,6 +274,12 @@ require_relative "pvectl/commands/edit_resource_command"
 require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
 
+# Commands - Resize
+require_relative "pvectl/commands/resize/resize_disk_command"
+require_relative "pvectl/commands/resize/resize_disk_vm"
+require_relative "pvectl/commands/resize/resize_disk_ct"
+require_relative "pvectl/commands/resize/command"
+
 # Commands - Delete
 require_relative "pvectl/commands/delete_snapshot"
 require_relative "pvectl/commands/delete_backup"

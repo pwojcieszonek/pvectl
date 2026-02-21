@@ -1,0 +1,13 @@
+module Pvectl
+  module Commands
+    module Resize
+      class Command
+        def self.register: (untyped cli) -> void
+
+        private
+
+        def self.register_disk_subcommand: (untyped parent) -> void
+      end
+    end
+  end
+end
