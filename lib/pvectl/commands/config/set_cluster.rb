@@ -20,6 +20,16 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "Create or modify a cluster"
+          parent.long_desc <<~HELP
+            Create a new cluster definition or modify an existing one.
+
+            EXAMPLES
+              Add a cluster:
+                $ pvectl config set-cluster production --server=https://pve.example.com:8006
+
+              Skip TLS verification (testing only):
+                $ pvectl config set-cluster lab --server=https://pve-lab:8006 --insecure-skip-tls-verify
+          HELP
           parent.command :"set-cluster" do |set_cluster|
             set_cluster.arg_name "CLUSTER_NAME"
 

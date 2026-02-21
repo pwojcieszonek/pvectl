@@ -25,6 +25,34 @@ module Pvectl
       # @param parent [GLI::Command] the parent delete command
       # @return [void]
       def self.register_subcommand(parent)
+        parent.desc "Delete snapshots from VMs or containers"
+        parent.long_desc <<~HELP
+          Delete snapshots from VMs and containers.
+
+          EXAMPLES
+            Delete a specific snapshot from a VM:
+              $ pvectl delete snapshot before-upgrade --vmid 100 --yes
+
+            Delete a snapshot from all VMs that have it:
+              $ pvectl delete snapshot before-upgrade --yes
+
+            Delete ALL snapshots from a specific VM:
+              $ pvectl delete snapshot --all --vmid 100 --yes
+
+            Delete ALL snapshots cluster-wide:
+              $ pvectl delete snapshot --all --yes
+
+          NOTES
+            Snapshot deletion is irreversible.
+
+            --all deletes every snapshot, not just the named one. Use with
+            extreme caution, especially without --vmid.
+
+          SEE ALSO
+            pvectl help create snapshot Create snapshots
+            pvectl help rollback        Rollback to a snapshot
+            pvectl help get snapshots   List existing snapshots
+        HELP
         parent.command :snapshot do |s|
           s.desc "VM/CT ID (repeatable)"
           s.flag [:vmid], arg_name: "VMID", multiple: true

@@ -27,6 +27,30 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Check connectivity to Proxmox cluster"
+        cli.long_desc <<~HELP
+          Verify connectivity to the Proxmox cluster by calling the version
+          API endpoint and measuring response time.
+
+          EXAMPLES
+            Basic connectivity check:
+              $ pvectl ping
+
+            Wide output with latency:
+              $ pvectl ping -o wide
+
+            JSON output for scripting:
+              $ pvectl ping -o json
+
+          NOTES
+            Uses the configured context (or PROXMOX_HOST environment variable)
+            to determine which server to ping.
+
+            Exit code 0 = connected, exit code 4 = connection error.
+
+          SEE ALSO
+            pvectl help config          Manage cluster configuration
+            pvectl help get nodes       List cluster nodes
+        HELP
         cli.command :ping do |c|
           c.action do |global_options, _options, _args|
             exit_code = execute(global_options)

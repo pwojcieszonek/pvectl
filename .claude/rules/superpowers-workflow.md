@@ -61,6 +61,13 @@ User request
 - **IMPORTANT:** Skip worktree cleanup steps (this project does not use worktrees)
 - After branch is closed (merged or discarded), propose deleting associated plan files from `docs/plans/` that were created during the branch's lifecycle
 
+## Plan Files (`docs/plans/`)
+
+- `docs/plans/` is in `.gitignore` — plan files are local-only working documents
+- Do NOT attempt `git add` on any file under `docs/plans/`
+- Do NOT treat `git add` failure for plan files as an error — it is expected behavior
+- Design docs and implementation plans stay local; they are not part of the repository
+
 ## Anti-Patterns
 
 - Skipping brainstorming because "it's simple" — every feature goes through design
@@ -68,3 +75,4 @@ User request
 - Claiming completion without running verification
 - Trusting subagent success reports without independent verification
 - Skipping spec review and going straight to code quality review
+- Attempting to `git add` files from `docs/plans/` — they are gitignored

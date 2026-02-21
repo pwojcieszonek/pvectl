@@ -26,6 +26,47 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Clone a resource"
+        cli.long_desc <<~HELP
+          Clone a virtual machine or container, optionally modifying the
+          configuration of the clone (CPU, memory, disks, network).
+
+          Supports full clones (independent copy) and linked clones (shares
+          base image with source — requires source to be a template).
+
+          EXAMPLES
+            Clone a VM to the same node:
+              $ pvectl clone vm 100 --name web-clone
+
+            Clone to a different node:
+              $ pvectl clone vm 100 --name web-prod --target pve2
+
+            Clone with modified configuration:
+              $ pvectl clone vm 100 --name web-prod --cores 4 --memory 8192
+
+            Linked clone (thin provisioning, requires template):
+              $ pvectl clone vm 100 --linked --name thin-clone
+
+            Clone a container with new network config:
+              $ pvectl clone ct 200 --name db-clone --memory 4096 --net bridge=vmbr1
+
+            Clone with explicit new ID:
+              $ pvectl clone vm 100 --newid 150 --name web-test
+
+          NOTES
+            Config modification is a two-step process: clone first, then update
+            configuration via the Proxmox API. If the config update fails, the
+            clone still exists but with the original configuration.
+
+            Linked clones share the base disk with the source. They are faster
+            to create and use less storage, but the source cannot be deleted.
+
+            If --name is not specified, Proxmox auto-generates a name.
+
+          SEE ALSO
+            pvectl help create          Create new VMs/containers from scratch
+            pvectl help migrate         Move resources between nodes
+            pvectl help template        Convert to template for linked clones
+        HELP
         cli.arg_name "RESOURCE_TYPE ID"
         cli.command :clone do |c|
           c.desc "Name/hostname for the new resource"

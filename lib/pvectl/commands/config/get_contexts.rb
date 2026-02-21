@@ -23,6 +23,13 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "List all available contexts"
+          parent.long_desc <<~HELP
+            List all contexts defined in the configuration file. The currently
+            active context is marked with an asterisk (*).
+
+            EXAMPLES
+              $ pvectl config get-contexts
+          HELP
           parent.command :"get-contexts" do |get_ctx|
             get_ctx.action do |global_options, _options, _args|
               exit_code = execute(global_options)

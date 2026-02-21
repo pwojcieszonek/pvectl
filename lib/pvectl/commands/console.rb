@@ -27,6 +27,36 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Open interactive terminal console to a VM or container"
+        cli.long_desc <<~HELP
+          Open an interactive terminal session to a VM or container via
+          WebSocket-based termproxy (xtermjs protocol).
+
+          EXAMPLES
+            Open console to a VM:
+              $ pvectl console vm 100
+
+            Open console to a container:
+              $ pvectl console ct 200
+
+            Specify node explicitly:
+              $ pvectl console vm 100 --node pve1
+
+            Provide credentials (prompted for password if omitted):
+              $ pvectl console vm 100 --user root@pam
+
+          NOTES
+            Console requires session authentication (username/password). If your
+            config only has an API token, pvectl will prompt for credentials.
+
+            Disconnect with Ctrl+].
+
+            The console uses a WebSocket connection. Network interruptions will
+            close the session.
+
+          SEE ALSO
+            pvectl help describe        View VM/container configuration
+            pvectl help start           Start a stopped VM before connecting
+        HELP
         cli.arg_name "RESOURCE_TYPE ID"
         cli.command :console do |c|
           c.desc "Filter by node name"

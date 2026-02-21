@@ -25,6 +25,41 @@ module Pvectl
         # @return [void]
         def self.register(cli)
           cli.desc "Display resource usage metrics (CPU, memory, disk)"
+          cli.long_desc <<~HELP
+            Display real-time resource usage metrics for cluster resources.
+            Shows CPU, memory, disk, and network utilization in a table format.
+
+            By default, only running VMs and containers are shown. Use --all to
+            include stopped resources. Nodes always show all (including offline).
+
+            RESOURCE TYPES
+              nodes                     Cluster node metrics
+              vms                       Virtual machine metrics (running only by default)
+              containers                Container metrics (running only by default)
+
+            EXAMPLES
+              Cluster node resource usage:
+                $ pvectl top nodes
+
+              VMs sorted by CPU usage:
+                $ pvectl top vms --sort-by cpu
+
+              All containers including stopped:
+                $ pvectl top containers --all
+
+              Memory usage in JSON format:
+                $ pvectl top vms --sort-by memory -o json
+
+            NOTES
+              Sort fields: cpu, memory, disk, netin, netout, name, node.
+
+              Stopped VMs/containers show 0% for all metrics. Use --all
+              if you need to see them alongside running resources.
+
+            SEE ALSO
+              pvectl help get           List resources with status info
+              pvectl help describe      Detailed resource information
+          HELP
           cli.arg_name "RESOURCE_TYPE"
           cli.command :top do |c|
             c.desc "Sort by field (cpu, memory, disk, netin, netout, name, node)"

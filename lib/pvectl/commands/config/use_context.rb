@@ -19,6 +19,18 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "Switch to a different context"
+          parent.long_desc <<~HELP
+            Switch the active context. The context determines which Proxmox
+            cluster and credentials are used for subsequent commands.
+
+            EXAMPLES
+              Switch to production:
+                $ pvectl config use-context production
+
+            NOTES
+              Changes are persisted to the config file immediately.
+              Use PVECTL_CONTEXT env var for temporary overrides.
+          HELP
           parent.command :"use-context" do |use_ctx|
             use_ctx.arg_name "CONTEXT_NAME"
             use_ctx.action do |global_options, _options, args|

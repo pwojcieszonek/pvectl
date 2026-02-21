@@ -21,6 +21,42 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Restore a resource from backup"
+        cli.long_desc <<~HELP
+          Restore a virtual machine or container from a backup (vzdump) volume.
+          Creates a new or overwrites an existing VM/container with the backup data.
+
+          EXAMPLES
+            Restore to a new VMID:
+              $ pvectl restore backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --vmid 200 --yes
+
+            Restore to specific storage:
+              $ pvectl restore backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --vmid 200 --storage local-lvm --yes
+
+            Overwrite existing VM:
+              $ pvectl restore backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --vmid 100 --force --yes
+
+            Restore and start immediately:
+              $ pvectl restore backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --vmid 200 --start --yes
+
+            Regenerate unique properties (MAC, UUID):
+              $ pvectl restore backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --vmid 200 --unique --yes
+
+          NOTES
+            --vmid is required to specify the target VM/container ID.
+
+            --force overwrites an existing VM/container with the same VMID.
+            Without it, restore fails if the VMID already exists.
+
+            --unique regenerates MAC addresses and other unique properties,
+            useful when restoring alongside the original VM.
+
+            Use 'pvectl get backups' to find backup volume IDs.
+
+          SEE ALSO
+            pvectl help create backup   Create a new backup
+            pvectl help get backups     List available backups
+            pvectl help delete backup   Delete backup volumes
+        HELP
         cli.arg_name "RESOURCE_TYPE VOLID"
         cli.command :restore do |c|
           c.desc "Target VMID (required)"

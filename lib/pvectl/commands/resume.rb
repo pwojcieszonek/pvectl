@@ -21,6 +21,23 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Resume suspended virtual machines"
+        cli.long_desc <<~HELP
+          Resume one or more suspended (hibernated) virtual machines. Restores
+          the VM's memory state from disk and continues execution.
+
+          Only available for VMs. Containers do not support resume.
+
+          EXAMPLES
+            Resume a suspended VM:
+              $ pvectl resume vm 100
+
+            Resume all suspended VMs:
+              $ pvectl resume vm --all -l status=suspended --yes
+
+          SEE ALSO
+            pvectl help suspend         Suspend (hibernate) VMs
+            pvectl help start           Start a stopped VM (no state restore)
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :resume do |c|
           SharedFlags.lifecycle(c)

@@ -31,6 +31,59 @@ module Pvectl
         # @return [void]
         def self.register(cli)
           cli.desc "List resources in cluster"
+          cli.long_desc <<~HELP
+            List resources across the Proxmox cluster. Supports multiple resource
+            types including nodes, VMs, containers, storage, snapshots, backups,
+            templates, and tasks.
+
+            Results can be filtered by node (--node), formatted in different output
+            modes (-o), and auto-refreshed with watch mode (-w).
+
+            RESOURCE TYPES
+              nodes (node)              Cluster nodes
+              vms (vm)                  Virtual machines
+              containers (ct, cts)      LXC containers
+              storage (stor)            Storage pools
+              snapshots (snap)          VM/CT snapshots
+              backups (backup)          Backup volumes
+              templates (template)      VM and container templates
+              tasks (task)              Task history
+
+            EXAMPLES
+              List all VMs in table format:
+                $ pvectl get vms
+
+              List containers on a specific node as JSON:
+                $ pvectl get containers --node pve1 -o json
+
+              List snapshots for specific VMs:
+                $ pvectl get snapshots --vmid 100 --vmid 101
+
+              Watch cluster nodes with 5-second refresh:
+                $ pvectl get nodes -w --watch-interval 5
+
+              Filter tasks by type and date:
+                $ pvectl get tasks --type vzdump --since 2026-01-01
+
+              Wide output with extra columns:
+                $ pvectl get vms -o wide
+
+              Filter VMs by status using selectors:
+                $ pvectl get vms -l status=running
+
+            NOTES
+              Use selectors (-l) to filter VMs/containers by status, name, tags, or
+              pool. Multiple selectors use AND logic.
+
+              Task listing defaults to 50 entries; use --limit to change.
+
+              Watch mode clears the screen on each refresh. Press Ctrl+C to stop.
+
+            SEE ALSO
+              pvectl help describe    Show detailed info about a single resource
+              pvectl help top         Display real-time resource usage metrics
+              pvectl help logs        Show logs and task history
+          HELP
           cli.command :get do |c|
             c.desc "Filter by node name"
             c.flag [:node], arg_name: "NODE"

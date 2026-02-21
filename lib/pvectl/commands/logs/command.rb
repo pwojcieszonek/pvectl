@@ -26,6 +26,52 @@ module Pvectl
         # @return [void]
         def self.register(cli)
           cli.desc "Show logs for resources (task history, syslog, journal)"
+          cli.long_desc <<~HELP
+            Show logs and task history for cluster resources. The log source
+            depends on the resource type:
+
+              vm / container    Task history (start, stop, backup, migrate, etc.)
+              node              System log (syslog by default, --journal for systemd)
+              task              Detailed log output for a specific task UPID
+
+            EXAMPLES
+              Node syslog (last 50 entries):
+                $ pvectl logs node pve1
+
+              Node systemd journal:
+                $ pvectl logs node pve1 --journal
+
+              Task history for a VM:
+                $ pvectl logs vm 100
+
+              Search VM tasks across all nodes:
+                $ pvectl logs vm 100 --all-nodes
+
+              Filter by task type and date:
+                $ pvectl logs vm 100 --type vzdump --since 2026-01-01
+
+              Detailed log for a specific task:
+                $ pvectl logs task UPID:pve1:000ABC:...
+
+              Filter node syslog by service:
+                $ pvectl logs node pve1 --service pvedaemon
+
+              Increase entry limit:
+                $ pvectl logs node pve1 --limit 200
+
+            NOTES
+              Default limit is 50 entries. Task detail (UPID) defaults to 512 lines.
+
+              --all-nodes searches across every cluster node for VM/CT tasks.
+              This is useful when a VM has been migrated between nodes.
+
+              Timestamps for --since and --until accept YYYY-MM-DD format
+              or Unix epoch seconds.
+
+            SEE ALSO
+              pvectl help get tasks     List task history cluster-wide
+              pvectl help describe      Detailed resource information
+          HELP
           cli.arg_name "RESOURCE_TYPE ID"
           cli.command :logs do |c|
             c.desc "Maximum number of entries to show"

@@ -21,6 +21,30 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Reset virtual machines (hard reset)"
+        cli.long_desc <<~HELP
+          Hard reset one or more virtual machines. Equivalent to pressing the
+          physical reset button — the VM is immediately restarted without
+          graceful OS shutdown.
+
+          Only available for VMs. Containers do not support hard reset.
+
+          EXAMPLES
+            Hard reset a VM:
+              $ pvectl reset vm 100
+
+            Reset multiple VMs:
+              $ pvectl reset vm 100 101 102
+
+          NOTES
+            May cause data loss or filesystem corruption. Use 'pvectl restart'
+            for a graceful reboot instead.
+
+            Not available for containers — use 'pvectl restart ct' instead.
+
+          SEE ALSO
+            pvectl help restart         Graceful reboot (VMs and containers)
+            pvectl help stop            Hard stop without restart
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :reset do |c|
           SharedFlags.lifecycle(c)
