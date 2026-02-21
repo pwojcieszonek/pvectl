@@ -109,7 +109,7 @@ pvectl config view                  # Show config (secrets masked)
 | vms | vm | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
 | containers | container, ct, cts | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes | yes |
 | storage | stor | yes | yes | - | - | - | - | - | - | - | - | - |
-| snapshots | snapshot, snap | yes | - | - | - | - | yes | yes | - | - | - | - |
+| snapshots | snapshot, snap | yes | yes | - | - | - | yes | yes | - | - | - | - |
 | backups | backup | yes | - | - | - | - | yes | yes | - | - | - | - |
 | templates | template | yes | - | - | - | - | - | - | - | - | - | - |
 | tasks | task | yes | - | - | - | - | - | - | - | - | - | - |
@@ -180,6 +180,9 @@ pvectl describe node pve1             # Full node diagnostics
 pvectl describe vm 100                # VM config, disks, network, snapshots
 pvectl describe container 200         # Container details
 pvectl describe storage local-lvm     # Storage pool info
+pvectl describe snapshot before-upgrade 100      # Snapshot metadata + tree for VM 100
+pvectl describe snapshot before-upgrade 100 101  # Across multiple VMs
+pvectl describe snapshot before-upgrade          # Search all VMs/CTs in cluster
 ```
 
 ### Console Access
