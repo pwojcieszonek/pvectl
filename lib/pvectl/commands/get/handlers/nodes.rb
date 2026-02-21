@@ -80,7 +80,7 @@ module Pvectl
           # @return [Models::Node] Node model with full details
           # @raise [ArgumentError] if node name is invalid
           # @raise [Pvectl::ResourceNotFoundError] if node not found
-          def describe(name:, node: nil)
+          def describe(name:, node: nil, args: [])
             raise ArgumentError, "Invalid node name" unless valid_node_name?(name)
 
             node = repository.describe(name)

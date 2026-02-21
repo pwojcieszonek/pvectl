@@ -4,9 +4,9 @@ module Pvectl
       class Command
         def self.register: (untyped cli) -> void
 
-        def self.execute: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+        def self.execute: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?extra_args: Array[String]) -> Integer
 
-        def initialize: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?registry: Class) -> void
+        def initialize: (String? resource_type, String? resource_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?extra_args: Array[String], ?registry: Class) -> void
 
         def execute: () -> Integer
 

@@ -409,7 +409,7 @@ class GetResourceServiceTest < Minitest::Test
       [MockModel.new("model-1", "running", "extra")]
     end
 
-    def describe(name:, node: nil)
+    def describe(name:, node: nil, args: [])
       @describe_called = true
       @last_describe_name = name
       MockModel.new(name, "running", "extra-value")

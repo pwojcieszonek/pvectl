@@ -52,8 +52,8 @@ module Pvectl
         # @param name [String] resource name
         # @param node [String, nil] filter by node name (for local storage)
         # @return [String] formatted output string
-        def describe(name:, node: nil)
-          result = @handler.describe(name: name, node: node)
+        def describe(name:, node: nil, args: [])
+          result = @handler.describe(name: name, node: node, args: args)
           presenter = @handler.presenter
 
           if result.is_a?(Array)

@@ -95,7 +95,7 @@ class DescribeCommandMissingArgumentsTest < Minitest::Test
       []
     end
 
-    def describe(name:, node: nil)
+    def describe(name:, node: nil, args: [])
       nil
     end
 
@@ -217,7 +217,7 @@ class DescribeCommandNotFoundTest < Minitest::Test
       []
     end
 
-    def describe(name:, node: nil)
+    def describe(name:, node: nil, args: [])
       raise Pvectl::ResourceNotFoundError, "Node not found: #{name}"
     end
 
@@ -353,7 +353,7 @@ class DescribeCommandSuccessTest < Minitest::Test
       [MockNode.new("pve-node1", "online")]
     end
 
-    def describe(name:, node: nil)
+    def describe(name:, node: nil, args: [])
       MockNode.new(name, "online")
     end
 
@@ -416,7 +416,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil)
+      def describe(name:, node: nil, args: [])
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -441,7 +441,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil)
+      def describe(name:, node: nil, args: [])
         raise Errno::ECONNREFUSED, "Connection refused"
       end
 
@@ -466,7 +466,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil)
+      def describe(name:, node: nil, args: [])
         raise SocketError, "getaddrinfo: Name or service not known"
       end
 
@@ -491,7 +491,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil)
+      def describe(name:, node: nil, args: [])
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -574,7 +574,7 @@ class DescribeCommandColorSupportTest < Minitest::Test
   class MockColorHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def describe(name:, node: nil)
+    def describe(name:, node: nil, args: [])
       MockModel.new(name, "running")
     end
 
@@ -608,5 +608,81 @@ class DescribeCommandColorSupportTest < Minitest::Test
     def to_description(model)
       to_hash(model)
     end
+  end
+end
+
+# =============================================================================
+# Commands::Describe::Command Tests - Args Pass-through
+# =============================================================================
+
+class DescribeCommandArgsPassthroughTest < Minitest::Test
+  def setup
+    @original_stderr = $stderr
+    $stderr = StringIO.new
+    @original_stdout = $stdout
+    $stdout = StringIO.new
+
+    Pvectl::Commands::Get::ResourceRegistry.reset!
+    Pvectl::Commands::Get::ResourceRegistry.register("snapshots", ArgsCapturingHandler, aliases: ["snapshot", "snap"])
+  end
+
+  def teardown
+    $stderr = @original_stderr
+    $stdout = @original_stdout
+    Pvectl::Commands::Get::ResourceRegistry.reset!
+    ArgsCapturingHandler.last_args = nil
+  end
+
+  def test_passes_extra_args_to_handler_describe
+    exit_code = Pvectl::Commands::Describe::Command.execute(
+      "snapshot",
+      "before-upgrade",
+      {},
+      { output: "json" },
+      extra_args: ["100", "101"]
+    )
+
+    assert_equal Pvectl::ExitCodes::SUCCESS, exit_code
+    assert_equal ["100", "101"], ArgsCapturingHandler.last_args
+  end
+
+  def test_passes_empty_args_when_none_provided
+    exit_code = Pvectl::Commands::Describe::Command.execute(
+      "snapshot",
+      "before-upgrade",
+      {},
+      { output: "json" }
+    )
+
+    assert_equal Pvectl::ExitCodes::SUCCESS, exit_code
+    assert_equal [], ArgsCapturingHandler.last_args
+  end
+
+  private
+
+  class ArgsCapturingHandler
+    include Pvectl::Commands::Get::ResourceHandler
+
+    class << self
+      attr_accessor :last_args
+    end
+
+    def describe(name:, node: nil, args: [])
+      self.class.last_args = args
+      MockSnapshotDescription.new
+    end
+
+    def presenter
+      MockDescPresenter.new
+    end
+  end
+
+  class MockSnapshotDescription; end
+
+  class MockDescPresenter < Pvectl::Presenters::Base
+    def columns = ["NAME"]
+    def to_row(_model, **_ctx) = ["test"]
+    def to_hash(_model) = { "name" => "test" }
+    def to_description(_model) = { "name" => "test" }
   end
 end

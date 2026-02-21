@@ -11,7 +11,7 @@ module Pvectl
 
           def presenter: () -> Presenters::Storage
 
-          def describe: (name: String, ?node: String?) -> (Models::Storage | Array[Models::Storage])
+          def describe: (name: String, ?node: String?, ?args: Array[String]) -> (Models::Storage | Array[Models::Storage])
 
           private
 
