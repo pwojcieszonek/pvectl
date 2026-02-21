@@ -20,7 +20,11 @@ class SelectorsVmTest < Minitest::Test
       vmid: 103, name: "cache-staging", status: "paused",
       node: "pve2", tags: nil, pool: nil
     )
-    @all_vms = [@vm1, @vm2, @vm3, @vm4]
+    @vm5 = Pvectl::Models::Vm.new(
+      vmid: 9000, name: "ubuntu-template", status: "stopped",
+      node: "pve1", tags: "template", pool: nil, template: 1
+    )
+    @all_vms = [@vm1, @vm2, @vm3, @vm4, @vm5]
   end
 
   # Class structure
@@ -33,7 +37,7 @@ class SelectorsVmTest < Minitest::Test
   end
 
   def test_supported_fields_constant
-    assert_equal %w[status tags pool name], Pvectl::Selectors::Vm::SUPPORTED_FIELDS
+    assert_equal %w[status tags pool name template], Pvectl::Selectors::Vm::SUPPORTED_FIELDS
   end
 
   # Status filtering
@@ -47,15 +51,15 @@ class SelectorsVmTest < Minitest::Test
   def test_filter_by_status_stopped
     selector = Pvectl::Selectors::Vm.parse("status=stopped")
     result = selector.apply(@all_vms)
-    assert_equal 1, result.size
-    assert_equal 102, result.first.vmid
+    assert_equal 2, result.size
+    assert_equal [102, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_status_not_equal
     selector = Pvectl::Selectors::Vm.parse("status!=running")
     result = selector.apply(@all_vms)
-    assert_equal 2, result.size
-    assert_equal [102, 103], result.map(&:vmid)
+    assert_equal 3, result.size
+    assert_equal [102, 103, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_status_in
@@ -75,8 +79,8 @@ class SelectorsVmTest < Minitest::Test
   def test_filter_by_tag_not_equal
     selector = Pvectl::Selectors::Vm.parse("tags!=prod")
     result = selector.apply(@all_vms)
-    assert_equal 2, result.size
-    assert_equal [102, 103], result.map(&:vmid)
+    assert_equal 3, result.size
+    assert_equal [102, 103, 9000], result.map(&:vmid)
   end
 
   def test_filter_by_tag_pattern
@@ -110,7 +114,7 @@ class SelectorsVmTest < Minitest::Test
   def test_filter_by_pool_not_equal
     selector = Pvectl::Selectors::Vm.parse("pool!=production")
     result = selector.apply(@all_vms)
-    assert_equal 2, result.size
+    assert_equal 3, result.size
   end
 
   # Name filtering
@@ -131,7 +135,7 @@ class SelectorsVmTest < Minitest::Test
   def test_filter_by_name_not_equal
     selector = Pvectl::Selectors::Vm.parse("name!=db-dev")
     result = selector.apply(@all_vms)
-    assert_equal 3, result.size
+    assert_equal 4, result.size
   end
 
   # Multiple conditions (AND)
@@ -151,7 +155,35 @@ class SelectorsVmTest < Minitest::Test
   def test_empty_selector_returns_all
     selector = Pvectl::Selectors::Vm.parse("")
     result = selector.apply(@all_vms)
+    assert_equal 5, result.size
+  end
+
+  # Template filtering
+  def test_filter_by_template_yes
+    selector = Pvectl::Selectors::Vm.parse("template=yes")
+    result = selector.apply(@all_vms)
+    assert_equal 1, result.size
+    assert_equal 9000, result.first.vmid
+  end
+
+  def test_filter_by_template_no
+    selector = Pvectl::Selectors::Vm.parse("template=no")
+    result = selector.apply(@all_vms)
     assert_equal 4, result.size
+    assert_equal [100, 101, 102, 103], result.map(&:vmid)
+  end
+
+  def test_filter_by_template_not_equal
+    selector = Pvectl::Selectors::Vm.parse("template!=yes")
+    result = selector.apply(@all_vms)
+    assert_equal 4, result.size
+  end
+
+  def test_filter_combined_template_and_status
+    selector = Pvectl::Selectors::Vm.parse("template=no,status=running")
+    result = selector.apply(@all_vms)
+    assert_equal 2, result.size
+    assert_equal [100, 101], result.map(&:vmid)
   end
 
   # Unknown field
