@@ -87,7 +87,7 @@ module Pvectl
         it "skips confirmation with --yes flag" do
           # With --yes, should skip confirmation and proceed to config load
           # (will fail at config load, that's expected - we're testing it doesn't ask)
-          exit_code = CloneVm.execute(["100"], { cores: 4, yes: true }, {})
+          CloneVm.execute(["100"], { cores: 4, yes: true }, {})
 
           # Should NOT be SUCCESS (that would mean it asked and user declined)
           # It should try to proceed and hit config error (GENERAL_ERROR)
