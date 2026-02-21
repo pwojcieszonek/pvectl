@@ -37,10 +37,12 @@ module Pvectl
         # @param args [Array<String>] additional positional arguments (e.g., VMIDs for snapshots)
         # @param storage [String, nil] filter by storage (for backups)
         # @param vmid [Array<String>, nil] filter by VM/CT IDs
+        # @param selector [Selectors::Base, nil] client-side selector for filtering results
         # @param options [Hash] additional options passed through to handler (e.g., limit, since, type_filter)
         # @return [String] formatted output string
-        def list(node: nil, name: nil, args: [], storage: nil, vmid: nil, **options)
+        def list(node: nil, name: nil, args: [], storage: nil, vmid: nil, selector: nil, **options)
           models = @handler.list(node: node, name: name, args: args, storage: storage, vmid: vmid, **options)
+          models = selector.apply(models) if selector && !selector.empty?
           presenter = @handler.presenter
           format_output(models, presenter)
         end

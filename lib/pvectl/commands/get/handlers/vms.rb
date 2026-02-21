@@ -45,6 +45,13 @@ module Pvectl
             @repository = repository
           end
 
+          # Returns selector class for VM filtering.
+          #
+          # @return [Class] Selectors::Vm
+          def selector_class
+            Pvectl::Selectors::Vm
+          end
+
           # Lists VMs with optional filtering and sorting.
           #
           # @param node [String, nil] filter by node name

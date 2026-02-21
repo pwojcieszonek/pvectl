@@ -11,6 +11,8 @@ module Pvectl
 
           def initialize: (?repository: Repositories::Vm?) -> void
 
+          def selector_class: () -> singleton(Selectors::Vm)
+
           def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?sort: String?) -> Array[Models::Vm]
 
           def presenter: () -> Presenters::Vm
