@@ -2,6 +2,7 @@ module Pvectl
   module Commands
     class CreateVm
       include CreateResourceCommand
+      include SharedConfigParsers
 
       def self.register: (untyped cli) -> void
 
@@ -24,12 +25,6 @@ module Pvectl
       def build_params_from_flags: () -> Hash[Symbol, untyped]
 
       def display_resource_summary: (Hash[Symbol, untyped] params) -> void
-
-      def parse_disks: () -> Array[Hash[Symbol, untyped]]
-
-      def parse_nets: () -> Array[Hash[Symbol, untyped]]
-
-      def parse_cloud_init: () -> Hash[Symbol, untyped]
     end
   end
 end
