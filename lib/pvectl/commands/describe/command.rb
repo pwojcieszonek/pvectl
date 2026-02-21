@@ -20,6 +20,54 @@ module Pvectl
         # @return [void]
         def self.register(cli)
           cli.desc "Show detailed information about a resource"
+          cli.long_desc <<~HELP
+            Show detailed information about a specific resource. Displays
+            comprehensive diagnostics including configuration, status, hardware,
+            network, and related resources (snapshots, disks, etc.).
+
+            Unlike 'get' which lists many resources in a table, 'describe' shows
+            everything known about a single resource in a readable format.
+
+            RESOURCE TYPES
+              node NAME                 Full node diagnostics (CPU, memory, storage, services)
+              vm VMID                   VM config, disks, network, snapshots, pending changes
+              container VMID            Container details, mountpoints, network
+              storage NAME              Storage pool info, content types, usage
+              snapshot NAME             Snapshot metadata and snapshot tree (use --vmid)
+
+            EXAMPLES
+              Full node diagnostics:
+                $ pvectl describe node pve1
+
+              VM details with config, disks, and snapshots:
+                $ pvectl describe vm 100
+
+              Container details:
+                $ pvectl describe container 200
+
+              Storage pool information (node-specific):
+                $ pvectl describe storage local-lvm --node pve1
+
+              Snapshot metadata for a specific VM:
+                $ pvectl describe snapshot before-upgrade --vmid 100
+
+              Snapshot search across multiple VMs:
+                $ pvectl describe snapshot before-upgrade --vmid 100 --vmid 101
+
+              Snapshot search cluster-wide (all VMs and containers):
+                $ pvectl describe snapshot before-upgrade
+
+            NOTES
+              For local storage, --node is required because local storage exists
+              independently on each node.
+
+              Snapshot describe shows a visual tree of all snapshots for the
+              matching VMs, highlighting the described snapshot.
+
+            SEE ALSO
+              pvectl help get           List resources in table format
+              pvectl help logs          Show task history and logs
+          HELP
           cli.arg_name "RESOURCE_TYPE NAME"
           cli.command :describe do |c|
             c.desc "Filter by node name (required for local storage)"
