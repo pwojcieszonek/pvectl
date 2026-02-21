@@ -2,6 +2,9 @@ module Pvectl
   module Commands
     module SharedFlags
       def self.lifecycle: (untyped command) -> void
+      def self.common_config: (untyped command) -> void
+      def self.vm_config: (untyped command) -> void
+      def self.container_config: (untyped command) -> void
     end
   end
 end
