@@ -117,7 +117,7 @@ module Pvectl
         params[:rootfs] = Parsers::LxcMountConfig.parse(@options[:rootfs]) if @options[:rootfs]
         params[:mountpoints] = parse_ct_mountpoints if @options[:mp]
         params[:nets] = parse_ct_nets if @options[:net]
-        params[:privileged] = true if @options[:privileged]
+        params[:privileged] = @options[:privileged]
 
         params.compact
       end
