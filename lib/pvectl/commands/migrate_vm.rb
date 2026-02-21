@@ -22,6 +22,45 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Migrate a resource to another node"
+        cli.long_desc <<~HELP
+          Migrate virtual machines or containers between cluster nodes.
+          Supports live migration (--online) for zero-downtime moves.
+
+          EXAMPLES
+            Offline migration:
+              $ pvectl migrate vm 100 --target pve2
+
+            Live migration (zero downtime):
+              $ pvectl migrate vm 100 --target pve2 --online
+
+            Migrate a container with restart:
+              $ pvectl migrate ct 200 --target pve2 --restart
+
+            Migrate to different storage:
+              $ pvectl migrate vm 100 --target pve2 --target-storage local-lvm
+
+            Batch migrate all VMs from a node:
+              $ pvectl migrate vm --all --node pve1 --target pve2 --yes
+
+            Migrate VMs matching a selector:
+              $ pvectl migrate vm --all -l tags=web --target pve2 --yes
+
+          NOTES
+            --online (live migration) requires shared storage or migration
+            network configured between nodes.
+
+            Container migration with --restart briefly stops the container,
+            migrates, then starts it on the target node.
+
+            --target is required for all migrations.
+
+            Default timeout is 600 seconds. Use --timeout to adjust for
+            large VMs with lots of memory/disk.
+
+          SEE ALSO
+            pvectl help clone           Clone instead of move
+            pvectl help get nodes       List available target nodes
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :migrate do |c|
           c.desc "Target node (required)"

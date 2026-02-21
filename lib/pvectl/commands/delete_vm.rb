@@ -29,6 +29,41 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Delete a resource"
+        cli.long_desc <<~HELP
+          Delete virtual machines, containers, snapshots, or backups.
+
+          Destructive operations require confirmation (--yes flag or interactive
+          prompt). Use --force to stop running resources before deletion.
+
+          SUBCOMMANDS
+            delete vm ID...              Delete virtual machines
+            delete container ID...       Delete LXC containers
+            delete snapshot NAME         Delete snapshots (see: pvectl help delete snapshot)
+            delete backup VOLID...       Delete backup volumes
+
+          EXAMPLES
+            Delete a stopped VM:
+              $ pvectl delete vm 100 --yes
+
+            Force-delete a running VM (stops it first):
+              $ pvectl delete vm 100 --force --yes
+
+            Delete VM but keep its disks:
+              $ pvectl delete vm 100 --keep-disks --yes
+
+            Delete a backup by volume ID:
+              $ pvectl delete backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --yes
+
+          NOTES
+            Deletion is irreversible. Always verify the resource ID before confirming.
+
+            --force stops a running VM/container before deleting.
+            --purge removes the resource from replication and backup jobs.
+
+          SEE ALSO
+            pvectl help get             List resources to find IDs
+            pvectl help create          Create new resources
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...] [NAME]"
         cli.command :delete do |c|
           c.desc "Skip confirmation prompt (REQUIRED for destructive operations)"

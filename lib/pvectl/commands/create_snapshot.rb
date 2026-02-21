@@ -25,6 +25,35 @@ module Pvectl
       # @param parent [GLI::Command] the parent create command
       # @return [void]
       def self.register_subcommand(parent)
+        parent.desc "Create a snapshot of VMs or containers"
+        parent.long_desc <<~HELP
+          Create a snapshot of one or more VMs or containers. Snapshots capture
+          the current state of disks (and optionally RAM) for later rollback.
+
+          EXAMPLES
+            Snapshot a single VM:
+              $ pvectl create snapshot before-upgrade --vmid 100
+
+            Snapshot multiple VMs:
+              $ pvectl create snapshot before-upgrade --vmid 100 --vmid 101
+
+            Snapshot with description and VM memory state:
+              $ pvectl create snapshot before-upgrade --vmid 100 --description "Pre-upgrade" --vmstate
+
+            Snapshot all VMs/containers cluster-wide:
+              $ pvectl create snapshot before-upgrade --yes
+
+          NOTES
+            --vmstate saves the VM's RAM state (QEMU only, not for containers).
+            This increases snapshot size but allows resuming from exact state.
+
+            Without --vmid, operates cluster-wide (requires --yes confirmation).
+
+          SEE ALSO
+            pvectl help rollback        Rollback to a snapshot
+            pvectl help delete snapshot Delete snapshots
+            pvectl help get snapshots   List existing snapshots
+        HELP
         parent.command :snapshot do |s|
           s.desc "VM/CT ID (repeatable)"
           s.flag [:vmid], arg_name: "VMID", multiple: true

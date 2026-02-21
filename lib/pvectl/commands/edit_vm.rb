@@ -25,8 +25,35 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Edit a resource configuration"
-        cli.long_desc "Opens the current configuration of a VM or container in your $EDITOR as YAML. " \
-                      "After editing, validates changes and applies them to the Proxmox API."
+        cli.long_desc <<~HELP
+          Open a VM or container configuration in your text editor. The
+          configuration is presented as YAML for easy editing. Changes are
+          applied via the Proxmox API when you save and close the editor.
+
+          EXAMPLES
+            Edit a VM configuration:
+              $ pvectl edit vm 100
+
+            Edit a container with a specific editor:
+              $ pvectl edit container 200 --editor nano
+
+            Preview changes without applying:
+              $ pvectl edit vm 100 --dry-run
+
+          NOTES
+            Uses $EDITOR environment variable by default, falling back to vi.
+            Override with --editor flag.
+
+            In --dry-run mode, shows the diff between current and edited
+            configuration without applying changes to Proxmox.
+
+            Not all configuration keys can be changed while a VM is running.
+            Proxmox will reject invalid changes with an error message.
+
+          SEE ALSO
+            pvectl help describe        View current configuration (read-only)
+            pvectl help create          Create a new resource
+        HELP
         cli.arg_name "RESOURCE_TYPE RESOURCE_ID"
         cli.command :edit do |c|
           c.desc "Override editor command (default: $EDITOR or vi)"

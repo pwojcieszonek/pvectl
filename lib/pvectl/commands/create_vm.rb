@@ -27,6 +27,49 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Create a resource"
+        cli.long_desc <<~HELP
+          Create a new virtual machine, container, snapshot, or backup.
+
+          For VMs and containers, you can either specify configuration via flags
+          or use --interactive for a guided wizard. Use --dry-run to preview
+          the configuration without actually creating the resource.
+
+          SUBCOMMANDS
+            create vm [ID]              Create a virtual machine
+            create container [ID]       Create an LXC container
+            create snapshot NAME        Create a snapshot (see: pvectl help create snapshot)
+            create backup ID...         Create a backup (vzdump)
+
+          EXAMPLES
+            Create a VM with specific config:
+              $ pvectl create vm 100 --cores 4 --memory 8192 --disk storage=local-lvm,size=50G
+
+            Create a VM using interactive wizard:
+              $ pvectl create vm --interactive
+
+            Preview VM creation without executing:
+              $ pvectl create vm 100 --cores 2 --memory 4096 --dry-run
+
+            Create a container:
+              $ pvectl create container 200 --hostname nginx --ostemplate local:vztmpl/debian-12.tar.zst
+
+            Create a backup:
+              $ pvectl create backup 100 --storage nfs-backup --mode snapshot
+
+          NOTES
+            If no ID is specified for VM/container, Proxmox auto-assigns the
+            next available ID.
+
+            VM creation supports cloud-init configuration via --cloud-init flag.
+
+            Backup modes: snapshot (default, no downtime), suspend (brief pause),
+            stop (full stop during backup).
+
+          SEE ALSO
+            pvectl help clone           Clone an existing VM or container
+            pvectl help delete          Delete resources
+            pvectl help get templates   List available templates
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :create do |c|
           c.desc "Resource name"
