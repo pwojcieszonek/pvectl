@@ -102,7 +102,7 @@ module Pvectl
               Commands::CreateBackup.execute(resource_type, resource_ids, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container, snapshot, backup"
+              $stderr.puts "Valid types: vm, container, backup (or use: create snapshot)"
               ExitCodes::USAGE_ERROR
             end
 
