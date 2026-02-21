@@ -47,6 +47,14 @@ module Pvectl
         vmids.map { |id| @cache[id.to_i] }.compact
       end
 
+      # Returns all resources in the cluster.
+      #
+      # @return [Array<Hash>] array of all VM/container resources
+      def resolve_all
+        load_resources
+        @cache.values
+      end
+
       private
 
       # Loads and caches cluster resources.
