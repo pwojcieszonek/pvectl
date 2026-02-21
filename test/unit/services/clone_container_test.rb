@@ -547,6 +547,80 @@ module Pvectl
           end
         end
 
+        # --- Onboot three-state ---
+
+        describe "onboot three-state" do
+          it "sends onboot=1 when onboot is true" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            ct_repo.expect(:update, nil) do |ctid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { onboot: true }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.successful?
+            assert_equal 1, update_params[:onboot]
+          end
+
+          it "sends onboot=0 when onboot is false" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            ct_repo.expect(:update, nil) do |ctid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { onboot: false }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.successful?
+            assert_equal 0, update_params[:onboot]
+          end
+
+          it "does not send onboot when onboot is nil" do
+            ct_repo, task_repo = build_mocks
+            ct = build_container
+            task = build_task
+
+            ct_repo.expect(:get, ct, [100])
+            ct_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
+            task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
+
+            update_params = nil
+            ct_repo.expect(:update, nil) do |ctid, node, params|
+              update_params = params
+              true
+            end
+
+            config_params = { onboot: nil, cores: 2 }
+            service = CloneContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            result = service.execute(ctid: 100, new_ctid: 200, config_params: config_params)
+
+            assert result.successful?
+            refute update_params.key?(:onboot)
+            assert_equal 2, update_params[:cores]
+          end
+        end
+
         # --- Error handling ---
 
         describe "error handling" do

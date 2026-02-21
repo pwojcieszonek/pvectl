@@ -187,7 +187,7 @@ module Pvectl
         params[:features] = config_params[:features] if config_params[:features]
         params[:password] = config_params[:password] if config_params[:password]
         params[:"ssh-public-keys"] = config_params[:ssh_public_keys] if config_params[:ssh_public_keys]
-        params[:onboot] = 1 if config_params[:onboot]
+        params[:onboot] = config_params[:onboot] ? 1 : 0 unless config_params[:onboot].nil?
         params[:startup] = config_params[:startup] if config_params[:startup]
         params[:tags] = config_params[:tags] if config_params[:tags]
         params
