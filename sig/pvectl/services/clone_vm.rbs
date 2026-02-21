@@ -3,15 +3,27 @@ module Pvectl
     class CloneVm
       DEFAULT_TIMEOUT: Integer
 
+      START_TIMEOUT: Integer
+
       def initialize: (vm_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
 
-      def execute: (vmid: Integer, ?node: String?, ?new_vmid: Integer?, ?name: String?, ?target_node: String?, ?storage: String?, ?linked: bool, ?pool: String?, ?description: String?) -> Models::VmOperationResult
+      def execute: (vmid: Integer, ?node: String?, ?new_vmid: Integer?, ?name: String?, ?target_node: String?, ?storage: String?, ?linked: bool, ?pool: String?, ?description: String?, ?config_params: Hash[Symbol, untyped]) -> Models::VmOperationResult
 
       private
 
       def generate_name: (Models::Vm source_vm) -> String
 
       def build_clone_options: (name: String, target_node: String?, storage: String?, linked: bool, pool: String?, description: String?) -> Hash[Symbol, untyped]
+
+      def apply_config_update: (Models::Vm source_vm, Integer new_vmid, String node, Hash[Symbol, untyped] config_params, Hash[Symbol, untyped] resource_info) -> Models::VmOperationResult
+
+      def build_config_api_params: (Hash[Symbol, untyped] config_params) -> Hash[Symbol, untyped]
+
+      def add_disk_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, String]] disks) -> void
+
+      def add_net_params: (Hash[Symbol, untyped] params, Array[Hash[Symbol, String]] nets) -> void
+
+      def start_vm: (Integer vmid, String node) -> void
 
       def timeout: () -> Integer
 
