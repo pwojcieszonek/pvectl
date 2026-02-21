@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **config**: `SimplePrompt` fallback now supports `required:`, `convert:`, and extra keyword arguments matching `TTY::Prompt#ask` interface (fixes `unknown keyword: :required` in interactive `create` wizard)
 
 ### Changed
+- **cli**: `pvectl get snapshots` without VMIDs now lists all snapshots cluster-wide (previously required at least one VMID), consistent with `describe snapshot` and other `get` commands
 - **commands**: Extracted `IrreversibleCommand` mixin from `DeleteCommand` for reuse in template and other destructive commands
 - **services**: Extract `Services::TaskListing` from `Logs::Handlers::TaskLogs` for shared multi-node task listing logic
 - **cli**: Refactored all command definitions from inline `cli.rb` to self-registration via `.register(cli)` class methods

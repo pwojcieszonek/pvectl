@@ -36,7 +36,7 @@ module Pvectl
       # @param vmids [Array<Integer>] VM/container IDs
       # @return [Array<Models::Snapshot>] all snapshots
       def list(vmids)
-        resources = @resolver.resolve_multiple(vmids)
+        resources = vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
         return [] if resources.empty?
 
         resources.flat_map do |r|
