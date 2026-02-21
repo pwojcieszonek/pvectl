@@ -21,6 +21,31 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Restart virtual machines or containers (reboot)"
+        cli.long_desc <<~HELP
+          Reboot one or more virtual machines or containers. Sends a reboot
+          signal to the guest OS for a clean restart.
+
+          EXAMPLES
+            Reboot a VM:
+              $ pvectl restart vm 100
+
+            Reboot a container:
+              $ pvectl restart ct 200
+
+            Reboot all VMs with a specific tag:
+              $ pvectl restart vm --all -l tags=webserver --yes
+
+          NOTES
+            For VMs, this sends an ACPI reboot signal (requires guest agent or
+            ACPI support). For containers, uses LXC reboot.
+
+            For a hard reset (equivalent to pressing the reset button), use
+            'pvectl reset' instead (VMs only).
+
+          SEE ALSO
+            pvectl help reset           Hard reset (VMs only)
+            pvectl help shutdown        Graceful shutdown without restart
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :restart do |c|
           SharedFlags.lifecycle(c)

@@ -21,6 +21,40 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Start virtual machines or containers"
+        cli.long_desc <<~HELP
+          Start one or more virtual machines or containers. Supports single
+          resource, multiple IDs, and batch operations with selectors.
+
+          By default, operations run asynchronously (fire-and-forget). Use
+          --wait to wait for completion, or --async to explicitly force async.
+
+          EXAMPLES
+            Start a single VM:
+              $ pvectl start vm 100
+
+            Start multiple VMs:
+              $ pvectl start vm 100 101 102
+
+            Start a container:
+              $ pvectl start ct 200
+
+            Start all stopped VMs on a node:
+              $ pvectl start vm --all -l status=stopped --node pve1
+
+            Wait for start to complete with timeout:
+              $ pvectl start vm 100 --wait --timeout 60
+
+          NOTES
+            Batch operations (--all) require --yes or interactive confirmation.
+
+            Use selectors (-l) to filter: status, name, tags, pool.
+            Multiple selectors use AND logic.
+
+          SEE ALSO
+            pvectl help stop            Hard stop resources
+            pvectl help shutdown        Graceful shutdown
+            pvectl help get vms         List VMs and their status
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :start do |c|
           SharedFlags.lifecycle(c)
