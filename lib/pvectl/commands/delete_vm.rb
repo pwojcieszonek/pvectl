@@ -61,6 +61,9 @@ module Pvectl
           c.desc "Stop on first error (default: continue and report all)"
           c.switch [:"fail-fast"], negatable: false
 
+          # Sub-commands
+          DeleteSnapshot.register_subcommand(c)
+
           c.action do |global_options, options, args|
             resource_type = args.shift
 
@@ -69,13 +72,11 @@ module Pvectl
               Commands::DeleteVm.execute(resource_type, args, options, global_options)
             when "container", "ct"
               Commands::DeleteContainer.execute(resource_type, args, options, global_options)
-            when "snapshot"
-              Commands::DeleteSnapshot.execute(resource_type, args, options, global_options)
             when "backup"
               Commands::DeleteBackup.execute(resource_type, args, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container, ct, snapshot, backup"
+              $stderr.puts "Valid types: vm, container, backup (or use: delete snapshot)"
               ExitCodes::USAGE_ERROR
             end
 
