@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: `SharedFlags` module for reusable flag definitions across commands
 
 ### Fixed
+- **wizards**: Remove duplicate confirmation prompt in `create vm` and `create ct` interactive wizards — wizard no longer asks "Create this VM/container?" before showing the summary; only the summary-based confirmation remains
 - **presenters**: Clone operation output now displays the new (cloned) resource data (VMID/CTID, name, node) instead of the source resource data
 - **config**: `SimplePrompt` fallback now supports `required:`, `convert:`, and extra keyword arguments matching `TTY::Prompt#ask` interface (fixes `unknown keyword: :required` in interactive `create` wizard)
 
