@@ -26,14 +26,20 @@ Use descriptive branch names with prefixes matching Conventional Commits:
 
 2. **Commit** frequently with small, atomic commits (see Commit Rules below)
 
-3. **Finish** by merging back to `main` or creating a PR — follow the finishing-a-development-branch skill
+3. **Finish** by pushing and creating a Pull Request:
+   ```bash
+   git push -u origin feat/my-feature
+   gh pr create --title "..." --body "..."
+   ```
 
 ### Rules
 
+- **NEVER merge locally to `main`** — always push the branch and create a PR via `gh pr create`
 - Never commit directly to `main` for feature work
 - Always create a feature branch before implementation starts
 - One logical change per branch
 - Keep branches short-lived
+- The `finishing-a-development-branch` skill options that involve local merge or discard do NOT apply — always use the Push + PR path
 
 ## Commit Rules
 
