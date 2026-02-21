@@ -5,17 +5,21 @@ module Pvectl
 
       def initialize: (snapshot_repo: untyped, resource_resolver: untyped, task_repo: untyped, ?options: Hash[Symbol, untyped]) -> void
 
-      def list: (Array[Integer] vmids) -> Array[Models::Snapshot]
+      def list: (Array[Integer] vmids, ?node: String?) -> Array[Models::Snapshot]
 
-      def describe: (Array[Integer] vmids, String name) -> Models::SnapshotDescription
+      def describe: (Array[Integer] vmids, String name, ?node: String?) -> Models::SnapshotDescription
 
-      def create: (Array[Integer] vmids, name: String, ?description: String?, ?vmstate: bool) -> Array[Models::OperationResult]
+      def create: (Array[Integer] vmids, name: String, ?description: String?, ?vmstate: bool, ?node: String?) -> Array[Models::OperationResult]
 
-      def delete: (Array[Integer] vmids, String snapname, ?force: bool) -> Array[Models::OperationResult]
+      def delete: (Array[Integer] vmids, String snapname, ?force: bool, ?node: String?) -> Array[Models::OperationResult]
 
       def rollback: (Integer vmid, String snapname, ?start: bool) -> Models::OperationResult
 
       private
+
+      def resolve_resources: (Array[Integer] vmids) -> Array[Hash[Symbol, untyped]]
+
+      def filter_by_node: (Array[Hash[Symbol, untyped]] resources, String? node) -> Array[Hash[Symbol, untyped]]
 
       def build_describe_entries: (Array[Hash[Symbol, untyped]] resources, String name) -> Array[Models::SnapshotDescription::Entry]
 

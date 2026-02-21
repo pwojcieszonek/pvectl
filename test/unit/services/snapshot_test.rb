@@ -294,6 +294,126 @@ module Pvectl
         @mock_resolver.verify
       end
 
+      # --- node filtering tests ---
+
+      def test_list_filters_by_node
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ], [[100, 101]])
+
+        snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100, node: "pve1", resource_type: :qemu)]
+        @mock_snapshot_repo.expect(:list, snapshots, [100, "pve1", :qemu])
+
+        result = @service.list([100, 101], node: "pve1")
+
+        assert_equal 1, result.length
+        assert_equal "snap1", result[0].name
+        @mock_resolver.verify
+        @mock_snapshot_repo.verify
+      end
+
+      def test_list_cluster_wide_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
+        @mock_snapshot_repo.expect(:list, snapshots, [100, "pve1", :qemu])
+
+        result = @service.list([])
+
+        assert_equal 1, result.length
+        @mock_resolver.verify
+      end
+
+      def test_create_filters_by_node
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ], [[100, 101]])
+
+        @mock_snapshot_repo.expect(:create, "UPID:pve1:00001234:...", [100, "pve1", :qemu], name: "snap1", description: nil, vmstate: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001234:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001234:..."], timeout: 60)
+
+        results = @service.create([100, 101], name: "snap1", node: "pve1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
+
+      def test_delete_filters_by_node
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ], [[100, 101]])
+
+        @mock_snapshot_repo.expect(:delete, "UPID:pve1:00001236:...", [100, "pve1", :qemu, "snap1"], force: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001236:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001236:..."], timeout: 60)
+
+        results = @service.delete([100, 101], "snap1", node: "pve1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
+
+      def test_describe_filters_by_node
+        @mock_resolver.expect(:resolve_multiple, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" },
+          { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
+        ], [[100, 101]])
+
+        @mock_snapshot_repo.expect(:list, [
+          Models::Snapshot.new(name: "snap1", vmid: 100, node: "pve1", resource_type: :qemu)
+        ], [100, "pve1", :qemu])
+
+        result = @service.describe([100, 101], "snap1", node: "pve1")
+
+        assert result.single?
+        assert_equal 100, result.entries.first.snapshot.vmid
+        @mock_resolver.verify
+      end
+
+      def test_create_cluster_wide_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        @mock_snapshot_repo.expect(:create, "UPID:pve1:00001234:...", [100, "pve1", :qemu], name: "snap1", description: nil, vmstate: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001234:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001234:..."], timeout: 60)
+
+        results = @service.create([], name: "snap1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
+
+      def test_delete_cluster_wide_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        @mock_snapshot_repo.expect(:delete, "UPID:pve1:00001236:...", [100, "pve1", :qemu, "snap1"], force: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001236:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001236:..."], timeout: 60)
+
+        results = @service.delete([], "snap1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
+
       # --- describe tests ---
 
       def test_describe_finds_snapshot_by_name_on_specific_vmid
