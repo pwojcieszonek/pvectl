@@ -63,9 +63,9 @@ module Pvectl
 
       # Checks if the operation failed.
       #
-      # @return [Boolean] true if success is false or task failed
+      # @return [Boolean] true if success is false, :partial, or task failed
       def failed?
-        success == false || task&.failed?
+        success == false || success == :partial || task&.failed?
       end
 
       # Checks if the operation is still pending (async).
@@ -75,11 +75,19 @@ module Pvectl
         success == :pending || task&.pending?
       end
 
+      # Checks if the operation partially succeeded (e.g. clone OK, config update failed).
+      #
+      # @return [Boolean] true if success is :partial
+      def partial?
+        success == :partial
+      end
+
       # Returns human-readable status.
       #
       # @return [String] "Pending", "Success", or "Failed"
       def status_text
         return "Pending" if pending?
+        return "Partial" if partial?
         return "Success" if successful?
 
         "Failed"

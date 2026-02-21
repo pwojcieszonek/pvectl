@@ -13,6 +13,7 @@ module Pvectl
       def successful?: () -> bool
       def failed?: () -> bool
       def pending?: () -> bool
+      def partial?: () -> bool
       def status_text: () -> String
       def message: () -> String
     end
