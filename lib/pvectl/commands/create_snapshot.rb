@@ -5,6 +5,7 @@ module Pvectl
     # Handler for the `pvectl create snapshot` command.
     #
     # Creates snapshots for one or more VMs/containers.
+    # When no VMIDs are given, creates on all cluster resources.
     # Supports multiple VMIDs with optional confirmation prompt.
     #
     # @example Create single snapshot
@@ -12,6 +13,9 @@ module Pvectl
     #
     # @example Create snapshot for multiple VMs
     #   pvectl create snapshot 100 101 102 --name before-upgrade --description "Pre-upgrade"
+    #
+    # @example Create snapshot for all cluster VMs/CTs
+    #   pvectl create snapshot --name before-upgrade --yes
     #
     # @example Create snapshot with VM memory state
     #   pvectl create snapshot 100 --name with-state --vmstate
@@ -49,7 +53,6 @@ module Pvectl
       def execute
         return usage_error("Resource type required (snapshot)") unless @resource_type
         return usage_error("Unsupported resource: #{@resource_type}") unless SUPPORTED_RESOURCES.include?(@resource_type)
-        return usage_error("At least one VMID is required") if @resource_ids.empty?
         return usage_error("--name is required") unless @options[:name]
 
         perform_operation
@@ -97,15 +100,19 @@ module Pvectl
         ExitCodes::GENERAL_ERROR
       end
 
-      # Confirms multi-VMID operation with user.
+      # Confirms multi-VMID or cluster-wide operation with user.
       #
       # @return [Boolean] true if operation should proceed
       def confirm_operation
         return true if @resource_ids.size == 1
         return true if @options[:yes]
 
-        $stdout.puts "You are about to create snapshot '#{@options[:name]}' for #{@resource_ids.size} VMs:"
-        @resource_ids.each { |vmid| $stdout.puts "  - #{vmid}" }
+        if @resource_ids.empty?
+          $stdout.puts "You are about to create snapshot '#{@options[:name]}' for ALL VMs/CTs in the cluster."
+        else
+          $stdout.puts "You are about to create snapshot '#{@options[:name]}' for #{@resource_ids.size} VMs:"
+          @resource_ids.each { |vmid| $stdout.puts "  - #{vmid}" }
+        end
         $stdout.puts ""
         $stdout.print "Proceed? [y/N]: "
 

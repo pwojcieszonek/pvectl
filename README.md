@@ -83,8 +83,8 @@ Context name: [default] production
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `create snapshot` | Create snapshot | `pvectl create snapshot 100 --name before-update` |
-| `delete snapshot` | Delete snapshot | `pvectl delete snapshot 100 before-update --yes` |
+| `create snapshot` | Create snapshot (VMIDs or cluster-wide) | `pvectl create snapshot 100 --name before-update` |
+| `delete snapshot` | Delete snapshot (VMIDs or cluster-wide) | `pvectl delete snapshot 100 before-update --yes` |
 | `rollback` | Rollback to snapshot | `pvectl rollback snapshot 100 before-update --yes` |
 | `create backup` | Create backup (vzdump) | `pvectl create backup 100 --storage nfs-backup` |
 | `delete backup` | Delete backup | `pvectl delete backup local:backup/... --yes` |

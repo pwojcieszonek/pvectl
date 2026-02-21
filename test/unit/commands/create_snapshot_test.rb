@@ -25,9 +25,11 @@ class CreateSnapshotTest < Minitest::Test
     assert_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
-  def test_returns_usage_error_when_no_vmids
+  def test_no_vmids_is_accepted_when_name_provided
+    # Empty VMIDs = cluster-wide operation (requires API connection)
+    # We verify it passes validation by checking it doesn't return USAGE_ERROR
     exit_code = Pvectl::Commands::CreateSnapshot.execute("snapshot", [], { name: "snap1" }, {})
-    assert_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
+    refute_equal Pvectl::ExitCodes::USAGE_ERROR, exit_code
   end
 
   def test_returns_usage_error_when_no_name
@@ -50,9 +52,15 @@ class CreateSnapshotTest < Minitest::Test
     assert_includes $stderr.string, "Unsupported resource"
   end
 
-  def test_error_message_for_missing_vmids
-    Pvectl::Commands::CreateSnapshot.execute("snapshot", [], { name: "snap1" }, {})
-    assert_includes $stderr.string, "At least one VMID is required"
+  def test_cluster_wide_confirmation_prompt
+    cmd = CreateSnapshotConfirmationTest::TestableCreateSnapshot.new("snapshot", [], { name: "snap1" }, {})
+
+    $stdin = StringIO.new("n\n")
+    output = StringIO.new
+    $stdout = output
+
+    cmd.test_confirm_operation
+    assert_includes output.string, "ALL VMs/CTs in the cluster"
   end
 
   def test_class_has_supported_resources_constant

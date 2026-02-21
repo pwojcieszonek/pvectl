@@ -100,6 +100,23 @@ module Pvectl
 
       # --- create tests ---
 
+      def test_create_searches_all_resources_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        @mock_snapshot_repo.expect(:create, "UPID:pve1:00001234:...", [100, "pve1", :qemu], name: "snap1", description: nil, vmstate: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001234:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001234:..."], timeout: 60)
+
+        results = @service.create([], name: "snap1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
+
       def test_create_returns_success_result
         @mock_resolver.expect(:resolve_multiple, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
@@ -184,6 +201,23 @@ module Pvectl
       end
 
       # --- delete tests ---
+
+      def test_delete_searches_all_resources_when_vmids_empty
+        @mock_resolver.expect(:resolve_all, [
+          { vmid: 100, node: "pve1", type: :qemu, name: "web" }
+        ])
+
+        @mock_snapshot_repo.expect(:delete, "UPID:pve1:00001236:...", [100, "pve1", :qemu, "snap1"], force: false)
+
+        task = Models::Task.new(upid: "UPID:pve1:00001236:...", status: "stopped", exitstatus: "OK")
+        @mock_task_repo.expect(:wait, task, ["UPID:pve1:00001236:..."], timeout: 60)
+
+        results = @service.delete([], "snap1")
+
+        assert_equal 1, results.length
+        assert results[0].successful?
+        @mock_resolver.verify
+      end
 
       def test_delete_returns_success_result
         @mock_resolver.expect(:resolve_multiple, [
