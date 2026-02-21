@@ -231,6 +231,21 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/config"].put(params)
       end
 
+      # Resizes a container disk.
+      #
+      # PUTs to +/nodes/{node}/lxc/{ctid}/resize+ with disk identifier
+      # and new size. This is a synchronous, irreversible operation —
+      # Proxmox does not support shrinking disks.
+      #
+      # @param ctid [Integer, String] container identifier
+      # @param node [String] node name
+      # @param disk [String] disk identifier (e.g., "rootfs", "mp0")
+      # @param size [String] new size, absolute ("50G") or relative ("+10G")
+      # @return [nil]
+      def resize(ctid, node, disk:, size:)
+        connection.client["nodes/#{node}/lxc/#{ctid}/resize"].put({ disk: disk, size: size })
+      end
+
       # Fetches container configuration.
       #
       # @param node [String] node name
