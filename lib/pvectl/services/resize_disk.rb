@@ -236,7 +236,7 @@ module Pvectl
       # @param suffix [String] unit suffix
       # @return [String] formatted size (e.g., "42G")
       def format_size(value, suffix)
-        formatted = value == value.to_i ? value.to_i.to_s : value.to_s
+        formatted = value == value.to_i ? value.to_i.to_s : format("%.1f", value)
         "#{formatted}#{suffix}"
       end
 
