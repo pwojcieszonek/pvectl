@@ -67,7 +67,7 @@ module Pvectl
         command.flag [:node], arg_name: "NODE"
 
         command.desc "Start resource after operation"
-        command.switch [:start], negatable: false
+        command.switch [:start], negatable: true, default_value: nil
       end
 
       # Defines VM-specific config flags.
@@ -82,7 +82,7 @@ module Pvectl
         command.flag [:"cpu-type"], arg_name: "TYPE"
 
         command.desc "Enable NUMA"
-        command.switch [:numa], negatable: false
+        command.switch [:numa], negatable: true, default_value: nil
 
         command.desc "Balloon memory in MB (0 to disable)"
         command.flag [:balloon], type: Integer, arg_name: "MB"
@@ -112,7 +112,7 @@ module Pvectl
         command.flag [:"cloud-init"], arg_name: "CONFIG"
 
         command.desc "Enable QEMU guest agent"
-        command.switch [:agent], negatable: false
+        command.switch [:agent], negatable: true, default_value: nil
 
         command.desc "OS type"
         command.flag [:ostype], arg_name: "TYPE"
@@ -133,7 +133,7 @@ module Pvectl
         command.flag [:swap], type: Integer, arg_name: "MB"
 
         command.desc "Create privileged container"
-        command.switch [:privileged], negatable: false
+        command.switch [:privileged], negatable: true, default_value: nil
 
         command.desc "Container features"
         command.flag [:features], arg_name: "FEATURES"
@@ -145,7 +145,7 @@ module Pvectl
         command.flag [:"ssh-public-keys"], arg_name: "FILE"
 
         command.desc "Start at boot"
-        command.switch [:onboot], negatable: false
+        command.switch [:onboot], negatable: true, default_value: nil
 
         command.desc "Startup/shutdown order"
         command.flag [:startup], arg_name: "SPEC"
