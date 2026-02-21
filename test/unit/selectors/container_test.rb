@@ -187,6 +187,32 @@ class SelectorsContainerTest < Minitest::Test
     assert_equal 4, result.size
   end
 
+  def test_filter_by_template_true_alias
+    selector = Pvectl::Selectors::Container.parse("template=true")
+    result = selector.apply(@all_containers)
+    assert_equal 1, result.size
+    assert_equal 9000, result.first.vmid
+  end
+
+  def test_filter_by_template_false_alias
+    selector = Pvectl::Selectors::Container.parse("template=false")
+    result = selector.apply(@all_containers)
+    assert_equal 4, result.size
+  end
+
+  def test_filter_by_template_1_alias
+    selector = Pvectl::Selectors::Container.parse("template=1")
+    result = selector.apply(@all_containers)
+    assert_equal 1, result.size
+    assert_equal 9000, result.first.vmid
+  end
+
+  def test_filter_by_template_0_alias
+    selector = Pvectl::Selectors::Container.parse("template=0")
+    result = selector.apply(@all_containers)
+    assert_equal 4, result.size
+  end
+
   def test_filter_combined_template_and_status
     selector = Pvectl::Selectors::Container.parse("template=no,status=running")
     result = selector.apply(@all_containers)
