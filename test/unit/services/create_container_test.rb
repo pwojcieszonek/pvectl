@@ -96,7 +96,7 @@ module Pvectl
             assert_equal 512, created_params[:swap]
           end
 
-          it "sets unprivileged to 1 by default" do
+          it "omits unprivileged when privileged is nil (default)" do
             ct_repo, task_repo = build_mocks
             task = build_task
             created_params = nil
@@ -109,6 +109,23 @@ module Pvectl
 
             service = CreateContainer.new(container_repository: ct_repo, task_repository: task_repo)
             service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t")
+
+            refute created_params.key?(:unprivileged)
+          end
+
+          it "sets unprivileged to 1 when privileged is false" do
+            ct_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            ct_repo.expect(:create, "UPID:pve1:create") do |_node, _ctid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t", privileged: false)
 
             assert_equal 1, created_params[:unprivileged]
           end
@@ -231,6 +248,57 @@ module Pvectl
             service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t", features: "nesting=1,keyctl=1")
 
             assert_equal "nesting=1,keyctl=1", created_params[:features]
+          end
+
+          it "sets onboot to 1 when onboot is true" do
+            ct_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            ct_repo.expect(:create, "UPID:pve1:create") do |_node, _ctid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t", onboot: true)
+
+            assert_equal 1, created_params[:onboot]
+          end
+
+          it "sets onboot to 0 when onboot is false" do
+            ct_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            ct_repo.expect(:create, "UPID:pve1:create") do |_node, _ctid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t", onboot: false)
+
+            assert_equal 0, created_params[:onboot]
+          end
+
+          it "omits onboot when onboot is nil (default)" do
+            ct_repo, task_repo = build_mocks
+            task = build_task
+            created_params = nil
+
+            ct_repo.expect(:create, "UPID:pve1:create") do |_node, _ctid, params|
+              created_params = params
+              "UPID:pve1:create"
+            end
+            task_repo.expect(:wait, task, ["UPID:pve1:create"], timeout: 300)
+
+            service = CreateContainer.new(container_repository: ct_repo, task_repository: task_repo)
+            service.execute(ctid: 200, hostname: "ct", node: "pve1", ostemplate: "t")
+
+            refute created_params.key?(:onboot)
           end
         end
 
