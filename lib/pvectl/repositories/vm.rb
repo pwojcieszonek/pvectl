@@ -238,6 +238,20 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/config"].put(params)
       end
 
+      # Resizes a VM disk.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/resize+ with disk and size parameters.
+      # Size can be absolute (e.g., "50G") or relative (e.g., "+10G").
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node name
+      # @param disk [String] disk name (e.g., "scsi0", "virtio0")
+      # @param size [String] new size or size increment (e.g., "50G", "+10G")
+      # @return [nil]
+      def resize(vmid, node, disk:, size:)
+        connection.client["nodes/#{node}/qemu/#{vmid}/resize"].put({ disk: disk, size: size })
+      end
+
       # Fetches VM configuration.
       #
       # @param node [String] node name
