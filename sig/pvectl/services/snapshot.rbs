@@ -13,6 +13,8 @@ module Pvectl
 
       def delete: (Array[Integer] vmids, String snapname, ?force: bool, ?node: String?) -> Array[Models::OperationResult]
 
+      def delete_all: (Array[Integer] vmids, ?node: String?, ?force: bool) -> Array[Models::OperationResult]
+
       def rollback: (Integer vmid, String snapname, ?start: bool) -> Models::OperationResult
 
       private
