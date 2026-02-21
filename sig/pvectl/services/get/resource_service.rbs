@@ -4,9 +4,9 @@ module Pvectl
       class ResourceService
         def initialize: (handler: untyped, ?format: String, ?color_enabled: bool) -> void
 
-        def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, **untyped) -> String
+        def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?, ?vmid: Array[String]?, **untyped) -> String
 
-        def describe: (name: String, ?node: String?, ?args: Array[String]) -> String
+        def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: Array[String]?) -> String
 
         private
 

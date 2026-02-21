@@ -12,54 +12,56 @@ module Pvectl
             @handler = Snapshots.new(service: @mock_service)
           end
 
-          # ---------------------------
-          # Standard interface tests (node:, name:, args:)
-          # ---------------------------
+          # --- list tests ---
 
-          def test_list_accepts_standard_handler_interface
+          def test_list_with_vmid_option
             snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
-            @mock_service.expect(:list, snapshots, [[100]])
+            @mock_service.expect(:list, snapshots, [[100]], node: nil)
 
-            # Should accept standard interface with args containing VMIDs
-            result = @handler.list(node: nil, name: nil, args: ["100"])
+            result = @handler.list(args: [], vmid: ["100"])
 
             assert_equal 1, result.length
             @mock_service.verify
           end
 
-          def test_list_with_args_containing_vmids
-            snapshots = [
-              Models::Snapshot.new(name: "snap1", vmid: 100),
-              Models::Snapshot.new(name: "snap2", vmid: 100)
-            ]
-            @mock_service.expect(:list, snapshots, [[100]])
-
-            result = @handler.list(node: nil, name: nil, args: ["100"])
-
-            assert_equal 2, result.length
-            assert_equal "snap1", result[0].name
-            @mock_service.verify
-          end
-
-          def test_list_with_multiple_vmids_in_args
+          def test_list_with_multiple_vmids
             snapshots = [
               Models::Snapshot.new(name: "snap1", vmid: 100),
               Models::Snapshot.new(name: "snap2", vmid: 101)
             ]
-            @mock_service.expect(:list, snapshots, [[100, 101]])
+            @mock_service.expect(:list, snapshots, [[100, 101]], node: nil)
 
-            result = @handler.list(node: nil, name: nil, args: ["100", "101"])
+            result = @handler.list(args: [], vmid: ["100", "101"])
 
             assert_equal 2, result.length
             @mock_service.verify
           end
 
-          def test_list_ignores_node_and_name_parameters
-            # For snapshots, node: and name: are ignored - only args matters
+          def test_list_with_node_filter
             snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
-            @mock_service.expect(:list, snapshots, [[100]])
+            @mock_service.expect(:list, snapshots, [[100]], node: "pve1")
 
-            result = @handler.list(node: "pve1", name: "ignored", args: ["100"])
+            result = @handler.list(args: [], vmid: ["100"], node: "pve1")
+
+            assert_equal 1, result.length
+            @mock_service.verify
+          end
+
+          def test_list_cluster_wide_without_vmid
+            snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
+            @mock_service.expect(:list, snapshots, [[]], node: nil)
+
+            result = @handler.list(args: [])
+
+            assert_equal 1, result.length
+            @mock_service.verify
+          end
+
+          def test_list_cluster_wide_with_node_filter
+            snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
+            @mock_service.expect(:list, snapshots, [[]], node: "pve1")
+
+            result = @handler.list(args: [], node: "pve1")
 
             assert_equal 1, result.length
             @mock_service.verify
@@ -71,73 +73,50 @@ module Pvectl
             assert_instance_of Presenters::Snapshot, presenter
           end
 
-          def test_list_with_empty_args_lists_all_snapshots
-            snapshots = [
-              Models::Snapshot.new(name: "snap1", vmid: 100),
-              Models::Snapshot.new(name: "snap2", vmid: 101)
-            ]
-            @mock_service.expect(:list, snapshots, [[]])
+          # --- describe tests ---
 
-            result = @handler.list(node: nil, name: nil, args: [])
-
-            assert_equal 2, result.length
-            @mock_service.verify
-          end
-
-          def test_converts_string_vmids_to_integers
-            snapshots = [Models::Snapshot.new(name: "snap1", vmid: 100)]
-            @mock_service.expect(:list, snapshots, [[100, 101, 102]])
-
-            @handler.list(node: nil, name: nil, args: ["100", "101", "102"])
-
-            @mock_service.verify
-          end
-
-          # ---------------------------
-          # Describe tests
-          # ---------------------------
-
-          def test_describe_delegates_to_service_with_vmids
+          def test_describe_with_vmid_option
             description = Models::SnapshotDescription.new(entries: [
               Models::SnapshotDescription::Entry.new(
                 snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
                 siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
               )
             ])
-            @mock_service.expect(:describe, description, [[100], "snap1"])
+            @mock_service.expect(:describe, description, [[100], "snap1"], node: nil)
 
-            result = @handler.describe(name: "snap1", node: nil, args: ["100"])
+            result = @handler.describe(name: "snap1", args: [], vmid: ["100"])
 
             assert_instance_of Models::SnapshotDescription, result
             @mock_service.verify
           end
 
-          def test_describe_with_empty_args_passes_empty_vmids
+          def test_describe_cluster_wide_without_vmid
             description = Models::SnapshotDescription.new(entries: [
               Models::SnapshotDescription::Entry.new(
                 snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
                 siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
               )
             ])
-            @mock_service.expect(:describe, description, [[], "snap1"])
+            @mock_service.expect(:describe, description, [[], "snap1"], node: nil)
 
-            result = @handler.describe(name: "snap1", node: nil, args: [])
+            result = @handler.describe(name: "snap1", args: [])
 
             assert_instance_of Models::SnapshotDescription, result
             @mock_service.verify
           end
 
-          def test_describe_converts_string_vmids_to_integers
+          def test_describe_with_node_filter
             description = Models::SnapshotDescription.new(entries: [
               Models::SnapshotDescription::Entry.new(
                 snapshot: Models::Snapshot.new(name: "snap1", vmid: 100),
                 siblings: [Models::Snapshot.new(name: "snap1", vmid: 100)]
               )
             ])
-            @mock_service.expect(:describe, description, [[100, 101], "snap1"])
+            @mock_service.expect(:describe, description, [[100], "snap1"], node: "pve1")
 
-            @handler.describe(name: "snap1", node: nil, args: ["100", "101"])
+            result = @handler.describe(name: "snap1", args: [], vmid: ["100"], node: "pve1")
 
+            assert_instance_of Models::SnapshotDescription, result
             @mock_service.verify
           end
         end

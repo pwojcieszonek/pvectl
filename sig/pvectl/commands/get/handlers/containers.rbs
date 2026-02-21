@@ -15,7 +15,7 @@ module Pvectl
 
           def presenter: () -> Presenters::Container
 
-          def describe: (name: String, ?node: String?, ?args: Array[String]) -> Models::Container
+          def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: Array[String]?) -> Models::Container
 
           private
 

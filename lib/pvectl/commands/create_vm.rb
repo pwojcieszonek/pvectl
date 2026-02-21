@@ -29,15 +29,11 @@ module Pvectl
         cli.desc "Create a resource"
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :create do |c|
-          # Snapshot-specific flags
-          c.desc "Snapshot name (required for snapshots)"
+          c.desc "Resource name"
           c.flag [:name], arg_name: "NAME"
 
           c.desc "Description/notes"
           c.flag [:description, :notes], arg_name: "TEXT"
-
-          c.desc "Save VM memory state (QEMU only, snapshots)"
-          c.switch [:vmstate], negatable: false
 
           # Backup-specific flags
           c.desc "Target storage for backup"
@@ -88,6 +84,9 @@ module Pvectl
           c.desc "OS template path (container): storage:vztmpl/name.tar.zst"
           c.flag [:ostemplate], arg_name: "TEMPLATE"
 
+          # Sub-commands
+          CreateSnapshot.register_subcommand(c)
+
           c.action do |global_options, options, args|
             resource_type = args.shift
             resource_ids = args
@@ -97,15 +96,13 @@ module Pvectl
               Commands::CreateVm.execute(resource_ids, options, global_options)
             when "container", "ct"
               Commands::CreateContainer.execute(resource_ids, options, global_options)
-            when "snapshot"
-              Commands::CreateSnapshot.execute(resource_type, resource_ids, options, global_options)
             when "backup"
               # Map :description to :notes for backup if notes not set
               options[:notes] ||= options[:description]
               Commands::CreateBackup.execute(resource_type, resource_ids, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container, snapshot, backup"
+              $stderr.puts "Valid types: vm, container, backup (or use: create snapshot)"
               ExitCodes::USAGE_ERROR
             end
 

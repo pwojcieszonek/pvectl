@@ -83,8 +83,9 @@ Context name: [default] production
 
 | Command | Description | Example |
 |---------|-------------|---------|
-| `create snapshot` | Create snapshot (VMIDs or cluster-wide) | `pvectl create snapshot 100 --name before-update` |
-| `delete snapshot` | Delete snapshot (VMIDs or cluster-wide) | `pvectl delete snapshot 100 before-update --yes` |
+| `create snapshot` | Create snapshot | `pvectl create snapshot before-update --vmid 100` |
+| `delete snapshot` | Delete snapshot | `pvectl delete snapshot before-update --vmid 100 --yes` |
+| `delete snapshot --all` | Delete all snapshots | `pvectl delete snapshot --all --vmid 100 --yes` |
 | `rollback` | Rollback to snapshot | `pvectl rollback snapshot 100 before-update --yes` |
 | `create backup` | Create backup (vzdump) | `pvectl create backup 100 --storage nfs-backup` |
 | `delete backup` | Delete backup | `pvectl delete backup local:backup/... --yes` |
@@ -123,8 +124,10 @@ pvectl get nodes                      # List cluster nodes
 pvectl get vms                        # List all VMs
 pvectl get containers --node pve1     # Containers on specific node
 pvectl get storage                    # List storage pools
-pvectl get snapshots                  # All snapshots cluster-wide
-pvectl get snapshots 100              # Snapshots for VM 100
+pvectl get snapshots                  # Snapshots cluster-wide
+pvectl get snapshots --vmid 100       # Snapshots for VM 100
+pvectl get snapshots --vmid 100 --vmid 101  # Multiple VMs
+pvectl get snapshots --node pve1      # Snapshots on specific node
 pvectl get backups --storage nfs      # Backups on specific storage
 pvectl get templates                  # List all templates (VMs and containers)
 pvectl get templates --type vm        # Only VM templates
@@ -181,9 +184,9 @@ pvectl describe node pve1             # Full node diagnostics
 pvectl describe vm 100                # VM config, disks, network, snapshots
 pvectl describe container 200         # Container details
 pvectl describe storage local-lvm     # Storage pool info
-pvectl describe snapshot before-upgrade 100      # Snapshot metadata + tree for VM 100
-pvectl describe snapshot before-upgrade 100 101  # Across multiple VMs
-pvectl describe snapshot before-upgrade          # Search all VMs/CTs in cluster
+pvectl describe snapshot before-upgrade --vmid 100          # Snapshot metadata + tree for VM 100
+pvectl describe snapshot before-upgrade --vmid 100 --vmid 101  # Across multiple VMs
+pvectl describe snapshot before-upgrade                      # Search all VMs/CTs in cluster
 ```
 
 ### Console Access
@@ -298,6 +301,52 @@ pvectl resize disk vm 100 scsi0 +10G --node pve1  # Specify node explicitly
 
 > **Note:** Disk resize is irreversible — Proxmox does not support shrinking disks.
 > A confirmation prompt is shown unless `--yes` is specified.
+
+### Snapshots
+
+```bash
+# List all snapshots cluster-wide
+pvectl get snapshots
+
+# List snapshots for specific VMs
+pvectl get snapshots --vmid 100 --vmid 101
+
+# List snapshots filtered by node
+pvectl get snapshots --node pve1
+
+# Create snapshot
+pvectl create snapshot before-upgrade --vmid 100
+
+# Create snapshot for multiple VMs
+pvectl create snapshot before-upgrade --vmid 100 --vmid 101
+
+# Create snapshot cluster-wide (prompts for confirmation)
+pvectl create snapshot before-upgrade --yes
+
+# Create snapshot with description and VM state
+pvectl create snapshot before-upgrade --vmid 100 --description "Pre-upgrade" --vmstate
+
+# Describe snapshot details
+pvectl describe snapshot before-upgrade --vmid 100
+
+# Describe snapshot cluster-wide (search all VMs)
+pvectl describe snapshot before-upgrade
+
+# Delete snapshot
+pvectl delete snapshot before-upgrade --vmid 100 --yes
+
+# Delete snapshot from all VMs
+pvectl delete snapshot before-upgrade --yes
+
+# Delete ALL snapshots from a VM
+pvectl delete snapshot --all --vmid 100 --yes
+
+# Delete ALL snapshots cluster-wide
+pvectl delete snapshot --all --yes
+
+# Rollback to snapshot (always single-VM)
+pvectl rollback snapshot 100 before-upgrade --yes
+```
 
 ### Editing Configuration
 

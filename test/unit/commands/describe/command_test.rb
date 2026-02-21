@@ -95,7 +95,7 @@ class DescribeCommandMissingArgumentsTest < Minitest::Test
       []
     end
 
-    def describe(name:, node: nil, args: [])
+    def describe(name:, node: nil, args: [], vmid: nil)
       nil
     end
 
@@ -217,7 +217,7 @@ class DescribeCommandNotFoundTest < Minitest::Test
       []
     end
 
-    def describe(name:, node: nil, args: [])
+    def describe(name:, node: nil, args: [], vmid: nil)
       raise Pvectl::ResourceNotFoundError, "Node not found: #{name}"
     end
 
@@ -353,7 +353,7 @@ class DescribeCommandSuccessTest < Minitest::Test
       [MockNode.new("pve-node1", "online")]
     end
 
-    def describe(name:, node: nil, args: [])
+    def describe(name:, node: nil, args: [], vmid: nil)
       MockNode.new(name, "online")
     end
 
@@ -416,7 +416,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil, args: [])
+      def describe(name:, node: nil, args: [], vmid: nil)
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -441,7 +441,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil, args: [])
+      def describe(name:, node: nil, args: [], vmid: nil)
         raise Errno::ECONNREFUSED, "Connection refused"
       end
 
@@ -466,7 +466,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil, args: [])
+      def describe(name:, node: nil, args: [], vmid: nil)
         raise SocketError, "getaddrinfo: Name or service not known"
       end
 
@@ -491,7 +491,7 @@ class DescribeCommandConnectionErrorTest < Minitest::Test
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler
 
-      def describe(name:, node: nil, args: [])
+      def describe(name:, node: nil, args: [], vmid: nil)
         raise Timeout::Error, "Connection timed out"
       end
 
@@ -574,7 +574,7 @@ class DescribeCommandColorSupportTest < Minitest::Test
   class MockColorHandler
     include Pvectl::Commands::Get::ResourceHandler
 
-    def describe(name:, node: nil, args: [])
+    def describe(name:, node: nil, args: [], vmid: nil)
       MockModel.new(name, "running")
     end
 
@@ -667,7 +667,7 @@ class DescribeCommandArgsPassthroughTest < Minitest::Test
       attr_accessor :last_args
     end
 
-    def describe(name:, node: nil, args: [])
+    def describe(name:, node: nil, args: [], vmid: nil)
       self.class.last_args = args
       MockSnapshotDescription.new
     end

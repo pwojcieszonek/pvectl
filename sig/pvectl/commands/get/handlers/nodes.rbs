@@ -13,7 +13,7 @@ module Pvectl
 
           def presenter: () -> Presenters::Node
 
-          def describe: (name: String, ?node: String?, ?args: Array[String]) -> Models::Node
+          def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: Array[String]?) -> Models::Node
 
           private
 
