@@ -31,10 +31,7 @@ module Pvectl
       #
       # @return [Hash, nil] creation params or nil if user cancels
       def run
-        params = collect_params
-        return nil unless @prompt.yes?("Create this VM?")
-
-        params
+        collect_params
       end
 
       private

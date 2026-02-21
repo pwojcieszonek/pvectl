@@ -35,7 +35,7 @@ module Pvectl
       end
 
       describe "#run" do
-        it "collects basic params and returns hash when confirmed" do
+        it "collects basic params and returns hash" do
           responses = [
             "web-server",  # VM name
             "pve1",        # Node
@@ -46,8 +46,7 @@ module Pvectl
             nil,           # Network config (skip)
             "l26",         # OS type
             false,         # Agent?
-            false,         # Start?
-            true           # Confirm?
+            false          # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -63,27 +62,6 @@ module Pvectl
           assert_nil params[:nets]
         end
 
-        it "returns nil when user cancels" do
-          responses = [
-            "web-server",  # VM name
-            "pve1",        # Node
-            1,             # CPU cores
-            1,             # CPU sockets
-            2048,          # Memory
-            nil,           # Disk config (skip)
-            nil,           # Network config (skip)
-            "l26",         # OS type
-            false,         # Agent?
-            false,         # Start?
-            false          # Confirm? -> NO
-          ]
-          prompt = PromptStub.new(responses)
-          wizard = CreateVm.new({}, {}, prompt: prompt)
-          params = wizard.run
-
-          assert_nil params
-        end
-
         it "collects disk config when provided" do
           responses = [
             "web-server",                   # VM name
@@ -96,8 +74,7 @@ module Pvectl
             nil,                            # Network config (skip)
             "l26",                          # OS type
             false,                          # Agent?
-            false,                          # Start?
-            true                            # Confirm?
+            false                           # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -122,8 +99,7 @@ module Pvectl
             nil,                            # Network config (skip)
             "l26",                          # OS type
             false,                          # Agent?
-            false,                          # Start?
-            true                            # Confirm?
+            false                           # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -146,8 +122,7 @@ module Pvectl
             false,               # Another net?
             "l26",               # OS type
             false,               # Agent?
-            false,               # Start?
-            true                 # Confirm?
+            false                # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -168,8 +143,7 @@ module Pvectl
             nil,           # Net (skip)
             "l26",         # OS type
             true,          # Agent? -> YES
-            true,          # Start? -> YES
-            true           # Confirm?
+            true           # Start? -> YES
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -190,8 +164,7 @@ module Pvectl
             nil,           # Net (skip)
             "l26",         # OS type
             false,         # Agent? -> NO
-            false,         # Start? -> NO
-            true           # Confirm?
+            false          # Start? -> NO
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({}, {}, prompt: prompt)
@@ -212,8 +185,7 @@ module Pvectl
             nil,           # Net (skip)
             "l26",         # OS type
             false,         # Agent?
-            false,         # Start?
-            true           # Confirm?
+            false          # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateVm.new({ node: "pve2" }, {}, prompt: prompt)

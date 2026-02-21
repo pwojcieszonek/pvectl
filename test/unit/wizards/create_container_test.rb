@@ -35,7 +35,7 @@ module Pvectl
       end
 
       describe "#run" do
-        it "collects basic params and returns hash when confirmed" do
+        it "collects basic params and returns hash" do
           responses = [
             "web-ct",                              # Hostname
             "local:vztmpl/debian-12.tar.zst",      # OS template
@@ -47,8 +47,7 @@ module Pvectl
             nil,                                    # Mountpoint (skip)
             nil,                                    # Network (skip)
             true,                                   # Unprivileged?
-            false,                                  # Start?
-            true                                    # Confirm?
+            false                                   # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
@@ -60,28 +59,6 @@ module Pvectl
           assert_equal 2, params[:cores]
           assert_equal 2048, params[:memory]
           assert_equal 512, params[:swap]
-        end
-
-        it "returns nil when user cancels" do
-          responses = [
-            "web-ct",                              # Hostname
-            "local:vztmpl/debian-12.tar.zst",      # OS template
-            "pve1",                                 # Node
-            1,                                      # CPU cores
-            512,                                    # Memory
-            512,                                    # Swap
-            "storage=local-lvm,size=8G",            # Root FS
-            nil,                                    # Mountpoint (skip)
-            nil,                                    # Network (skip)
-            true,                                   # Unprivileged?
-            false,                                  # Start?
-            false                                   # Confirm? -> NO
-          ]
-          prompt = PromptStub.new(responses)
-          wizard = CreateContainer.new({}, {}, prompt: prompt)
-          params = wizard.run
-
-          assert_nil params
         end
 
         it "collects rootfs config" do
@@ -96,8 +73,7 @@ module Pvectl
             nil,                                    # Mountpoint (skip)
             nil,                                    # Network (skip)
             true,                                   # Unprivileged?
-            false,                                  # Start?
-            true                                    # Confirm?
+            false                                   # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
@@ -120,8 +96,7 @@ module Pvectl
             false,                                  # Another mount?
             nil,                                    # Network (skip)
             true,                                   # Unprivileged?
-            false,                                  # Start?
-            true                                    # Confirm?
+            false                                   # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
@@ -144,8 +119,7 @@ module Pvectl
             "bridge=vmbr0,ip=dhcp",                 # Network
             false,                                  # Another net?
             true,                                   # Unprivileged?
-            false,                                  # Start?
-            true                                    # Confirm?
+            false                                   # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
@@ -160,8 +134,7 @@ module Pvectl
             "ct", "t", "pve1", 1, 512, 512,
             "storage=local-lvm,size=8G",
             nil, nil, true,
-            true,   # Start? -> YES
-            true    # Confirm?
+            true    # Start? -> YES
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
@@ -176,8 +149,7 @@ module Pvectl
             "storage=local-lvm,size=8G",
             nil, nil,
             false,  # Unprivileged? -> NO (meaning privileged)
-            false,  # Start?
-            true    # Confirm?
+            false   # Start?
           ]
           prompt = PromptStub.new(responses)
           wizard = CreateContainer.new({}, {}, prompt: prompt)
