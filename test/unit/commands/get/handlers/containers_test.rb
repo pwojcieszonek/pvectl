@@ -420,6 +420,16 @@ class GetHandlersContainersTest < Minitest::Test
     assert_equal 3, result.length
   end
 
+  # ---------------------------
+  # #selector_class
+  # ---------------------------
+
+  def test_selector_class_returns_container_selector
+    handler = create_handler_with_mock_repo([])
+
+    assert_equal Pvectl::Selectors::Container, handler.selector_class
+  end
+
   private
 
   # Creates a handler with a mock repository returning given containers

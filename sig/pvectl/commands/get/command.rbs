@@ -31,6 +31,8 @@ module Pvectl
 
         def run_watch_mode: (untyped handler) -> void
 
+        def build_selector: (untyped handler) -> Selectors::Base?
+
         def build_service: (untyped handler) -> Services::Get::ResourceService
 
         def determine_color_enabled: () -> bool

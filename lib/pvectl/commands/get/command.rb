@@ -68,12 +68,18 @@ module Pvectl
               Wide output with extra columns:
                 $ pvectl get vms -o wide
 
-              Filter VMs by status using selectors:
+              Filter VMs by status (shortcut):
+                $ pvectl get vms --status running
+
+              Filter VMs by selector (supports status, name, tags, pool):
                 $ pvectl get vms -l status=running
+                $ pvectl get vms -l status=running,tags=prod
+                $ pvectl get vms -l name=~web-*
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or
-              pool. Multiple selectors use AND logic.
+              pool. Multiple selectors use AND logic. The --status flag is a shortcut
+              for -l status=VALUE and can be combined with other selectors.
 
               Task listing defaults to 50 entries; use --limit to change.
 
@@ -114,8 +120,11 @@ module Pvectl
             c.desc "Filter by task type (e.g., qmstart, qmstop, vzdump)"
             c.flag [:type], arg_name: "TYPE"
 
-            c.desc "Filter by status (running, ok, error)"
+            c.desc "Filter by status (running, stopped for VMs/CTs; running, ok, error for tasks)"
             c.flag [:status], arg_name: "STATUS"
+
+            c.desc "Filter by selector (e.g., status=running,tags=prod)"
+            c.flag [:l, :selector], arg_name: "SELECTOR", multiple: true
 
             c.desc "Search across all cluster nodes (default for tasks)"
             c.switch [:"all-nodes"], negatable: false
@@ -246,6 +255,7 @@ module Pvectl
         # @return [void]
         def run_once(handler)
           service = build_service(handler)
+          selector = build_selector(handler)
           output = service.list(
             node: options[:node],
             name: nil,
@@ -257,7 +267,8 @@ module Pvectl
             until_time: options[:until],
             type_filter: options[:type],
             status_filter: options[:status],
-            all_nodes: options[:"all-nodes"] || false
+            all_nodes: options[:"all-nodes"] || false,
+            selector: selector
           )
           puts output
         end
@@ -270,6 +281,26 @@ module Pvectl
           interval = options[:"watch-interval"] || WatchLoop::DEFAULT_INTERVAL
           watch_loop = WatchLoop.new(interval: interval)
           watch_loop.run { run_once(handler) }
+        end
+
+        # Builds a selector from -l and --status flags for client-side filtering.
+        #
+        # For handlers that declare a selector_class (VMs, Containers), --status
+        # is translated into a selector condition. For handlers without selector
+        # support (e.g., tasks), --status is passed through as status_filter.
+        #
+        # @param handler [ResourceHandler] the resource handler
+        # @return [Selectors::Base, nil] parsed selector or nil if not applicable
+        def build_selector(handler)
+          selector_class = handler.selector_class
+          return nil unless selector_class
+
+          selector_strings = Array(options[:selector])
+          selector_strings << "status=#{options[:status]}" if options[:status]
+
+          return nil if selector_strings.empty?
+
+          selector_class.parse_all(selector_strings)
         end
 
         # Builds the service for the given handler.

@@ -47,6 +47,16 @@ module Pvectl
         def presenter
           raise NotImplementedError, "#{self.class}#presenter must be implemented"
         end
+
+        # Returns the selector class for client-side filtering.
+        #
+        # Handlers that support selector-based filtering (e.g., -l status=running)
+        # should override this to return their selector class.
+        #
+        # @return [Class, nil] selector class (e.g., Selectors::Vm) or nil if not supported
+        def selector_class
+          nil
+        end
       end
     end
   end

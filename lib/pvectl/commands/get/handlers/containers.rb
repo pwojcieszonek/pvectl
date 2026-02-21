@@ -45,6 +45,13 @@ module Pvectl
             @repository = repository
           end
 
+          # Returns selector class for container filtering.
+          #
+          # @return [Class] Selectors::Container
+          def selector_class
+            Pvectl::Selectors::Container
+          end
+
           # Lists containers with optional filtering and sorting.
           #
           # @param node [String, nil] filter by node name

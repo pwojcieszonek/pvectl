@@ -5,6 +5,8 @@ module Pvectl
         def list: (?node: String?, ?name: String?, **untyped) -> Array[untyped]
 
         def presenter: () -> Presenters::Base
+
+        def selector_class: () -> Class?
       end
     end
   end

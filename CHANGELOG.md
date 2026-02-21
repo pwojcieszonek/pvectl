@@ -21,7 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **services**: Snapshot service methods accept `node:` parameter for node filtering
 - **services**: Added `delete_all` method for removing all snapshots from VMs
 
+### Fixed
+- **cli**: `--status` flag now correctly filters VMs and containers by status in `get` command (previously ignored for VM/CT resources)
+
 ### Added
+- **cli**: `-l`/`--selector` flag for `get` command enables kubectl-style filtering for VMs and containers (e.g., `-l status=running,tags=prod`, `-l name=~web-*`)
+- **cli**: `--status` flag acts as shortcut for `-l status=VALUE` for VM/CT resources, combinable with other selectors
 - **cli**: `pvectl template vm/ct` command for converting VMs and containers to Proxmox templates (irreversible, with confirmation prompt or `--yes` flag, `--force` to stop running resources)
 - **cli**: `pvectl get templates` handler for listing templates with optional `--type vm|ct` filter
 - **models**: `type` attribute added to VM and Container models (distinguishes `qemu`/`lxc`)

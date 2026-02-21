@@ -139,6 +139,22 @@ class GetResourceHandlerTest < Minitest::Test
     assert_equal "vm-100", filtered_results.first[:name]
   end
 
+  # ---------------------------
+  # #selector_class Method
+  # ---------------------------
+
+  def test_selector_class_returns_nil_by_default
+    handler = CompleteHandler.new
+
+    assert_nil handler.selector_class
+  end
+
+  def test_handler_responds_to_selector_class
+    handler = CompleteHandler.new
+
+    assert_respond_to handler, :selector_class
+  end
+
   private
 
   # Handler that doesn't implement required methods
