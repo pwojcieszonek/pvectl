@@ -20,6 +20,35 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Rollback to a snapshot"
+        cli.long_desc <<~HELP
+          Rollback a virtual machine or container to a previous snapshot,
+          restoring its disk (and optionally RAM) state to the snapshot point.
+
+          WARNING: All changes made after the snapshot will be lost.
+
+          EXAMPLES
+            Rollback a VM to a snapshot:
+              $ pvectl rollback snapshot 100 before-upgrade --yes
+
+            Rollback and start the VM after:
+              $ pvectl rollback snapshot 100 before-upgrade --yes --start
+
+            Async rollback:
+              $ pvectl rollback snapshot 100 before-upgrade --yes --async
+
+          NOTES
+            Rollback always operates on a single VM/container (not batch).
+
+            The VM/container will be stopped during rollback if running.
+
+            --yes is required — rollback is a destructive operation that
+            discards all changes since the snapshot.
+
+          SEE ALSO
+            pvectl help create snapshot Create a snapshot before changes
+            pvectl help get snapshots   List available snapshots
+            pvectl help describe snapshot  View snapshot details
+        HELP
         cli.arg_name "RESOURCE_TYPE ID SNAPSHOT_NAME"
         cli.command :rollback do |c|
           c.desc "Skip confirmation prompt (REQUIRED for destructive operations)"

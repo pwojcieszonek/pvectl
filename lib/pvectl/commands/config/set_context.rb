@@ -19,6 +19,17 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "Create or modify a context"
+          parent.long_desc <<~HELP
+            Create a new context or modify an existing one. A context links
+            a cluster definition with user credentials.
+
+            EXAMPLES
+              Create a new context:
+                $ pvectl config set-context prod --cluster=production --user=admin-prod
+
+              Set a default node:
+                $ pvectl config set-context prod --default-node=pve1
+          HELP
           parent.command :"set-context" do |set_ctx|
             set_ctx.arg_name "CONTEXT_NAME"
 

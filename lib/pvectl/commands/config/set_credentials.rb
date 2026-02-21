@@ -23,6 +23,21 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "Create or modify user credentials"
+          parent.long_desc <<~HELP
+            Create or modify user credentials. Supports API token (recommended)
+            and username/password authentication.
+
+            EXAMPLES
+              Set API token credentials:
+                $ pvectl config set-credentials admin --token-id=root@pam!pvectl --token-secret=xxx
+
+              Set username/password credentials:
+                $ pvectl config set-credentials admin --username=root@pam --password=secret
+
+            NOTES
+              API tokens are recommended over passwords — they are more secure
+              and don't expire with password changes.
+          HELP
           parent.command :"set-credentials" do |set_creds|
             set_creds.arg_name "USER_NAME"
 

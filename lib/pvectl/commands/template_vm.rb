@@ -29,6 +29,37 @@ module Pvectl
       # @return [void]
       def self.register(cli)
         cli.desc "Convert a resource to a template (irreversible)"
+        cli.long_desc <<~HELP
+          Convert a virtual machine or container into a Proxmox template.
+          Templates are read-only base images used for linked cloning.
+
+          WARNING: This operation is irreversible. Once converted, the resource
+          cannot be converted back to a regular VM/container.
+
+          EXAMPLES
+            Convert a stopped VM to template:
+              $ pvectl template vm 100 --yes
+
+            Convert a running VM (stops it first):
+              $ pvectl template vm 100 --force --yes
+
+            Convert multiple VMs:
+              $ pvectl template vm 100 101 102 --yes
+
+            Convert a container:
+              $ pvectl template ct 200 --yes
+
+          NOTES
+            The resource must be stopped before conversion. Use --force to
+            automatically stop a running resource before converting.
+
+            --yes skips the confirmation prompt. Without it, you will be
+            asked to confirm the irreversible operation.
+
+          SEE ALSO
+            pvectl help clone           Create linked clones from templates
+            pvectl help get templates   List existing templates
+        HELP
         cli.arg_name "RESOURCE_TYPE [ID...]"
         cli.command :template do |c|
           c.desc "Skip confirmation prompt"

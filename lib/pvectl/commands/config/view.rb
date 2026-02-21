@@ -22,6 +22,14 @@ module Pvectl
         # @return [void]
         def self.register_subcommand(parent)
           parent.desc "Display current configuration with masked secrets"
+          parent.long_desc <<~HELP
+            Display the current configuration file contents. Secrets (token
+            secrets, passwords) are masked for security.
+
+            EXAMPLES
+              $ pvectl config view
+              $ pvectl config view -o yaml
+          HELP
           parent.command :view do |view|
             view.action do |global_options, _options, _args|
               exit_code = execute(global_options)
