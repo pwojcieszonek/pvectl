@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cli**: `--status` flag now correctly filters VMs and containers by status in `get` command (previously ignored for VM/CT resources)
 
 ### Added
+- **selectors**: support `template` field filtering for VMs and containers (`-l template=yes`, `-l template=no`)
 - **cli**: `-l`/`--selector` flag for `get` command enables kubectl-style filtering for VMs and containers (e.g., `-l status=running,tags=prod`, `-l name=~web-*`)
 - **cli**: `--status` flag acts as shortcut for `-l status=VALUE` for VM/CT resources, combinable with other selectors
 - **cli**: `pvectl template vm/ct` command for converting VMs and containers to Proxmox templates (irreversible, with confirmation prompt or `--yes` flag, `--force` to stop running resources)
