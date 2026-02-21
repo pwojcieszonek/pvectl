@@ -505,7 +505,7 @@ module Pvectl
         @mock_resolver.verify
       end
 
-      def test_delete_all_returns_success_when_no_snapshots
+      def test_delete_all_returns_empty_when_no_snapshots
         @mock_resolver.expect(:resolve_multiple, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
@@ -514,8 +514,7 @@ module Pvectl
 
         results = @service.delete_all([100])
 
-        assert_equal 1, results.length
-        assert results[0].successful?
+        assert_equal 0, results.length
       end
 
       def test_delete_all_with_force_flag

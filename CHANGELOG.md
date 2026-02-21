@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **cli**: Unified snapshot CLI syntax — snapshot name is now a positional argument, VMIDs use `--vmid` flag (repeatable), `--node` filters by node, `--all` deletes all snapshots (**breaking change**)
+- **cli**: `create snapshot` and `delete snapshot` are now GLI sub-commands with dedicated flags
+- **cli**: `get snapshots` and `describe snapshot` accept `--vmid` and `--node` flags
+- **services**: Snapshot service methods accept `node:` parameter for node filtering
+- **services**: Added `delete_all` method for removing all snapshots from VMs
+
 ### Added
 - **cli**: `pvectl template vm/ct` command for converting VMs and containers to Proxmox templates (irreversible, with confirmation prompt or `--yes` flag, `--force` to stop running resources)
 - **cli**: `pvectl get templates` handler for listing templates with optional `--type vm|ct` filter
