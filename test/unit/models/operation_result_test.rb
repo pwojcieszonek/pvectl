@@ -174,4 +174,9 @@ class ModelsOperationResultTest < Minitest::Test
     result = Pvectl::Models::OperationResult.new(success: true)
     assert_equal "Success", result.message
   end
+
+  def test_message_returns_partial_when_no_error_set
+    result = Pvectl::Models::OperationResult.new(success: :partial)
+    assert_equal "Partial", result.message
+  end
 end

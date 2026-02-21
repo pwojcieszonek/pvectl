@@ -23,6 +23,7 @@ module Pvectl
         when "Success" then colorize(model.status_text, :green)
         when "Failed" then colorize(model.status_text, :red)
         when "Pending" then colorize(model.status_text, :yellow)
+        when "Partial" then colorize(model.status_text, :bright_yellow)
         else model.status_text
         end
       end
