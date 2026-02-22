@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl set` command for non-interactive resource configuration (vm, container, volume, node) with key=value syntax
+- **commands**: `pvectl edit volume` for interactive volume property editing via YAML editor
+- **commands**: `pvectl edit node` for interactive node configuration editing via YAML editor
 - **commands**: `pvectl get volume <vm|ct> <ID...>` and `pvectl get volume --storage <STORAGE>` list virtual disk volumes from VM/CT config or storage content API
 - **commands**: `pvectl describe volume <vm|ct> <ID> <disk_name>` shows detailed information about a specific virtual disk
 - **volumes**: Volume selector with `-l format=raw,storage=local-lvm` filtering for `get volume`
@@ -26,8 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **readme**: Transformed README from 529-line reference into ~130-line landing page with links to GitHub Wiki
 - **wiki**: Created comprehensive GitHub Wiki with 10 pages: Home, Getting Started, Command Reference, Configuration Guide, Selectors & Filtering, Output Formats, Workflows, Plugin Development, Troubleshooting, FAQ
 
+### Removed
+- **commands**: `pvectl resize volume` command (replaced by `pvectl set volume ... size=+10G`)
+
 ### Changed
-- **resize**: Renamed `pvectl resize disk` to `pvectl resize volume` for consistency (physical disks are `get disk`, virtual disks are `volume`)
+- **commands**: `pvectl edit` now supports `volume` and `node` resource types in addition to `vm` and `container`
 - **presenters**: reduce default table columns to 6 (NAME, ID, STATUS, NODE, CPU, MEMORY); UPTIME, TEMPLATE, TAGS moved to wide output
 - **presenters**: NAME column now appears first (before VMID/CTID), matching kubectl convention
 - **presenters**: extract shared display helpers (format_bytes, uptime_human, tags_display, template_display) to Presenters::Base
