@@ -9,6 +9,11 @@ module Pvectl
 
       def describe: (String name) -> Models::Node?
 
+
+      def fetch_config: (String node_name) -> Hash[Symbol, untyped]
+
+      def update: (String node_name, ?Hash[Symbol, untyped] params) -> void
+
       private
 
       def build_model: (Hash[Symbol, untyped] data) -> Models::Node

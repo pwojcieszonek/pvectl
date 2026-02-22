@@ -95,6 +95,27 @@ module Pvectl
         build_describe_model(data)
       end
 
+
+      # Fetches configuration for a node.
+      #
+      # @param node_name [String] node name
+      # @return [Hash] node configuration
+      def fetch_config(node_name)
+        resp = connection.client["nodes/#{node_name}/config"].get
+        extract_data(resp)
+      rescue StandardError
+        {}
+      end
+
+      # Updates node configuration.
+      #
+      # @param node_name [String] node name
+      # @param params [Hash] configuration parameters to update
+      # @return [void]
+      def update(node_name, params = {})
+        connection.client["nodes/#{node_name}/config"].put(params)
+      end
+
       protected
 
       # Builds Node model from API response data.
