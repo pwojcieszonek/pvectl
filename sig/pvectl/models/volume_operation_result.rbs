@@ -1,0 +1,9 @@
+module Pvectl
+  module Models
+    class VolumeOperationResult < OperationResult
+      attr_reader volume: Models::Volume?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+    end
+  end
+end
