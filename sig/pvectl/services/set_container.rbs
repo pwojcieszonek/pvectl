@@ -1,0 +1,14 @@
+module Pvectl
+  module Services
+    class SetContainer
+      def initialize: (container_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      def execute: (ctid: Integer, params: Hash[Symbol | String, untyped]) -> Models::ContainerOperationResult?
+
+      private
+      def compute_diff: (Hash[Symbol, untyped] config, Hash[Symbol | String, untyped] params) -> Hash[Symbol, untyped]
+      def build_update_params: (Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::ContainerOperationResult
+      def not_found_result: (Integer ctid) -> Models::ContainerOperationResult
+    end
+  end
+end
