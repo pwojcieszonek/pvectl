@@ -1,0 +1,23 @@
+module Pvectl
+  module Presenters
+    class Disk < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      attr_reader disk: untyped
+
+      def format_size: () -> String
+
+      def format_boolean: (Integer? value) -> String
+    end
+  end
+end

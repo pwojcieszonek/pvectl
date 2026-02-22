@@ -123,6 +123,7 @@ require_relative "pvectl/presenters/task_entry"
 require_relative "pvectl/presenters/syslog_entry"
 require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
+require_relative "pvectl/presenters/disk"
 
 # Selectors
 require_relative "pvectl/selectors/base"
