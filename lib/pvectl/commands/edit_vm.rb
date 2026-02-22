@@ -26,9 +26,10 @@ module Pvectl
       def self.register(cli)
         cli.desc "Edit a resource configuration"
         cli.long_desc <<~HELP
-          Open a VM, container, or node configuration in your text editor. The
-          configuration is presented as YAML for easy editing. Changes are
-          applied via the Proxmox API when you save and close the editor.
+          Open a VM, container, node, or volume configuration in your text
+          editor. The configuration is presented as YAML for easy editing.
+          Changes are applied via the Proxmox API when you save and close
+          the editor.
 
           EXAMPLES
             Edit a VM configuration:
@@ -40,6 +41,9 @@ module Pvectl
             Edit a node configuration:
               $ pvectl edit node pve1
 
+            Edit volume properties:
+              $ pvectl edit volume vm 100 scsi0
+
             Preview changes without applying:
               $ pvectl edit vm 100 --dry-run
 
@@ -50,7 +54,9 @@ module Pvectl
             In --dry-run mode, shows the diff between current and edited
             configuration without applying changes to Proxmox.
 
-            Supported resource types: vm, container (ct), node.
+            Supported resource types: vm, container (ct), node, volume.
+
+            For volumes, syntax is: pvectl edit volume <vm|container> <id> <disk>
 
             Not all configuration keys can be changed while a VM is running.
             Proxmox will reject invalid changes with an error message.
@@ -58,6 +64,7 @@ module Pvectl
           SEE ALSO
             pvectl help describe        View current configuration (read-only)
             pvectl help create          Create a new resource
+            pvectl help set             Set individual resource properties
         HELP
         cli.arg_name "RESOURCE_TYPE RESOURCE_ID"
         cli.command :edit do |c|
@@ -78,9 +85,11 @@ module Pvectl
               Commands::EditContainer.execute(resource_ids, options, global_options)
             when "node"
               Commands::EditNode.execute(resource_ids, options, global_options)
+            when "volume"
+              Commands::EditVolume.execute(resource_ids, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container, node"
+              $stderr.puts "Valid types: vm, container, node, volume"
               ExitCodes::USAGE_ERROR
             end
 
