@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **commands**: `pvectl get volume <vm|ct> <ID...>` and `pvectl get volume --storage <STORAGE>` list virtual disk volumes from VM/CT config or storage content API
 - **commands**: `pvectl describe volume <vm|ct> <ID> <disk_name>` shows detailed information about a specific virtual disk
+- **volumes**: Volume selector with `-l format=raw,storage=local-lvm` filtering for `get volume`
 - **describe disk**: `pvectl describe disk /dev/xxx [--node NODE]` shows device info and structured SMART attributes (ATA table or parsed NVMe/SAS key-value pairs)
 - **parsers**: SmartText parser for converting NVMe/SAS smartctl text output into structured data
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
@@ -26,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **wiki**: Created comprehensive GitHub Wiki with 10 pages: Home, Getting Started, Command Reference, Configuration Guide, Selectors & Filtering, Output Formats, Workflows, Plugin Development, Troubleshooting, FAQ
 
 ### Changed
+- **resize**: Renamed `pvectl resize disk` to `pvectl resize volume` for consistency (physical disks are `get disk`, virtual disks are `volume`)
 - **presenters**: reduce default table columns to 6 (NAME, ID, STATUS, NODE, CPU, MEMORY); UPTIME, TEMPLATE, TAGS moved to wide output
 - **presenters**: NAME column now appears first (before VMID/CTID), matching kubectl convention
 - **presenters**: extract shared display helpers (format_bytes, uptime_human, tags_display, template_display) to Presenters::Base

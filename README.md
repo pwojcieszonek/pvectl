@@ -64,8 +64,8 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, snapshots, backups, tasks) |
-| `describe` | Show detailed information about a resource |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks) |
+| `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
 | `start` `stop` `shutdown` `restart` | Lifecycle management |
@@ -75,7 +75,7 @@ pvectl top nodes                  # Resource usage
 | `migrate` | Migrate resources between nodes (supports live migration) |
 | `edit` | Edit VM/container configuration in $EDITOR |
 | `template` | Convert VM/container to template |
-| `resize disk` | Resize VM/container disks |
+| `resize volume` | Resize VM/container virtual disks |
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |

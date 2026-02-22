@@ -49,6 +49,7 @@ module Pvectl
               templates (template)      VM and container templates
               tasks (task)              Task history
               disks (disk)              Physical disks (block devices)
+              volumes (volume, vol)     Virtual disks attached to VMs/containers
 
             EXAMPLES
               List all VMs in table format:
@@ -76,6 +77,15 @@ module Pvectl
                 $ pvectl get vms -l status=running
                 $ pvectl get vms -l status=running,tags=prod
                 $ pvectl get vms -l name=~web-*
+
+              List VM volumes:
+                $ pvectl get volume vm 100
+
+              List volumes from storage:
+                $ pvectl get volume --storage local-lvm
+
+              List volumes with filtering:
+                $ pvectl get volume vm 100 -l format=raw
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or
