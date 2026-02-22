@@ -5,7 +5,7 @@ require "test_helper"
 module Pvectl
   module Commands
     module Resize
-      class ResizeDiskCtTest < Minitest::Test
+      class ResizeVolumeVmTest < Minitest::Test
         describe "argument validation" do
           before do
             @original_stderr = $stderr
@@ -16,24 +16,24 @@ module Pvectl
             $stderr = @original_stderr
           end
 
-          it "returns usage error when CTID is missing" do
-            cmd = ResizeDiskCt.new([], {}, {})
+          it "returns usage error when VMID is missing" do
+            cmd = ResizeVolumeVm.new([], {}, {})
             exit_code = cmd.execute
 
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes $stderr.string, "CTID"
+            assert_includes $stderr.string, "VMID"
           end
 
-          it "returns usage error when disk is missing" do
-            cmd = ResizeDiskCt.new(["200"], {}, {})
+          it "returns usage error when volume is missing" do
+            cmd = ResizeVolumeVm.new(["100"], {}, {})
             exit_code = cmd.execute
 
             assert_equal ExitCodes::USAGE_ERROR, exit_code
-            assert_includes $stderr.string, "DISK"
+            assert_includes $stderr.string, "VOLUME"
           end
 
           it "returns usage error when size is missing" do
-            cmd = ResizeDiskCt.new(["200", "rootfs"], {}, {})
+            cmd = ResizeVolumeVm.new(["100", "scsi0"], {}, {})
             exit_code = cmd.execute
 
             assert_equal ExitCodes::USAGE_ERROR, exit_code
@@ -41,7 +41,7 @@ module Pvectl
           end
 
           it "returns usage error for invalid size format" do
-            cmd = ResizeDiskCt.new(["200", "rootfs", "xyz"], {}, {})
+            cmd = ResizeVolumeVm.new(["100", "scsi0", "abc"], {}, {})
             exit_code = cmd.execute
 
             assert_equal ExitCodes::USAGE_ERROR, exit_code
@@ -50,14 +50,14 @@ module Pvectl
         end
 
         describe "template hooks" do
-          it "returns container as resource_label" do
-            cmd = ResizeDiskCt.new([], {}, {})
-            assert_equal "container", cmd.send(:resource_label)
+          it "returns VM as resource_label" do
+            cmd = ResizeVolumeVm.new([], {}, {})
+            assert_equal "VM", cmd.send(:resource_label)
           end
 
-          it "returns CTID as resource_id_label" do
-            cmd = ResizeDiskCt.new([], {}, {})
-            assert_equal "CTID", cmd.send(:resource_id_label)
+          it "returns VMID as resource_id_label" do
+            cmd = ResizeVolumeVm.new([], {}, {})
+            assert_equal "VMID", cmd.send(:resource_id_label)
           end
         end
       end

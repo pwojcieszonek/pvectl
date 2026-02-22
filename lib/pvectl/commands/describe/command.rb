@@ -34,6 +34,7 @@ module Pvectl
               container VMID            Container details, mountpoints, network
               storage NAME              Storage pool info, content types, usage
               snapshot NAME             Snapshot metadata and snapshot tree (use --vmid)
+              volume TYPE ID DISK       Virtual disk details (e.g., describe volume vm 100 scsi0)
 
             EXAMPLES
               Full node diagnostics:
@@ -57,6 +58,12 @@ module Pvectl
               Snapshot search cluster-wide (all VMs and containers):
                 $ pvectl describe snapshot before-upgrade
 
+              Virtual disk details:
+                $ pvectl describe volume vm 100 scsi0
+
+              Container rootfs:
+                $ pvectl describe volume ct 200 rootfs
+
             NOTES
               For local storage, --node is required because local storage exists
               independently on each node.
@@ -66,6 +73,7 @@ module Pvectl
 
             SEE ALSO
               pvectl help get           List resources in table format
+              pvectl help get volume    List virtual disks attached to VMs/containers
               pvectl help logs          Show task history and logs
           HELP
           cli.arg_name "RESOURCE_TYPE NAME"

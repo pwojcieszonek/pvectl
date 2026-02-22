@@ -5,7 +5,7 @@ module Pvectl
     module Resize
       # Registers the `pvectl resize` command group with subcommands.
       #
-      # Currently supports `resize disk`. Designed for extensibility
+      # Currently supports `resize volume`. Designed for extensibility
       # with future subcommands (memory, cpu).
       #
       # @example
@@ -19,68 +19,68 @@ module Pvectl
         def self.register(cli)
           cli.desc "Resize a resource property"
           cli.long_desc <<~HELP
-            Resize a property of a VM or container. Currently supports disk
-            resizing via the 'disk' subcommand.
+            Resize a property of a VM or container. Currently supports volume
+            resizing via the 'volume' subcommand.
 
             SEE ALSO
-              pvectl help resize disk   Resize a VM or container disk
+              pvectl help resize volume   Resize a VM or container volume
           HELP
           cli.command :resize do |c|
-            register_disk_subcommand(c)
+            register_volume_subcommand(c)
           end
         end
 
-        # Registers the disk subcommand.
+        # Registers the volume subcommand.
         #
         # @param parent [GLI::Command] parent resize command
         # @return [void]
-        def self.register_disk_subcommand(parent)
-          parent.desc "Resize a disk on a VM or container"
-          parent.arg_name "RESOURCE_TYPE ID DISK SIZE"
+        def self.register_volume_subcommand(parent)
+          parent.desc "Resize a volume on a VM or container"
+          parent.arg_name "RESOURCE_TYPE ID VOLUME SIZE"
           parent.long_desc <<~HELP
-            Resize a disk on a virtual machine or container. You can specify
+            Resize a volume on a virtual machine or container. You can specify
             either an absolute size or a relative increase with the + prefix.
 
             EXAMPLES
-              Add 10GB to a VM disk:
-                $ pvectl resize disk vm 100 scsi0 +10G
+              Add 10GB to a VM volume:
+                $ pvectl resize volume vm 100 scsi0 +10G
 
               Add 5GB to a container rootfs:
-                $ pvectl resize disk ct 200 rootfs +5G
+                $ pvectl resize volume ct 200 rootfs +5G
 
-              Set disk to exactly 50GB (skip confirmation):
-                $ pvectl resize disk vm 100 scsi0 50G --yes
+              Set volume to exactly 50GB (skip confirmation):
+                $ pvectl resize volume vm 100 scsi0 50G --yes
 
               Resize on a specific node:
-                $ pvectl resize disk vm 100 scsi0 +10G --node pve1
+                $ pvectl resize volume vm 100 scsi0 +10G --node pve1
 
             NOTES
-              Disk resize is irreversible — Proxmox does not support shrinking
-              disks. A confirmation prompt is shown unless --yes is specified.
+              Volume resize is irreversible — Proxmox does not support shrinking
+              volumes. A confirmation prompt is shown unless --yes is specified.
 
-              Common disk names: scsi0, virtio0, ide0 (VMs), rootfs, mp0 (containers).
+              Common volume names: scsi0, virtio0, ide0 (VMs), rootfs, mp0 (containers).
 
               Size format: use G for gigabytes (e.g., +10G, 50G).
 
             SEE ALSO
-              pvectl help describe vm     View current disk configuration
+              pvectl help describe vm     View current volume configuration
               pvectl help edit            Edit full VM/container configuration
           HELP
-          parent.command :disk do |disk_cmd|
-            disk_cmd.desc "Skip confirmation prompt"
-            disk_cmd.switch [:yes, :y], negatable: false
+          parent.command :volume do |vol_cmd|
+            vol_cmd.desc "Skip confirmation prompt"
+            vol_cmd.switch [:yes, :y], negatable: false
 
-            disk_cmd.desc "Target node name"
-            disk_cmd.flag [:node, :n], arg_name: "NODE"
+            vol_cmd.desc "Target node name"
+            vol_cmd.flag [:node, :n], arg_name: "NODE"
 
-            disk_cmd.action do |global_options, options, args|
+            vol_cmd.action do |global_options, options, args|
               resource_type = args.shift
 
               exit_code = case resource_type
               when "vm"
-                Resize::ResizeDiskVm.execute(args, options, global_options)
+                Resize::ResizeVolumeVm.execute(args, options, global_options)
               when "container", "ct"
-                Resize::ResizeDiskCt.execute(args, options, global_options)
+                Resize::ResizeVolumeCt.execute(args, options, global_options)
               when nil
                 $stderr.puts "Error: Resource type required (vm, container, ct)"
                 ExitCodes::USAGE_ERROR
@@ -94,7 +94,7 @@ module Pvectl
             end
           end
         end
-        private_class_method :register_disk_subcommand
+        private_class_method :register_volume_subcommand
       end
     end
   end

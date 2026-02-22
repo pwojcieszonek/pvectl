@@ -85,6 +85,7 @@ require_relative "pvectl/models/task_entry"
 require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
+require_relative "pvectl/models/volume"
 
 # Repositories
 require_relative "pvectl/repositories/base"
@@ -100,6 +101,7 @@ require_relative "pvectl/repositories/syslog"
 require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
+require_relative "pvectl/repositories/volume"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -124,12 +126,14 @@ require_relative "pvectl/presenters/syslog_entry"
 require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
 require_relative "pvectl/presenters/disk"
+require_relative "pvectl/presenters/volume"
 
 # Selectors
 require_relative "pvectl/selectors/base"
 require_relative "pvectl/selectors/vm"
 require_relative "pvectl/selectors/container"
 require_relative "pvectl/selectors/disk"
+require_relative "pvectl/selectors/volume"
 
 # Console
 require_relative "pvectl/console/terminal_session"
@@ -190,8 +194,8 @@ require_relative "pvectl/services/edit_vm"
 # Services - Edit Container
 require_relative "pvectl/services/edit_container"
 
-# Services - Resize Disk
-require_relative "pvectl/services/resize_disk"
+# Services - Resize Volume
+require_relative "pvectl/services/resize_volume"
 
 # Services - Clone Container
 require_relative "pvectl/services/clone_container"
@@ -224,6 +228,7 @@ require_relative "pvectl/commands/get/handlers/backups"
 require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
+require_relative "pvectl/commands/get/handlers/volume"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -281,9 +286,9 @@ require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
 
 # Commands - Resize
-require_relative "pvectl/commands/resize/resize_disk_command"
-require_relative "pvectl/commands/resize/resize_disk_vm"
-require_relative "pvectl/commands/resize/resize_disk_ct"
+require_relative "pvectl/commands/resize/resize_volume_command"
+require_relative "pvectl/commands/resize/resize_volume_vm"
+require_relative "pvectl/commands/resize/resize_volume_ct"
 require_relative "pvectl/commands/resize/command"
 
 # Commands - Delete

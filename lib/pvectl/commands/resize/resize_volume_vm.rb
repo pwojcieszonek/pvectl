@@ -3,16 +3,16 @@
 module Pvectl
   module Commands
     module Resize
-      # Handler for the `pvectl resize disk vm` command.
+      # Handler for the `pvectl resize volume vm` command.
       #
-      # Includes ResizeDiskCommand for shared workflow and overrides
+      # Includes ResizeVolumeCommand for shared workflow and overrides
       # template methods with VM-specific behavior.
       #
       # @example
-      #   pvectl resize disk vm 100 scsi0 +10G
+      #   pvectl resize volume vm 100 scsi0 +10G
       #
-      class ResizeDiskVm
-        include ResizeDiskCommand
+      class ResizeVolumeVm
+        include ResizeVolumeCommand
 
         private
 
@@ -27,10 +27,10 @@ module Pvectl
         end
 
         # @param connection [Connection] API connection
-        # @return [Services::ResizeDisk] resize service with VM repository
+        # @return [Services::ResizeVolume] resize service with VM repository
         def build_resize_service(connection)
           repo = Pvectl::Repositories::Vm.new(connection)
-          Pvectl::Services::ResizeDisk.new(repository: repo)
+          Pvectl::Services::ResizeVolume.new(repository: repo)
         end
 
         # @return [Presenters::VmOperationResult] VM result presenter

@@ -4,13 +4,13 @@ require "test_helper"
 
 module Pvectl
   module Services
-    class ResizeDiskTest < Minitest::Test
+    class ResizeVolumeTest < Minitest::Test
       # --- .parse_size ---
 
       describe ".parse_size" do
         describe "relative sizes" do
           it "parses relative size with G suffix" do
-            parsed = ResizeDisk.parse_size("+10G")
+            parsed = ResizeVolume.parse_size("+10G")
 
             assert parsed.relative?
             assert_equal "10G", parsed.value
@@ -18,7 +18,7 @@ module Pvectl
           end
 
           it "parses relative size with M suffix" do
-            parsed = ResizeDisk.parse_size("+512M")
+            parsed = ResizeVolume.parse_size("+512M")
 
             assert parsed.relative?
             assert_equal "512M", parsed.value
@@ -26,7 +26,7 @@ module Pvectl
           end
 
           it "parses relative size with T suffix" do
-            parsed = ResizeDisk.parse_size("+1T")
+            parsed = ResizeVolume.parse_size("+1T")
 
             assert parsed.relative?
             assert_equal "1T", parsed.value
@@ -34,7 +34,7 @@ module Pvectl
           end
 
           it "parses relative size with K suffix" do
-            parsed = ResizeDisk.parse_size("+100K")
+            parsed = ResizeVolume.parse_size("+100K")
 
             assert parsed.relative?
             assert_equal "100K", parsed.value
@@ -44,7 +44,7 @@ module Pvectl
 
         describe "absolute sizes" do
           it "parses absolute size with G suffix" do
-            parsed = ResizeDisk.parse_size("50G")
+            parsed = ResizeVolume.parse_size("50G")
 
             refute parsed.relative?
             assert_equal "50G", parsed.value
@@ -52,7 +52,7 @@ module Pvectl
           end
 
           it "parses absolute size with M suffix" do
-            parsed = ResizeDisk.parse_size("1024M")
+            parsed = ResizeVolume.parse_size("1024M")
 
             refute parsed.relative?
             assert_equal "1024M", parsed.value
@@ -60,7 +60,7 @@ module Pvectl
           end
 
           it "parses absolute size with T suffix" do
-            parsed = ResizeDisk.parse_size("2T")
+            parsed = ResizeVolume.parse_size("2T")
 
             refute parsed.relative?
             assert_equal "2T", parsed.value
@@ -70,7 +70,7 @@ module Pvectl
 
         describe "decimal values" do
           it "parses decimal size" do
-            parsed = ResizeDisk.parse_size("1.5T")
+            parsed = ResizeVolume.parse_size("1.5T")
 
             refute parsed.relative?
             assert_equal "1.5T", parsed.value
@@ -78,7 +78,7 @@ module Pvectl
           end
 
           it "parses relative decimal size" do
-            parsed = ResizeDisk.parse_size("+0.5G")
+            parsed = ResizeVolume.parse_size("+0.5G")
 
             assert parsed.relative?
             assert_equal "0.5G", parsed.value
@@ -88,7 +88,7 @@ module Pvectl
 
         describe "no suffix" do
           it "parses number without suffix" do
-            parsed = ResizeDisk.parse_size("100")
+            parsed = ResizeVolume.parse_size("100")
 
             refute parsed.relative?
             assert_equal "100", parsed.value
@@ -96,7 +96,7 @@ module Pvectl
           end
 
           it "parses relative number without suffix" do
-            parsed = ResizeDisk.parse_size("+50")
+            parsed = ResizeVolume.parse_size("+50")
 
             assert parsed.relative?
             assert_equal "50", parsed.value
@@ -106,7 +106,7 @@ module Pvectl
 
         describe "case insensitivity" do
           it "uppercases lowercase suffix" do
-            parsed = ResizeDisk.parse_size("10g")
+            parsed = ResizeVolume.parse_size("10g")
 
             assert_equal "10G", parsed.value
             assert_equal "10G", parsed.raw
@@ -115,27 +115,27 @@ module Pvectl
 
         describe "invalid formats" do
           it "raises on invalid format" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size("abc") }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size("abc") }
           end
 
           it "raises on empty string" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size("") }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size("") }
           end
 
           it "raises on nil" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size(nil) }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size(nil) }
           end
 
           it "raises on negative value (minus prefix)" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size("-10G") }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size("-10G") }
           end
 
           it "raises on zero value" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size("0G") }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size("0G") }
           end
 
           it "raises on invalid suffix" do
-            assert_raises(ArgumentError) { ResizeDisk.parse_size("10X") }
+            assert_raises(ArgumentError) { ResizeVolume.parse_size("10X") }
           end
         end
       end
@@ -155,8 +155,8 @@ module Pvectl
           it "calculates new size from current + increment" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=32G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("+10G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("+10G")
 
             result = service.preflight(100, "scsi0", parsed, node: "pve1")
 
@@ -170,8 +170,8 @@ module Pvectl
           it "uses parsed value as new size" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=32G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("50G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("50G")
 
             result = service.preflight(100, "scsi0", parsed, node: "pve1")
 
@@ -181,25 +181,25 @@ module Pvectl
           end
         end
 
-        describe "disk not found" do
-          it "raises DiskNotFoundError when disk key missing" do
+        describe "volume not found" do
+          it "raises VolumeNotFoundError when volume key missing" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=32G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("+10G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("+10G")
 
-            assert_raises(ResizeDisk::DiskNotFoundError) do
+            assert_raises(ResizeVolume::VolumeNotFoundError) do
               service.preflight(100, "virtio0", parsed, node: "pve1")
             end
           end
 
-          it "raises DiskNotFoundError when size not extractable" do
+          it "raises VolumeNotFoundError when size not extractable" do
             config = { scsi0: "local-lvm:vm-100-disk-0" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("+10G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("+10G")
 
-            assert_raises(ResizeDisk::DiskNotFoundError) do
+            assert_raises(ResizeVolume::VolumeNotFoundError) do
               service.preflight(100, "scsi0", parsed, node: "pve1")
             end
           end
@@ -209,10 +209,10 @@ module Pvectl
           it "raises SizeTooSmallError when absolute size equals current" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=32G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("32G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("32G")
 
-            assert_raises(ResizeDisk::SizeTooSmallError) do
+            assert_raises(ResizeVolume::SizeTooSmallError) do
               service.preflight(100, "scsi0", parsed, node: "pve1")
             end
           end
@@ -220,10 +220,10 @@ module Pvectl
           it "raises SizeTooSmallError when absolute size less than current" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=32G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("16G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("16G")
 
-            assert_raises(ResizeDisk::SizeTooSmallError) do
+            assert_raises(ResizeVolume::SizeTooSmallError) do
               service.preflight(100, "scsi0", parsed, node: "pve1")
             end
           end
@@ -233,8 +233,8 @@ module Pvectl
           it "handles rootfs disk format" do
             config = { rootfs: "local-lvm:subvol-200-disk-0,size=8G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("+2G")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("+2G")
 
             result = service.preflight(200, "rootfs", parsed, node: "pve1")
 
@@ -248,8 +248,8 @@ module Pvectl
           it "converts units when adding T to G" do
             config = { scsi0: "local-lvm:vm-100-disk-0,size=512G" }
             repo = build_mock_repo(config)
-            service = ResizeDisk.new(repository: repo)
-            parsed = ResizeDisk.parse_size("+1T")
+            service = ResizeVolume.new(repository: repo)
+            parsed = ResizeVolume.parse_size("+1T")
 
             result = service.preflight(100, "scsi0", parsed, node: "pve1")
 
@@ -270,11 +270,11 @@ module Pvectl
               nil
             end
 
-            service = ResizeDisk.new(repository: repo)
+            service = ResizeVolume.new(repository: repo)
             result = service.perform(100, "scsi0", "+10G", node: "pve1")
 
             assert result.successful?
-            assert_equal :resize_disk, result.operation
+            assert_equal :resize_volume, result.operation
             assert_equal({ id: 100, node: "pve1", disk: "scsi0", size: "+10G" }, result.resource)
 
             assert_equal({ id: 100, node: "pve1", disk: "scsi0", size: "+10G" }, resize_args)
@@ -288,11 +288,11 @@ module Pvectl
               raise StandardError, "API connection refused"
             end
 
-            service = ResizeDisk.new(repository: repo)
+            service = ResizeVolume.new(repository: repo)
             result = service.perform(100, "scsi0", "+10G", node: "pve1")
 
             assert result.failed?
-            assert_equal :resize_disk, result.operation
+            assert_equal :resize_volume, result.operation
             assert_equal "API connection refused", result.error
             assert_equal({ id: 100, node: "pve1", disk: "scsi0" }, result.resource)
           end

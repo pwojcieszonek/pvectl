@@ -1,0 +1,29 @@
+module Pvectl
+  module Models
+    class Volume < Base
+      attr_reader name: String?
+      attr_reader storage: String?
+      attr_reader volume_id: String?
+      attr_reader volid: String?
+      attr_reader size: String?
+      attr_reader format: String?
+      attr_reader resource_type: String?
+      attr_reader resource_id: Integer?
+      attr_reader node: String?
+      attr_reader content: String?
+      attr_reader cache: String?
+      attr_reader discard: String?
+      attr_reader ssd: Integer?
+      attr_reader iothread: Integer?
+      attr_reader backup: Integer?
+      attr_reader mp: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+      def vm?: () -> bool
+      def container?: () -> bool
+
+      private
+      def construct_volid: () -> String?
+    end
+  end
+end

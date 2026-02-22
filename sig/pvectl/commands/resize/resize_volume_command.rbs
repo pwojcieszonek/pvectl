@@ -1,7 +1,7 @@
 module Pvectl
   module Commands
     module Resize
-      module ResizeDiskCommand
+      module ResizeVolumeCommand
         module ClassMethods
           def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
         end
@@ -16,9 +16,9 @@ module Pvectl
 
         def resource_label: () -> String
         def resource_id_label: () -> String
-        def build_resize_service: (Connection connection) -> Services::ResizeDisk
+        def build_resize_service: (Connection connection) -> Services::ResizeVolume
         def build_presenter: () -> untyped
-        def perform_resize: (Integer resource_id, String disk, Services::ResizeDisk::ParsedSize parsed_size) -> Integer
+        def perform_resize: (Integer resource_id, String disk, Services::ResizeVolume::ParsedSize parsed_size) -> Integer
         def resolve_node: (Integer resource_id, Connection connection) -> String?
         def confirm_operation: (Integer resource_id, Hash[Symbol, String] info, String node) -> bool
         def output_result: (Models::OperationResult result) -> void

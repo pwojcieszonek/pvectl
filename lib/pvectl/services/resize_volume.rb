@@ -2,25 +2,25 @@
 
 module Pvectl
   module Services
-    # Orchestrates disk resize operations for VMs and containers.
+    # Orchestrates volume resize operations for VMs and containers.
     #
     # Handles size parsing, preflight validation (current size comparison),
     # and execution via the repository interface. Works polymorphically with
     # both VM and Container repositories (they share #fetch_config and #resize).
     #
     # Two-phase operation:
-    # 1. {#preflight} — validates disk exists, computes new size, checks constraints
+    # 1. {#preflight} — validates volume exists, computes new size, checks constraints
     # 2. {#perform} — executes the actual resize via repository
     #
     # @example Basic resize flow
-    #   parsed = ResizeDisk.parse_size("+10G")
-    #   service = ResizeDisk.new(repository: vm_repo)
+    #   parsed = ResizeVolume.parse_size("+10G")
+    #   service = ResizeVolume.new(repository: vm_repo)
     #   info = service.preflight(100, "scsi0", parsed, node: "pve1")
     #   result = service.perform(100, "scsi0", parsed.raw, node: "pve1")
     #
-    class ResizeDisk
-      # Raised when the specified disk key is not found in resource config.
-      class DiskNotFoundError < StandardError; end
+    class ResizeVolume
+      # Raised when the specified volume key is not found in resource config.
+      class VolumeNotFoundError < StandardError; end
 
       # Raised when absolute size is not larger than current disk size.
       class SizeTooSmallError < StandardError; end
@@ -63,11 +63,11 @@ module Pvectl
       # @raise [ArgumentError] if format is invalid, empty, or negative
       #
       # @example Relative size
-      #   ResizeDisk.parse_size("+10G")
+      #   ResizeVolume.parse_size("+10G")
       #   #=> ParsedSize(relative: true, value: "10G", raw: "+10G")
       #
       # @example Absolute size
-      #   ResizeDisk.parse_size("50G")
+      #   ResizeVolume.parse_size("50G")
       #   #=> ParsedSize(relative: false, value: "50G", raw: "50G")
       def self.parse_size(size_str)
         raise ArgumentError, "Size cannot be empty" if size_str.nil? || size_str.strip.empty?
@@ -90,7 +90,7 @@ module Pvectl
         )
       end
 
-      # Creates a new ResizeDisk service.
+      # Creates a new ResizeVolume service.
       #
       # @param repository [Repositories::Vm, Repositories::Container] resource repository
       def initialize(repository:)
@@ -108,7 +108,7 @@ module Pvectl
       # @param parsed_size [ParsedSize] parsed size from {.parse_size}
       # @param node [String] node name
       # @return [Hash] preflight info with :disk, :current_size, :new_size
-      # @raise [DiskNotFoundError] if disk not in config or size not extractable
+      # @raise [VolumeNotFoundError] if volume not in config or size not extractable
       # @raise [SizeTooSmallError] if absolute size <= current size
       def preflight(id, disk, parsed_size, node:)
         config = @repository.fetch_config(node, id)
@@ -129,13 +129,13 @@ module Pvectl
       def perform(id, disk, raw_size, node:)
         @repository.resize(id, node, disk: disk, size: raw_size)
         Models::OperationResult.new(
-          operation: :resize_disk,
+          operation: :resize_volume,
           success: true,
           resource: { id: id, node: node, disk: disk, size: raw_size }
         )
       rescue StandardError => e
         Models::OperationResult.new(
-          operation: :resize_disk,
+          operation: :resize_volume,
           success: false,
           error: e.message,
           resource: { id: id, node: node, disk: disk }
@@ -155,13 +155,13 @@ module Pvectl
       # @param disk [String] disk key to look up
       # @param id [Integer] resource ID (for error messages)
       # @return [String] current size (e.g., "32G")
-      # @raise [DiskNotFoundError] if disk not found or size not extractable
+      # @raise [VolumeNotFoundError] if volume not found or size not extractable
       def extract_disk_size(config, disk, id)
         disk_value = config[disk.to_sym]
-        raise DiskNotFoundError, "Disk '#{disk}' not found in config for resource #{id}" unless disk_value
+        raise VolumeNotFoundError, "Volume '#{disk}' not found in config for resource #{id}" unless disk_value
 
         size_match = disk_value.to_s.match(/size=(\d+(?:\.\d+)?[TGMK]?)/i)
-        raise DiskNotFoundError, "Cannot determine size for disk '#{disk}' on resource #{id}" unless size_match
+        raise VolumeNotFoundError, "Cannot determine size for volume '#{disk}' on resource #{id}" unless size_match
 
         size_match[1]
       end

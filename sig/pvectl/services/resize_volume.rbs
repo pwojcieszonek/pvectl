@@ -1,7 +1,7 @@
 module Pvectl
   module Services
-    class ResizeDisk
-      class DiskNotFoundError < StandardError
+    class ResizeVolume
+      class VolumeNotFoundError < StandardError
       end
 
       class SizeTooSmallError < StandardError

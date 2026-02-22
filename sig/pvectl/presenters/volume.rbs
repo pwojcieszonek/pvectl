@@ -1,0 +1,23 @@
+module Pvectl
+  module Presenters
+    class Volume < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (Models::Volume model, **untyped _context) -> Array[String]
+
+      def extra_values: (Models::Volume model, **untyped _context) -> Array[String]
+
+      def to_hash: (Models::Volume model) -> Hash[String, untyped]
+
+      def to_description: (Models::Volume model) -> Hash[String, Hash[String, String]]
+
+      private
+
+      attr_reader volume: Models::Volume
+
+      def volume_info_section: () -> Hash[String, untyped]
+    end
+  end
+end

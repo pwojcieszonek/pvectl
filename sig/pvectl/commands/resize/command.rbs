@@ -6,7 +6,7 @@ module Pvectl
 
         private
 
-        def self.register_disk_subcommand: (untyped parent) -> void
+        def self.register_volume_subcommand: (untyped parent) -> void
       end
     end
   end

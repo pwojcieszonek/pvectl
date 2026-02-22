@@ -68,7 +68,7 @@ docs(logs): add RDoc documentation for public API
 - Commit after each logical unit of work (TDD cycle: test → implement → refactor)
 - Never bundle unrelated changes in one commit
 - Write imperative mood descriptions: "add", "fix", "remove" — not "added", "fixes"
-- No `Co-Authored-By` trailers
+- **NEVER add `Co-Authored-By` trailers** — this is a hard rule, no exceptions. Do not add any Co-Authored-By, Signed-off-by, or similar trailers to commit messages. This applies to ALL commits: manual, from subagents, from scripts. When dispatching subagents that commit, explicitly instruct them: "Do NOT add Co-Authored-By or any trailers to commit messages."
 - When the user asks to commit — execute immediately, no questions asked
 
 ### TDD Commit Rhythm
