@@ -15,10 +15,10 @@ module Pvectl
     #   #     { "Attribute" => "Temperature", "Value" => "34 Celsius" }]
     #
     class SmartText
-      # Pattern: key (with possible spaces/hyphens), colon, whitespace, value.
-      # Uses non-greedy key capture so the first colon followed by spaces is
-      # the delimiter. Header lines without a colon-space pattern are skipped.
-      LINE_PATTERN = /\A\s*(.+?):\s+(.+)\z/
+      # Pattern: key (no colons), colon, whitespace, value.
+      # Uses negated character class [^:]+ for O(n) matching without
+      # backtracking (avoids ReDoS on lines with many spaces and no colon).
+      LINE_PATTERN = /\A\s*([^:]+):\s+(.+)\z/
 
       # Parses smartctl text output into structured attributes.
       #
