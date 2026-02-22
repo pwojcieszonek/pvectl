@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **wiki**: Created comprehensive GitHub Wiki with 10 pages: Home, Getting Started, Command Reference, Configuration Guide, Selectors & Filtering, Output Formats, Workflows, Plugin Development, Troubleshooting, FAQ
 
 ### Changed
+- **presenters**: reduce default table columns to 6 (NAME, ID, STATUS, NODE, CPU, MEMORY); UPTIME, TEMPLATE, TAGS moved to wide output
+- **presenters**: NAME column now appears first (before VMID/CTID), matching kubectl convention
+- **presenters**: extract shared display helpers (format_bytes, uptime_human, tags_display, template_display) to Presenters::Base
 - **cli**: boolean config flags (`--start`, `--numa`, `--agent`, `--privileged`, `--onboot`) now support negation (`--no-start`, `--no-agent`, etc.) in `create` and `clone` commands
 - **cli**: Unified snapshot CLI syntax — snapshot name is now a positional argument, VMIDs use `--vmid` flag (repeatable), `--node` filters by node, `--all` deletes all snapshots (**breaking change**)
 - **cli**: `create snapshot` and `delete snapshot` are now GLI sub-commands with dedicated flags
