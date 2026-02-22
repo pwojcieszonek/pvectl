@@ -306,6 +306,7 @@ require_relative "pvectl/commands/create_container"
 require_relative "pvectl/commands/edit_resource_command"
 require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
+require_relative "pvectl/commands/edit_node"
 
 # Commands - Set
 require_relative "pvectl/commands/set_resource_command"

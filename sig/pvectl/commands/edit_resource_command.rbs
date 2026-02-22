@@ -17,7 +17,7 @@ module Pvectl
 
       def resource_id_label: () -> String
 
-      def execute_params: (Integer resource_id) -> Hash[Symbol, untyped]
+      def execute_params: (String resource_id) -> Hash[Symbol, untyped]
 
       def build_edit_service: (untyped connection) -> untyped
 

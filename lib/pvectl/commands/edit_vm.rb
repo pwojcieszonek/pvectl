@@ -26,7 +26,7 @@ module Pvectl
       def self.register(cli)
         cli.desc "Edit a resource configuration"
         cli.long_desc <<~HELP
-          Open a VM or container configuration in your text editor. The
+          Open a VM, container, or node configuration in your text editor. The
           configuration is presented as YAML for easy editing. Changes are
           applied via the Proxmox API when you save and close the editor.
 
@@ -37,6 +37,9 @@ module Pvectl
             Edit a container with a specific editor:
               $ pvectl edit container 200 --editor nano
 
+            Edit a node configuration:
+              $ pvectl edit node pve1
+
             Preview changes without applying:
               $ pvectl edit vm 100 --dry-run
 
@@ -46,6 +49,8 @@ module Pvectl
 
             In --dry-run mode, shows the diff between current and edited
             configuration without applying changes to Proxmox.
+
+            Supported resource types: vm, container (ct), node.
 
             Not all configuration keys can be changed while a VM is running.
             Proxmox will reject invalid changes with an error message.
@@ -71,9 +76,11 @@ module Pvectl
               Commands::EditVm.execute(resource_ids, options, global_options)
             when "container", "ct"
               Commands::EditContainer.execute(resource_ids, options, global_options)
+            when "node"
+              Commands::EditNode.execute(resource_ids, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container"
+              $stderr.puts "Valid types: vm, container, node"
               ExitCodes::USAGE_ERROR
             end
 
@@ -96,10 +103,10 @@ module Pvectl
 
       # Builds execution parameters from a VM ID.
       #
-      # @param resource_id [Integer] VMID
+      # @param resource_id [String] VMID (converted to Integer)
       # @return [Hash] parameters for the edit service
       def execute_params(resource_id)
-        { vmid: resource_id }
+        { vmid: resource_id.to_i }
       end
 
       # Builds the VM edit service.

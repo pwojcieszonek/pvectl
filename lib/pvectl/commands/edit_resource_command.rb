@@ -65,7 +65,7 @@ module Pvectl
         load_config
         connection = Pvectl::Connection.new(@config)
         service = build_edit_service(connection)
-        result = service.execute(**execute_params(resource_id.to_i))
+        result = service.execute(**execute_params(resource_id))
 
         if result.nil?
           $stdout.puts "Edit cancelled, no changes made."
@@ -109,7 +109,7 @@ module Pvectl
 
       # Builds execution parameters from resource ID.
       #
-      # @param resource_id [Integer] resource identifier
+      # @param resource_id [String] resource identifier (converted by specializations)
       # @return [Hash] parameters for the edit service (e.g. { vmid: 100 })
       def execute_params(resource_id)
         raise NotImplementedError, "#{self.class} must implement #execute_params"
