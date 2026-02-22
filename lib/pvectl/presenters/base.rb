@@ -106,6 +106,81 @@ module Pvectl
       def to_description(model)
         to_hash(model)
       end
+
+      # Returns uptime in human-readable format.
+      # Delegates to resource.uptime. Override in subclasses with custom logic.
+      #
+      # @return [String] formatted uptime (e.g., "15d 3h") or "-"
+      def uptime_human
+        uptime = resource.uptime
+        return "-" if uptime.nil? || uptime.zero?
+
+        days = uptime / 86_400
+        hours = (uptime % 86_400) / 3600
+        minutes = (uptime % 3600) / 60
+
+        if days.positive?
+          "#{days}d #{hours}h"
+        elsif hours.positive?
+          "#{hours}h #{minutes}m"
+        else
+          "#{minutes}m"
+        end
+      end
+
+      # Returns tags as array.
+      #
+      # @return [Array<String>] array of tags, or empty array if no tags
+      def tags_array
+        tags = resource.tags
+        return [] if tags.nil? || tags.empty?
+
+        tags.split(";").map(&:strip)
+      end
+
+      # Returns tags as comma-separated string.
+      #
+      # @return [String] formatted tags (e.g., "prod, web") or "-" if no tags
+      def tags_display
+        arr = tags_array
+        arr.empty? ? "-" : arr.join(", ")
+      end
+
+      # Returns template display string.
+      #
+      # @return [String] "yes" if template, "-" otherwise
+      def template_display
+        resource.template? ? "yes" : "-"
+      end
+
+      private
+
+      # Returns the current resource model.
+      # Must be implemented by subclasses.
+      #
+      # @return [Object] current model
+      # @raise [NotImplementedError] if not implemented
+      def resource
+        raise NotImplementedError, "#{self.class}#resource must be implemented"
+      end
+
+      # Formats bytes to human readable string.
+      #
+      # @param bytes [Integer, nil] bytes
+      # @return [String] formatted size
+      def format_bytes(bytes)
+        return "-" if bytes.nil? || bytes.zero?
+
+        if bytes >= 1024 * 1024 * 1024
+          "#{(bytes.to_f / 1024 / 1024 / 1024).round(1)} GiB"
+        elsif bytes >= 1024 * 1024
+          "#{(bytes.to_f / 1024 / 1024).round(1)} MiB"
+        elsif bytes >= 1024
+          "#{(bytes.to_f / 1024).round(1)} KiB"
+        else
+          "#{bytes} B"
+        end
+      end
     end
   end
 end

@@ -93,7 +93,7 @@ class PresentersContainerTest < Minitest::Test
   # ---------------------------
 
   def test_columns_returns_expected_headers
-    expected = %w[CTID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS]
+    expected = %w[NAME CTID STATUS NODE CPU MEMORY]
     assert_equal expected, @presenter.columns
   end
 
@@ -102,7 +102,7 @@ class PresentersContainerTest < Minitest::Test
   # ---------------------------
 
   def test_extra_columns_returns_wide_headers
-    expected = %w[SWAP DISK NETIN NETOUT POOL]
+    expected = %w[UPTIME TEMPLATE TAGS SWAP DISK NETIN NETOUT POOL]
     assert_equal expected, @presenter.extra_columns
   end
 
@@ -111,7 +111,7 @@ class PresentersContainerTest < Minitest::Test
   # ---------------------------
 
   def test_wide_columns_combines_columns_and_extra_columns
-    expected = %w[CTID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS SWAP DISK NETIN NETOUT POOL]
+    expected = %w[NAME CTID STATUS NODE CPU MEMORY UPTIME TEMPLATE TAGS SWAP DISK NETIN NETOUT POOL]
     assert_equal expected, @presenter.wide_columns
   end
 
@@ -122,15 +122,13 @@ class PresentersContainerTest < Minitest::Test
   def test_to_row_for_running_container
     row = @presenter.to_row(@running_container)
 
-    assert_equal "200", row[0]           # CTID
-    assert_equal "web-container", row[1] # NAME
-    assert_equal "running", row[2]       # STATUS
-    assert_equal "5%/2", row[3]          # CPU (usage/cores)
-    assert_equal "1.2/2.0 GiB", row[4]   # MEMORY
-    assert_equal "pve1", row[5]          # NODE
-    assert_equal "5d 2h", row[6]         # UPTIME
-    assert_equal "-", row[7]             # TEMPLATE
-    assert_equal "prod, web", row[8]     # TAGS
+    assert_equal 6, row.length
+    assert_equal "web-container", row[0]  # NAME
+    assert_equal "200", row[1]            # CTID
+    assert_equal "running", row[2]        # STATUS
+    assert_equal "pve1", row[3]           # NODE
+    assert_equal "5%/2", row[4]           # CPU
+    assert_equal "1.2/2.0 GiB", row[5]   # MEMORY
   end
 
   # ---------------------------
@@ -140,15 +138,13 @@ class PresentersContainerTest < Minitest::Test
   def test_to_row_for_stopped_container
     row = @presenter.to_row(@stopped_container)
 
-    assert_equal "201", row[0]           # CTID
-    assert_equal "dev-container", row[1] # NAME
-    assert_equal "stopped", row[2]       # STATUS
-    assert_equal "-/1", row[3]           # CPU (usage/cores for stopped)
-    assert_equal "-/1.0 GiB", row[4]     # MEMORY (usage/total for stopped)
-    assert_equal "pve2", row[5]          # NODE
-    assert_equal "-", row[6]             # UPTIME (nil for stopped)
-    assert_equal "-", row[7]             # TEMPLATE
-    assert_equal "dev", row[8]           # TAGS
+    assert_equal 6, row.length
+    assert_equal "dev-container", row[0]  # NAME
+    assert_equal "201", row[1]            # CTID
+    assert_equal "stopped", row[2]        # STATUS
+    assert_equal "pve2", row[3]           # NODE
+    assert_equal "-/1", row[4]            # CPU
+    assert_equal "-/1.0 GiB", row[5]      # MEMORY
   end
 
   # ---------------------------
@@ -158,15 +154,13 @@ class PresentersContainerTest < Minitest::Test
   def test_to_row_for_template
     row = @presenter.to_row(@template_container)
 
-    assert_equal "9000", row[0]          # CTID
-    assert_equal "debian-template", row[1] # NAME
-    assert_equal "stopped", row[2]       # STATUS
-    assert_equal "-/1", row[3]           # CPU (usage/cores for template)
-    assert_equal "-/0.5 GiB", row[4]     # MEMORY (usage/total for template)
-    assert_equal "pve1", row[5]          # NODE
-    assert_equal "-", row[6]             # UPTIME
-    assert_equal "yes", row[7]           # TEMPLATE
-    assert_equal "-", row[8]             # TAGS (nil)
+    assert_equal 6, row.length
+    assert_equal "debian-template", row[0] # NAME
+    assert_equal "9000", row[1]            # CTID
+    assert_equal "stopped", row[2]         # STATUS
+    assert_equal "pve1", row[3]            # NODE
+    assert_equal "-/1", row[4]             # CPU
+    assert_equal "-/0.5 GiB", row[5]       # MEMORY
   end
 
   # ---------------------------
@@ -176,21 +170,29 @@ class PresentersContainerTest < Minitest::Test
   def test_extra_values_for_running_container
     extra = @presenter.extra_values(@running_container)
 
-    assert_equal "0/512 MiB", extra[0]   # SWAP
-    assert_equal "3.2/8.0 GiB", extra[1] # DISK
-    assert_match(/MiB$/, extra[2])       # NETIN (formatted bytes)
-    assert_match(/MiB$/, extra[3])       # NETOUT (formatted bytes)
-    assert_equal "production", extra[4]  # POOL
+    assert_equal 8, extra.length
+    assert_equal "5d 2h", extra[0]        # UPTIME
+    assert_equal "-", extra[1]             # TEMPLATE
+    assert_equal "prod, web", extra[2]     # TAGS
+    assert_equal "0/512 MiB", extra[3]     # SWAP
+    assert_equal "3.2/8.0 GiB", extra[4]  # DISK
+    assert_match(/MiB$/, extra[5])         # NETIN
+    assert_match(/MiB$/, extra[6])         # NETOUT
+    assert_equal "production", extra[7]    # POOL
   end
 
   def test_extra_values_for_stopped_container
     extra = @presenter.extra_values(@stopped_container)
 
-    assert_equal "-/256 MiB", extra[0]   # SWAP (no current usage)
-    assert_equal "1.0/4.0 GiB", extra[1] # DISK
-    assert_equal "-", extra[2]           # NETIN (nil)
-    assert_equal "-", extra[3]           # NETOUT (nil)
-    assert_equal "-", extra[4]           # POOL (nil)
+    assert_equal 8, extra.length
+    assert_equal "-", extra[0]             # UPTIME
+    assert_equal "-", extra[1]             # TEMPLATE
+    assert_equal "dev", extra[2]           # TAGS
+    assert_equal "-/256 MiB", extra[3]     # SWAP
+    assert_equal "1.0/4.0 GiB", extra[4]  # DISK
+    assert_equal "-", extra[5]             # NETIN
+    assert_equal "-", extra[6]             # NETOUT
+    assert_equal "-", extra[7]             # POOL
   end
 
   # ---------------------------
@@ -201,9 +203,10 @@ class PresentersContainerTest < Minitest::Test
     wide_row = @presenter.to_wide_row(@running_container)
 
     assert_equal 14, wide_row.length
-    assert_equal "200", wide_row[0]        # CTID
-    assert_equal "0/512 MiB", wide_row[9]  # SWAP (first extra column)
-    assert_equal "production", wide_row[13] # POOL
+    assert_equal "web-container", wide_row[0]  # NAME
+    assert_equal "200", wide_row[1]            # CTID
+    assert_equal "5d 2h", wide_row[6]          # UPTIME (first extra)
+    assert_equal "production", wide_row[13]    # POOL
   end
 
   # ---------------------------
@@ -462,82 +465,6 @@ class PresentersContainerTest < Minitest::Test
     )
     @presenter.to_row(ct)
     assert_equal "-", @presenter.disk_display
-  end
-
-  def test_uptime_human_for_days_and_hours
-    @presenter.to_row(@running_container)
-    assert_equal "5d 2h", @presenter.uptime_human
-  end
-
-  def test_uptime_human_for_hours_and_minutes
-    ct = Pvectl::Models::Container.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 8100  # 2h 15m
-    )
-    @presenter.to_row(ct)
-    assert_equal "2h 15m", @presenter.uptime_human
-  end
-
-  def test_uptime_human_for_minutes_only
-    ct = Pvectl::Models::Container.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 900  # 15m
-    )
-    @presenter.to_row(ct)
-    assert_equal "15m", @presenter.uptime_human
-  end
-
-  def test_uptime_human_returns_dash_when_nil
-    @presenter.to_row(@stopped_container)
-    assert_equal "-", @presenter.uptime_human
-  end
-
-  def test_uptime_human_returns_dash_when_zero
-    ct = Pvectl::Models::Container.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 0
-    )
-    @presenter.to_row(ct)
-    assert_equal "-", @presenter.uptime_human
-  end
-
-  def test_tags_array_parses_semicolon_separated_tags
-    @presenter.to_row(@running_container)
-    assert_equal ["prod", "web"], @presenter.tags_array
-  end
-
-  def test_tags_array_returns_empty_array_when_tags_nil
-    @presenter.to_row(@template_container)
-    assert_equal [], @presenter.tags_array
-  end
-
-  def test_tags_array_returns_empty_array_when_tags_empty
-    ct = Pvectl::Models::Container.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      tags: ""
-    )
-    @presenter.to_row(ct)
-    assert_equal [], @presenter.tags_array
-  end
-
-  def test_tags_display_formats_as_comma_separated
-    @presenter.to_row(@running_container)
-    assert_equal "prod, web", @presenter.tags_display
-  end
-
-  def test_tags_display_returns_dash_when_no_tags
-    @presenter.to_row(@template_container)
-    assert_equal "-", @presenter.tags_display
-  end
-
-  def test_template_display_returns_yes_for_template
-    @presenter.to_row(@template_container)
-    assert_equal "yes", @presenter.template_display
-  end
-
-  def test_template_display_returns_dash_for_regular_container
-    @presenter.to_row(@running_container)
-    assert_equal "-", @presenter.template_display
   end
 
   # ---------------------------

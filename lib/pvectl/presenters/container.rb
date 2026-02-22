@@ -7,8 +7,8 @@ module Pvectl
     # Defines column layout and formatting for table output.
     # Used by formatters to render container data in various formats.
     #
-    # Standard columns: CTID, NAME, STATUS, CPU, MEMORY, NODE, UPTIME, TEMPLATE, TAGS
-    # Wide columns add: SWAP, DISK, NETIN, NETOUT, POOL
+    # Standard columns: NAME, CTID, STATUS, NODE, CPU, MEMORY
+    # Wide columns add: UPTIME, TEMPLATE, TAGS, SWAP, DISK, NETIN, NETOUT, POOL
     #
     # @example Using with formatter
     #   presenter = Container.new
@@ -23,14 +23,14 @@ module Pvectl
       #
       # @return [Array<String>] column headers
       def columns
-        %w[CTID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS]
+        %w[NAME CTID STATUS NODE CPU MEMORY]
       end
 
       # Returns additional column headers for wide output.
       #
       # @return [Array<String>] extra column headers
       def extra_columns
-        %w[SWAP DISK NETIN NETOUT POOL]
+        %w[UPTIME TEMPLATE TAGS SWAP DISK NETIN NETOUT POOL]
       end
 
       # Converts Container model to table row values.
@@ -41,15 +41,12 @@ module Pvectl
       def to_row(model, **_context)
         @container = model
         [
-          container.vmid.to_s,
           display_name,
+          container.vmid.to_s,
           container.status,
-          cpu_percent,
-          memory_display,
           container.node,
-          uptime_human,
-          template_display,
-          tags_display
+          cpu_percent,
+          memory_display
         ]
       end
 
@@ -61,6 +58,9 @@ module Pvectl
       def extra_values(model, **_context)
         @container = model
         [
+          uptime_human,
+          template_display,
+          tags_display,
           swap_display,
           disk_display,
           netin_display,
@@ -262,49 +262,6 @@ module Pvectl
         "#{disk_used_gib}/#{disk_total_gib} GiB"
       end
 
-      # Returns uptime in human-readable format.
-      #
-      # @return [String] formatted uptime (e.g., "15d 3h") or "-" if unavailable
-      def uptime_human
-        return "-" if container.uptime.nil? || container.uptime.zero?
-
-        days = container.uptime / 86_400
-        hours = (container.uptime % 86_400) / 3600
-        minutes = (container.uptime % 3600) / 60
-
-        if days.positive?
-          "#{days}d #{hours}h"
-        elsif hours.positive?
-          "#{hours}h #{minutes}m"
-        else
-          "#{minutes}m"
-        end
-      end
-
-      # Returns tags as array.
-      #
-      # @return [Array<String>] array of tags, or empty array if no tags
-      def tags_array
-        return [] if container.tags.nil? || container.tags.empty?
-
-        container.tags.split(";").map(&:strip)
-      end
-
-      # Returns tags as comma-separated string.
-      #
-      # @return [String] formatted tags (e.g., "prod, web") or "-" if no tags
-      def tags_display
-        arr = tags_array
-        arr.empty? ? "-" : arr.join(", ")
-      end
-
-      # Returns template display string.
-      #
-      # @return [String] "yes" if template, "-" otherwise
-      def template_display
-        container.template? ? "yes" : "-"
-      end
-
       # Returns pool display string.
       #
       # @return [String] pool name or "-" if no pool
@@ -330,6 +287,7 @@ module Pvectl
 
       # @return [Models::Container] current container model
       attr_reader :container
+      alias resource container
 
       # Formats system section.
       #
@@ -442,23 +400,6 @@ module Pvectl
         }
       end
 
-      # Formats bytes to human readable string.
-      #
-      # @param bytes [Integer, nil] bytes
-      # @return [String] formatted size
-      def format_bytes(bytes)
-        return "-" if bytes.nil? || bytes.zero?
-
-        if bytes >= 1024 * 1024 * 1024
-          "#{(bytes.to_f / 1024 / 1024 / 1024).round(1)} GiB"
-        elsif bytes >= 1024 * 1024
-          "#{(bytes.to_f / 1024 / 1024).round(1)} MiB"
-        elsif bytes >= 1024
-          "#{(bytes.to_f / 1024).round(1)} KiB"
-        else
-          "#{bytes} B"
-        end
-      end
     end
   end
 end

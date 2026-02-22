@@ -519,6 +519,7 @@ module Pvectl
 
       # @return [Models::Node] the current node being presented
       attr_reader :node
+      alias resource node
 
       # Returns description for offline nodes.
       #

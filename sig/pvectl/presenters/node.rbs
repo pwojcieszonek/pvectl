@@ -76,6 +76,7 @@ module Pvectl
       private
 
       attr_reader node: untyped
+      alias resource node
 
       def offline_description: () -> Hash[String, untyped]
 
