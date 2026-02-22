@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Disks
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Disk?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::PhysicalDisk]
+
+          def presenter: () -> Presenters::Disk
+
+          def selector_class: () -> singleton(Selectors::Disk)
+
+          private
+
+          attr_reader repository: Repositories::Disk
+
+          def build_repository: () -> Repositories::Disk
+        end
+      end
+    end
+  end
+end

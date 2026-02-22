@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cli**: `--status` flag now correctly filters VMs and containers by status in `get` command (previously ignored for VM/CT resources)
 
 ### Added
+- **cli**: `get disks` command to list physical disks (block devices) on cluster nodes with `--node` filtering
+- **cli**: `get disk` alias for `get disks`
+- **cli**: selector support for disks (`-l type=ssd,health=PASSED,node=pve1,gpt=yes,mounted=yes`)
 - **selectors**: support `template` field filtering for VMs and containers (`-l template=yes`, `-l template=no`)
 - **cli**: `-l`/`--selector` flag for `get` command enables kubectl-style filtering for VMs and containers (e.g., `-l status=running,tags=prod`, `-l name=~web-*`)
 - **cli**: `--status` flag acts as shortcut for `-l status=VALUE` for VM/CT resources, combinable with other selectors

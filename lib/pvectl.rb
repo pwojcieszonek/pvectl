@@ -99,6 +99,7 @@ require_relative "pvectl/repositories/task_list"
 require_relative "pvectl/repositories/syslog"
 require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
+require_relative "pvectl/repositories/disk"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -122,11 +123,13 @@ require_relative "pvectl/presenters/task_entry"
 require_relative "pvectl/presenters/syslog_entry"
 require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
+require_relative "pvectl/presenters/disk"
 
 # Selectors
 require_relative "pvectl/selectors/base"
 require_relative "pvectl/selectors/vm"
 require_relative "pvectl/selectors/container"
+require_relative "pvectl/selectors/disk"
 
 # Console
 require_relative "pvectl/console/terminal_session"
@@ -219,6 +222,7 @@ require_relative "pvectl/commands/get/handlers/snapshots"
 require_relative "pvectl/commands/get/handlers/backups"
 require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
+require_relative "pvectl/commands/get/handlers/disks"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"

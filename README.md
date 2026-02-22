@@ -64,7 +64,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, snapshots, backups, tasks) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, snapshots, backups, tasks) |
 | `describe` | Show detailed information about a resource |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
