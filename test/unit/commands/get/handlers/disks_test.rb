@@ -132,6 +132,45 @@ class GetHandlersDisksTest < Minitest::Test
     assert_instance_of Pvectl::Commands::Get::Handlers::Disks, handler
   end
 
+  # ---------------------------
+  # describe() Method
+  # ---------------------------
+
+  def test_describe_returns_disk_with_smart_data
+    handler = create_handler(@all_disks)
+
+    disk = handler.describe(name: "/dev/sda")
+
+    assert_instance_of Pvectl::Models::PhysicalDisk, disk
+    assert_equal "/dev/sda", disk.devpath
+    assert_equal "text", disk.smart_type
+  end
+
+  def test_describe_with_node_searches_only_that_node
+    handler = create_handler(@all_disks)
+
+    disk = handler.describe(name: "/dev/nvme0n1", node: "pve2")
+
+    assert_equal "pve2", disk.node
+    assert_equal "/dev/nvme0n1", disk.devpath
+  end
+
+  def test_describe_raises_when_disk_not_found
+    handler = create_handler(@all_disks)
+
+    assert_raises(Pvectl::ResourceNotFoundError) do
+      handler.describe(name: "/dev/nonexistent")
+    end
+  end
+
+  def test_describe_finds_disk_across_nodes
+    handler = create_handler(@all_disks)
+
+    disk = handler.describe(name: "/dev/nvme0n1")
+
+    assert_equal "pve2", disk.node
+  end
+
   private
 
   def create_handler(disks)
@@ -150,6 +189,10 @@ class GetHandlersDisksTest < Minitest::Test
       else
         @disks.dup
       end
+    end
+
+    def smart(_node, _disk_path)
+      { health: "PASSED", type: "text", text: "Temperature: 34 C", attributes: nil }
     end
   end
 end

@@ -9,6 +9,8 @@ module Pvectl
 
           def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::PhysicalDisk]
 
+          def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: String?) -> Models::PhysicalDisk
+
           def presenter: () -> Presenters::Disk
 
           def selector_class: () -> singleton(Selectors::Disk)

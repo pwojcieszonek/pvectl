@@ -147,6 +147,7 @@ require_relative "pvectl/parsers/net_config"
 require_relative "pvectl/parsers/cloud_init_config"
 require_relative "pvectl/parsers/lxc_mount_config"
 require_relative "pvectl/parsers/lxc_net_config"
+require_relative "pvectl/parsers/smart_text"
 
 # Commands
 require_relative "pvectl/commands/config/use_context"

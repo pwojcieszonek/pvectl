@@ -71,6 +71,18 @@ module Pvectl
       # @return [String, nil] parent device path (e.g., "/dev/sda" for partition "/dev/sda1")
       attr_reader :parent
 
+      # @return [String, nil] SMART type ("ata" or "text")
+      attr_reader :smart_type
+
+      # @return [Array<Hash>, nil] ATA SMART attributes array
+      attr_reader :smart_attributes
+
+      # @return [String, nil] raw SMART text (NVMe/SAS)
+      attr_reader :smart_text
+
+      # @return [Integer, nil] disk wearout percentage
+      attr_reader :wearout
+
       # Creates a new PhysicalDisk instance.
       #
       # @param attrs [Hash] disk attributes from API
@@ -88,6 +100,10 @@ module Pvectl
       # @option attrs [String] :wwn World Wide Name
       # @option attrs [Integer] :osdid Ceph OSD ID
       # @option attrs [String] :parent parent device path
+      # @option attrs [String] :smart_type SMART data type ("ata" or "text")
+      # @option attrs [Array<Hash>] :smart_attributes ATA SMART attributes
+      # @option attrs [String] :smart_text raw SMART text (NVMe/SAS)
+      # @option attrs [Integer] :wearout wearout percentage
       def initialize(attrs = {})
         super
         @devpath = attributes[:devpath]
@@ -104,6 +120,10 @@ module Pvectl
         @wwn = attributes[:wwn]
         @osdid = attributes[:osdid]
         @parent = attributes[:parent]
+        @smart_type = attributes[:smart_type]
+        @smart_attributes = attributes[:smart_attributes]
+        @smart_text = attributes[:smart_text]
+        @wearout = attributes[:wearout]
       end
 
       # Returns disk size in gigabytes.
@@ -152,6 +172,21 @@ module Pvectl
       # @return [Boolean] true if osdid is non-nil and >= 0
       def osd?
         !osdid.nil? && osdid >= 0
+      end
+
+      # Merges SMART data into the model.
+      #
+      # Called after initial construction when SMART data is fetched separately
+      # from the disk list endpoint.
+      #
+      # @param smart_data [Hash{Symbol => untyped}] SMART response data
+      # @return [void]
+      def merge_smart(smart_data)
+        @smart_type = smart_data[:type]
+        @smart_attributes = smart_data[:attributes]
+        @smart_text = smart_data[:text]
+        @wearout = smart_data[:wearout]
+        @health = smart_data[:health] if smart_data[:health]
       end
     end
   end

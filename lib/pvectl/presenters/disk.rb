@@ -88,6 +88,17 @@ module Pvectl
         }
       end
 
+      # Returns detailed description for describe command output.
+      #
+      # @param model [Models::PhysicalDisk] PhysicalDisk model with SMART data
+      # @return [Hash{String => Object}] nested hash with Device Info and SMART sections
+      def to_description(model)
+        @disk = model
+        result = { "Device Info" => device_info_section }
+        result["SMART Attributes"] = smart_attributes_section if disk.smart_type
+        result
+      end
+
       private
 
       # @return [Models::PhysicalDisk] the current disk being presented
@@ -115,6 +126,58 @@ module Pvectl
         return "-" if value.nil?
 
         value == 1 ? "yes" : "no"
+      end
+
+      # Builds the Device Info section hash.
+      #
+      # @return [Hash{String => String}] device info key-value pairs
+      def device_info_section
+        info = {
+          "Node"    => disk.node || "-",
+          "Device"  => disk.devpath || "-",
+          "Model"   => disk.model || "-",
+          "Serial"  => disk.serial || "-",
+          "Vendor"  => disk.vendor || "-",
+          "Size"    => format_size,
+          "Type"    => disk.type || "-",
+          "Health"  => disk.health || "-"
+        }
+        info["Life Remaining"] = "#{disk.wearout}%" if disk.wearout
+        info["Used"]    = disk.used || "-"
+        info["GPT"]     = format_boolean(disk.gpt)
+        info["WWN"]     = disk.wwn || "-"
+        info
+      end
+
+      # Builds SMART attributes section based on disk type.
+      #
+      # @return [Array<Hash{String => String}>] SMART attributes for table display
+      def smart_attributes_section
+        case disk.smart_type
+        when "ata"
+          format_ata_attributes
+        else
+          Pvectl::Parsers::SmartText.parse(disk.smart_text)
+        end
+      end
+
+      # Formats ATA SMART attributes for table display.
+      #
+      # @return [Array<Hash{String => String}>] formatted ATA attributes
+      def format_ata_attributes
+        return [] unless disk.smart_attributes
+
+        disk.smart_attributes.map do |attr|
+          {
+            "ID"        => attr[:id].to_s,
+            "Attribute" => attr[:name].to_s,
+            "Value"     => attr[:value].to_s,
+            "Worst"     => attr[:worst].to_s,
+            "Threshold" => attr[:threshold].to_s,
+            "Raw"       => attr[:raw].to_s,
+            "Fail"      => attr[:fail].to_s
+          }
+        end
       end
     end
   end

@@ -15,6 +15,10 @@ module Pvectl
       attr_reader wwn: String?
       attr_reader osdid: Integer?
       attr_reader parent: String?
+      attr_reader smart_type: String?
+      attr_reader smart_attributes: Array[Hash[Symbol, untyped]]?
+      attr_reader smart_text: String?
+      attr_reader wearout: Integer?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 
@@ -24,6 +28,8 @@ module Pvectl
       def gpt?: () -> bool
       def mounted?: () -> bool
       def osd?: () -> bool
+
+      def merge_smart: (Hash[Symbol, untyped] smart_data) -> void
     end
   end
 end

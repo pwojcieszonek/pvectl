@@ -143,6 +143,65 @@ class RepositoriesDiskTest < Minitest::Test
   end
 
   # ---------------------------
+  # smart() Method
+  # ---------------------------
+
+  def test_smart_returns_hash_with_health_and_type
+    smart_data = {
+      health: "PASSED",
+      type: "text",
+      text: "Critical Warning:                   0x00\nTemperature:                        34 Celsius\n",
+      attributes: nil
+    }
+    repo = create_repo_with_mock(
+      disks: {},
+      nodes: @mock_nodes_response,
+      smart: { "pve1" => smart_data }
+    )
+
+    result = repo.smart("pve1", "/dev/nvme0n1")
+
+    assert_equal "PASSED", result[:health]
+    assert_equal "text", result[:type]
+    assert_includes result[:text], "Critical Warning"
+  end
+
+  def test_smart_returns_ata_attributes
+    smart_data = {
+      health: "PASSED",
+      type: "ata",
+      attributes: [
+        { id: 1, name: "Raw_Read_Error_Rate", value: 200, worst: 200, threshold: 51, raw: "0", fail: "-", flags: "0x002f" }
+      ],
+      text: nil
+    }
+    repo = create_repo_with_mock(
+      disks: {},
+      nodes: @mock_nodes_response,
+      smart: { "pve1" => smart_data }
+    )
+
+    result = repo.smart("pve1", "/dev/sda")
+
+    assert_equal "PASSED", result[:health]
+    assert_equal "ata", result[:type]
+    assert_equal 1, result[:attributes].size
+    assert_equal "Raw_Read_Error_Rate", result[:attributes][0][:name]
+  end
+
+  def test_smart_returns_empty_hash_on_error
+    repo = create_repo_with_mock(
+      disks: {},
+      nodes: @mock_nodes_response,
+      smart: { "pve1" => StandardError.new("API error") }
+    )
+
+    result = repo.smart("pve1", "/dev/nonexistent")
+
+    assert_equal({}, result)
+  end
+
+  # ---------------------------
   # list() - Error Handling
   # ---------------------------
 
@@ -170,39 +229,42 @@ class RepositoriesDiskTest < Minitest::Test
 
   private
 
-  def create_repo_with_mock(disks:, nodes:)
-    connection = MockDiskConnection.new(disks: disks, nodes: nodes)
+  def create_repo_with_mock(disks:, nodes:, smart: {})
+    connection = MockDiskConnection.new(disks: disks, nodes: nodes, smart: smart)
     Pvectl::Repositories::Disk.new(connection)
   end
 
   # Mock connection that simulates Proxmox API responses
   class MockDiskConnection
-    def initialize(disks:, nodes:)
+    def initialize(disks:, nodes:, smart: {})
       @disks = disks
       @nodes = nodes
+      @smart = smart
     end
 
     def client
-      @client ||= MockClient.new(disks: @disks, nodes: @nodes)
+      @client ||= MockClient.new(disks: @disks, nodes: @nodes, smart: @smart)
     end
   end
 
   class MockClient
-    def initialize(disks:, nodes:)
+    def initialize(disks:, nodes:, smart: {})
       @disks = disks
       @nodes = nodes
+      @smart = smart
     end
 
     def [](path)
-      MockEndpoint.new(path, disks: @disks, nodes: @nodes)
+      MockEndpoint.new(path, disks: @disks, nodes: @nodes, smart: @smart)
     end
   end
 
   class MockEndpoint
-    def initialize(path, disks:, nodes:)
+    def initialize(path, disks:, nodes:, smart: {})
       @path = path
       @disks = disks
       @nodes = nodes
+      @smart = smart
     end
 
     def get(**_kwargs)
@@ -215,6 +277,12 @@ class RepositoriesDiskTest < Minitest::Test
         raise result if result.is_a?(StandardError)
 
         result || []
+      when /\Anodes\/([^\/]+)\/disks\/smart\z/
+        node_name = Regexp.last_match(1)
+        result = @smart[node_name]
+        raise result if result.is_a?(StandardError)
+
+        { data: result }
       else
         []
       end

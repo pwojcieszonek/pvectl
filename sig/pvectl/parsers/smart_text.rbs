@@ -1,0 +1,7 @@
+module Pvectl
+  module Parsers
+    class SmartText
+      def self.parse: (String? text) -> Array[Hash[String, String]]
+    end
+  end
+end
