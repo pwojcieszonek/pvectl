@@ -1,0 +1,9 @@
+module Pvectl
+  module Models
+    class NodeOperationResult < OperationResult
+      attr_reader node_model: Models::Node?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+    end
+  end
+end

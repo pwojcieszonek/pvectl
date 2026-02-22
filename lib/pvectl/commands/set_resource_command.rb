@@ -2,27 +2,27 @@
 
 module Pvectl
   module Commands
-    # Shared functionality for resource edit commands.
+    # Shared functionality for resource set commands.
     #
-    # Template method pattern: provides common edit workflow
-    # (config loading, editor session, diff display, dry-run)
+    # Template method pattern: provides common set workflow
+    # (config loading, key-value parsing, diff display, dry-run)
     # while specialization classes define resource-specific hooks.
     #
     # @abstract Include this module and implement template methods.
     #
     # @example Specialization
-    #   class EditVm
-    #     include EditResourceCommand
+    #   class SetVm
+    #     include SetResourceCommand
     #     private
     #     def resource_label = "VM"
     #     def resource_id_label = "VMID"
     #     # ...
     #   end
     #
-    module EditResourceCommand
+    module SetResourceCommand
       # Class methods added when the module is included.
       module ClassMethods
-        # Executes the edit command.
+        # Executes the set command.
         #
         # @param args [Array<String>] command arguments
         # @param options [Hash] command options
@@ -40,7 +40,7 @@ module Pvectl
         base.extend(ClassMethods)
       end
 
-      # Initializes an edit command.
+      # Initializes a set command.
       #
       # @param args [Array<String>] command arguments
       # @param options [Hash] command options
@@ -51,24 +51,23 @@ module Pvectl
         @global_options = global_options
       end
 
-      # Executes the edit command.
-      #
-      # Loads configuration, builds the edit service, and runs it.
-      # Handles cancelled edits, successful updates with diff display,
-      # dry-run mode, and errors.
+      # Executes the set command.
       #
       # @return [Integer] exit code
       def execute
         resource_id = @args.first
         return usage_error("#{resource_id_label} is required") unless resource_id
 
+        key_values = parse_key_values(@args[1..])
+        return usage_error("At least one key=value pair is required") if key_values.empty?
+
         load_config
         connection = Pvectl::Connection.new(@config)
-        service = build_edit_service(connection)
-        result = service.execute(**execute_params(resource_id))
+        service = build_set_service(connection)
+        result = service.execute(**execute_params(resource_id, key_values))
 
         if result.nil?
-          $stdout.puts "Edit cancelled, no changes made."
+          $stdout.puts "No changes detected."
           return ExitCodes::SUCCESS
         end
 
@@ -97,35 +96,53 @@ module Pvectl
 
       private
 
-      # @return [String] human label for resource ("VM" or "container")
+      # @return [String] human label for resource
       def resource_label
         raise NotImplementedError, "#{self.class} must implement #resource_label"
       end
 
-      # @return [String] human label for resource ID ("VMID" or "CTID")
+      # @return [String] human label for resource ID
       def resource_id_label
         raise NotImplementedError, "#{self.class} must implement #resource_id_label"
       end
 
-      # Builds execution parameters from resource ID.
+      # Builds execution parameters.
       #
-      # @param resource_id [String] resource identifier (converted by specializations)
-      # @return [Hash] parameters for the edit service (e.g. { vmid: 100 })
-      def execute_params(resource_id)
+      # @param resource_id [String] resource identifier
+      # @param key_values [Hash] parsed key-value pairs
+      # @return [Hash] parameters for the service
+      def execute_params(resource_id, key_values)
         raise NotImplementedError, "#{self.class} must implement #execute_params"
       end
 
-      # Builds the edit service for the given connection.
+      # Builds the set service.
       #
       # @param connection [Connection] API connection
-      # @return [Object] edit service instance
-      def build_edit_service(connection)
-        raise NotImplementedError, "#{self.class} must implement #build_edit_service"
+      # @return [Object] set service instance
+      def build_set_service(connection)
+        raise NotImplementedError, "#{self.class} must implement #build_set_service"
+      end
+
+      # Parses key=value pairs from argument list.
+      #
+      # @param args [Array<String>] arguments like ["memory=4096", "cores=2"]
+      # @return [Hash] parsed pairs { "memory" => "4096", "cores" => "2" }
+      def parse_key_values(args)
+        pairs = {}
+        (args || []).each do |arg|
+          unless arg.include?("=")
+            $stderr.puts "Warning: Ignoring argument without '=': #{arg}"
+            next
+          end
+          key, value = arg.split("=", 2)
+          pairs[key] = value
+        end
+        pairs
       end
 
       # Displays a formatted diff from the operation result.
       #
-      # @param result [Models::OperationResult] operation result with diff in resource
+      # @param result [Models::OperationResult] operation result
       # @return [void]
       def display_diff(result)
         diff = result.resource&.dig(:diff)
@@ -137,7 +154,7 @@ module Pvectl
         $stdout.puts ""
       end
 
-      # Loads configuration from file or environment.
+      # Loads configuration.
       #
       # @return [void]
       def load_config
@@ -146,34 +163,22 @@ module Pvectl
         @config = service.current_config
       end
 
-      # Builds service options from command options.
-      #
-      # @return [Hash] service options
-      def service_options
-        opts = {}
-        opts[:dry_run] = true if @options[:"dry-run"]
-        opts
-      end
-
-      # Builds an editor session from the --editor option.
-      #
-      # @return [EditorSession, nil] editor session or nil if no --editor flag
-      def build_editor_session
-        editor_cmd = @options[:editor]
-        return nil unless editor_cmd
-
-        Pvectl::EditorSession.new(
-          editor: ->(path) { system(editor_cmd, path) }
-        )
-      end
-
-      # Outputs usage error and returns exit code.
+      # Outputs usage error.
       #
       # @param message [String] error message
       # @return [Integer] exit code
       def usage_error(message)
         $stderr.puts "Error: #{message}"
         ExitCodes::USAGE_ERROR
+      end
+
+      # Returns service options.
+      #
+      # @return [Hash] service options
+      def service_options
+        opts = {}
+        opts[:dry_run] = true if @options[:"dry-run"]
+        opts
       end
     end
   end

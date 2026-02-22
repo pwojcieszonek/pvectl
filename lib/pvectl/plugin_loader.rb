@@ -34,13 +34,13 @@ module Pvectl
       Commands::CreateVm,
       Commands::DeleteVm,
       Commands::EditVm,
+      Commands::SetVm,
       Commands::CloneVm,
       Commands::MigrateVm,
       Commands::TemplateVm,
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
       Commands::Console,
-      Commands::Resize::Command,
     ].freeze
 
     @registered_plugins = []

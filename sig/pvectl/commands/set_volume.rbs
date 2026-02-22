@@ -1,0 +1,24 @@
+module Pvectl
+  module Commands
+    class SetVolume
+      module ClassMethods
+        def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      extend ClassMethods
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+      def parse_key_values: (Array[String] args) -> Hash[String, String]
+      def resolve_node: (Integer resource_id, untyped connection, String resource_type) -> String?
+      def confirm_resize: (String resource_id, String disk, String size) -> bool
+      def build_repository: (untyped connection, String resource_type) -> untyped
+      def resource_type_symbol: (String resource_type) -> Symbol
+      def output_result: (untyped result) -> void
+      def load_config: () -> void
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

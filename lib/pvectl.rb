@@ -81,6 +81,8 @@ require_relative "pvectl/models/task"
 require_relative "pvectl/models/operation_result"
 require_relative "pvectl/models/vm_operation_result"
 require_relative "pvectl/models/container_operation_result"
+require_relative "pvectl/models/node_operation_result"
+require_relative "pvectl/models/volume_operation_result"
 require_relative "pvectl/models/task_entry"
 require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
@@ -117,6 +119,8 @@ require_relative "pvectl/presenters/top_container"
 require_relative "pvectl/presenters/operation_result"
 require_relative "pvectl/presenters/vm_operation_result"
 require_relative "pvectl/presenters/container_operation_result"
+require_relative "pvectl/presenters/node_operation_result"
+require_relative "pvectl/presenters/volume_operation_result"
 require_relative "pvectl/presenters/snapshot"
 require_relative "pvectl/presenters/snapshot_operation_result"
 require_relative "pvectl/presenters/backup"
@@ -194,8 +198,26 @@ require_relative "pvectl/services/edit_vm"
 # Services - Edit Container
 require_relative "pvectl/services/edit_container"
 
+# Services - Edit Node
+require_relative "pvectl/services/edit_node"
+
+# Services - Edit Volume
+require_relative "pvectl/services/edit_volume"
+
+# Services - Set VM
+require_relative "pvectl/services/set_vm"
+
+# Services - Set Container
+require_relative "pvectl/services/set_container"
+
+# Services - Set Node
+require_relative "pvectl/services/set_node"
+
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
+
+# Services - Set Volume
+require_relative "pvectl/services/set_volume"
 
 # Services - Clone Container
 require_relative "pvectl/services/clone_container"
@@ -284,12 +306,15 @@ require_relative "pvectl/commands/create_container"
 require_relative "pvectl/commands/edit_resource_command"
 require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
+require_relative "pvectl/commands/edit_node"
+require_relative "pvectl/commands/edit_volume"
 
-# Commands - Resize
-require_relative "pvectl/commands/resize/resize_volume_command"
-require_relative "pvectl/commands/resize/resize_volume_vm"
-require_relative "pvectl/commands/resize/resize_volume_ct"
-require_relative "pvectl/commands/resize/command"
+# Commands - Set
+require_relative "pvectl/commands/set_resource_command"
+require_relative "pvectl/commands/set_vm"
+require_relative "pvectl/commands/set_container"
+require_relative "pvectl/commands/set_node"
+require_relative "pvectl/commands/set_volume"
 
 # Commands - Delete
 require_relative "pvectl/commands/delete_snapshot"

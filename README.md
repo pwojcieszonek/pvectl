@@ -73,9 +73,9 @@ pvectl top nodes                  # Resource usage
 | `delete` | Delete resources |
 | `clone` | Clone VMs or containers with optional config changes |
 | `migrate` | Migrate resources between nodes (supports live migration) |
-| `edit` | Edit VM/container configuration in $EDITOR |
+| `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume) |
+| `set` | Set resource properties non-interactively with key=value pairs |
 | `template` | Convert VM/container to template |
-| `resize volume` | Resize VM/container virtual disks |
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |

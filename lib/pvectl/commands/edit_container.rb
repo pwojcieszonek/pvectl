@@ -33,10 +33,10 @@ module Pvectl
 
       # Builds execution parameters from a container ID.
       #
-      # @param resource_id [Integer] CTID
+      # @param resource_id [String] CTID (converted to Integer)
       # @return [Hash] parameters for the edit service
       def execute_params(resource_id)
-        { ctid: resource_id }
+        { ctid: resource_id.to_i }
       end
 
       # Builds the container edit service.

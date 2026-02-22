@@ -1,6 +1,6 @@
 module Pvectl
   module Commands
-    class EditContainer
+    class EditNode
       include EditResourceCommand
 
       private
@@ -9,9 +9,9 @@ module Pvectl
 
       def resource_id_label: () -> String
 
-      def execute_params: (String resource_id) -> Hash[Symbol, Integer]
+      def execute_params: (String resource_id) -> Hash[Symbol, String]
 
-      def build_edit_service: (untyped connection) -> Services::EditContainer
+      def build_edit_service: (untyped connection) -> Services::EditNode
     end
   end
 end

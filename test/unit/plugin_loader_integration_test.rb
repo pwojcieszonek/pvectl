@@ -23,7 +23,7 @@ class PluginLoaderIntegrationTest < Minitest::Test
     expected_commands = %i[get top logs describe ping start stop shutdown
                           restart reset suspend resume create delete edit
                           clone migrate rollback restore config console template
-                          resize]
+                          set]
 
     expected_commands.each do |cmd|
       assert test_app.commands.key?(cmd),
