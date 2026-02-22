@@ -316,12 +316,6 @@ require_relative "pvectl/commands/set_container"
 require_relative "pvectl/commands/set_node"
 require_relative "pvectl/commands/set_volume"
 
-# Commands - Resize
-require_relative "pvectl/commands/resize/resize_volume_command"
-require_relative "pvectl/commands/resize/resize_volume_vm"
-require_relative "pvectl/commands/resize/resize_volume_ct"
-require_relative "pvectl/commands/resize/command"
-
 # Commands - Delete
 require_relative "pvectl/commands/delete_snapshot"
 require_relative "pvectl/commands/delete_backup"
