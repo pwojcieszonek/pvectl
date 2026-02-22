@@ -1,0 +1,13 @@
+module Pvectl
+  module Selectors
+    class Disk < Base
+      SUPPORTED_FIELDS: Array[String]
+
+      def apply: (Array[untyped] disks) -> Array[untyped]
+
+      public
+
+      def extract_value: (untyped disk, String field) -> String?
+    end
+  end
+end

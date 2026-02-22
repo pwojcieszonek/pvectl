@@ -129,6 +129,7 @@ require_relative "pvectl/presenters/disk"
 require_relative "pvectl/selectors/base"
 require_relative "pvectl/selectors/vm"
 require_relative "pvectl/selectors/container"
+require_relative "pvectl/selectors/disk"
 
 # Console
 require_relative "pvectl/console/terminal_session"
