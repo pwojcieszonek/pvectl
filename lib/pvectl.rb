@@ -133,6 +133,7 @@ require_relative "pvectl/selectors/base"
 require_relative "pvectl/selectors/vm"
 require_relative "pvectl/selectors/container"
 require_relative "pvectl/selectors/disk"
+require_relative "pvectl/selectors/volume"
 
 # Console
 require_relative "pvectl/console/terminal_session"

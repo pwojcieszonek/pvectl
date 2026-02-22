@@ -1,0 +1,13 @@
+module Pvectl
+  module Selectors
+    class Volume < Base
+      SUPPORTED_FIELDS: Array[String]
+
+      def apply: (Array[Models::Volume] volumes) -> Array[Models::Volume]
+
+      private
+
+      def extract_value: (Models::Volume vol, String field) -> String?
+    end
+  end
+end
