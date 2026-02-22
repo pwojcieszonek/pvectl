@@ -228,6 +228,7 @@ require_relative "pvectl/commands/get/handlers/backups"
 require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
+require_relative "pvectl/commands/get/handlers/volume"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl get volume <vm|ct> <ID...>` and `pvectl get volume --storage <STORAGE>` list virtual disk volumes from VM/CT config or storage content API
+- **commands**: `pvectl describe volume <vm|ct> <ID> <disk_name>` shows detailed information about a specific virtual disk
 - **describe disk**: `pvectl describe disk /dev/xxx [--node NODE]` shows device info and structured SMART attributes (ATA table or parsed NVMe/SAS key-value pairs)
 - **parsers**: SmartText parser for converting NVMe/SAS smartctl text output into structured data
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)

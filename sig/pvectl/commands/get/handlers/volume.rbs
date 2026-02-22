@@ -1,0 +1,27 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Volume
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Volume?) -> void
+
+          def list: (?args: Array[String], ?storage: String?, ?node: String?, **untyped _options) -> Array[Models::Volume]
+
+          def describe: (name: String, ?args: Array[String], ?node: String?, **untyped _options) -> Models::Volume
+
+          def presenter: () -> Presenters::Volume
+
+          def selector_class: () -> singleton(Selectors::Volume)
+
+          private
+
+          attr_reader repository: Repositories::Volume
+
+          def build_repository: () -> Repositories::Volume
+        end
+      end
+    end
+  end
+end
