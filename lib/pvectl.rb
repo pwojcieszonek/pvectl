@@ -306,6 +306,7 @@ require_relative "pvectl/commands/set_resource_command"
 require_relative "pvectl/commands/set_vm"
 require_relative "pvectl/commands/set_container"
 require_relative "pvectl/commands/set_node"
+require_relative "pvectl/commands/set_volume"
 
 # Commands - Resize
 require_relative "pvectl/commands/resize/resize_volume_command"
