@@ -85,6 +85,7 @@ require_relative "pvectl/models/task_entry"
 require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
+require_relative "pvectl/models/volume"
 
 # Repositories
 require_relative "pvectl/repositories/base"
