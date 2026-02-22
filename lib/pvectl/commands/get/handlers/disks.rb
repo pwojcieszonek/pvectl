@@ -40,6 +40,27 @@ module Pvectl
             disks
           end
 
+          # Describes a single physical disk with SMART data.
+          #
+          # Locates the disk by devpath across all nodes (or a specific node),
+          # then fetches SMART data and merges it into the model.
+          #
+          # @param name [String] device path (e.g., "/dev/nvme0n1")
+          # @param node [String, nil] optional node filter
+          # @param args [Array<String>] unused, for interface compatibility
+          # @param vmid [String, nil] unused, for interface compatibility
+          # @return [Models::PhysicalDisk] enriched disk model
+          # @raise [Pvectl::ResourceNotFoundError] when disk not found
+          def describe(name:, node: nil, args: [], vmid: nil)
+            disks = repository.list(node: node)
+            disk = disks.find { |d| d.devpath == name }
+            raise Pvectl::ResourceNotFoundError, "Disk not found: #{name}" unless disk
+
+            smart_data = repository.smart(disk.node, name)
+            disk.merge_smart(smart_data)
+            disk
+          end
+
           # Returns presenter for physical disks.
           #
           # @return [Presenters::Disk] Disk presenter instance
