@@ -48,6 +48,7 @@ module Pvectl
               backups (backup)          Backup volumes
               templates (template)      VM and container templates
               tasks (task)              Task history
+              disks (disk)              Physical disks (block devices)
 
             EXAMPLES
               List all VMs in table format:

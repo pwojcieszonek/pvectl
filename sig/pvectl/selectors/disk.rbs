@@ -5,7 +5,7 @@ module Pvectl
 
       def apply: (Array[untyped] disks) -> Array[untyped]
 
-      public
+      private
 
       def extract_value: (untyped disk, String field) -> String?
     end
