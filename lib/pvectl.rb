@@ -101,6 +101,7 @@ require_relative "pvectl/repositories/syslog"
 require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
+require_relative "pvectl/repositories/volume"
 
 # Presenters
 require_relative "pvectl/presenters/base"

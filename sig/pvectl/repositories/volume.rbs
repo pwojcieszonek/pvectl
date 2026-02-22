@@ -1,0 +1,43 @@
+module Pvectl
+  module Repositories
+    class Volume < Base
+      VM_DISK_PATTERN: Regexp
+
+      CT_DISK_PATTERN: Regexp
+
+      def initialize: (untyped connection, ?vm_repo: Repositories::Vm?, ?container_repo: Repositories::Container?) -> void
+
+      def list_from_config: (resource_type: String, ids: Array[Integer | String], ?node: String?) -> Array[Models::Volume]
+
+      def list_from_storage: (storage: String, ?node: String?) -> Array[Models::Volume]
+
+      def find: (resource_type: String, id: Integer | String, disk_name: String, ?node: String?) -> Models::Volume?
+
+      private
+
+      def repo_for: (String type) -> (Repositories::Vm | Repositories::Container)?
+
+      def vm_repo: () -> Repositories::Vm
+
+      def container_repo: () -> Repositories::Container
+
+      def normalize_resource_type: (String type) -> String
+
+      def extract_volumes: (Hash[Symbol, untyped] config, String resource_type, Integer resource_id, String node) -> Array[Models::Volume]
+
+      def parse_config_value: (String name, String value, String resource_type, Integer resource_id, String node) -> Models::Volume
+
+      def fetch_storage_volumes: (String node_name, String storage) -> Array[Models::Volume]
+
+      def build_storage_volume: (Hash[Symbol, untyped] data, String node, String storage) -> Models::Volume
+
+      def extract_resource_from_volume_id: (String? volume_id, String? content) -> [String?, Integer?]
+
+      def format_bytes_to_size: (Integer? bytes) -> String?
+
+      def online_nodes: () -> Array[String]
+
+      def parse_int: (String? value) -> Integer?
+    end
+  end
+end
