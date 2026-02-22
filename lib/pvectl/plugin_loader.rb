@@ -34,6 +34,7 @@ module Pvectl
       Commands::CreateVm,
       Commands::DeleteVm,
       Commands::EditVm,
+      Commands::SetVm,
       Commands::CloneVm,
       Commands::MigrateVm,
       Commands::TemplateVm,

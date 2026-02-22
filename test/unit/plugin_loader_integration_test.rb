@@ -39,9 +39,9 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     Pvectl::PluginLoader.load_builtins(test_app)
 
-    # GLI adds :help and :_doc by default, plus our 23 built-in commands
+    # GLI adds :help and :_doc by default, plus our 24 built-in commands
     user_commands = test_app.commands.keys - [:help, :_doc]
-    expected_count = 23
+    expected_count = 24
     assert_equal expected_count, user_commands.size,
                  "Expected #{expected_count} user commands, got #{user_commands.size}: #{user_commands.sort}"
   end
