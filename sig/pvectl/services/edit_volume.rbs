@@ -1,0 +1,18 @@
+module Pvectl
+  module Services
+    class EditVolume
+      def initialize: (repository: untyped, resource_type: Symbol, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+      def execute: (id: Integer, disk: String, node: String) -> Models::VolumeOperationResult?
+
+      private
+      def parse_disk_config: (String disk_value) -> Hash[String, String]
+      def build_yaml_content: (Hash[String, String] editable, String disk, Integer id, String node) -> String
+      def parse_edited_yaml: (String edited) -> Hash[String, untyped]
+      def no_changes?: (Hash[Symbol, untyped] changes) -> bool
+      def compute_diff: (Hash[String, String] original, Hash[String, untyped] edited) -> Hash[Symbol, untyped]
+      def apply_changes: (Integer id, String disk, String node, String original_disk_value, Hash[Symbol, untyped] changes) -> void
+      def rebuild_disk_config: (String current_value, Hash[String, String] updates, ?Array[String] removed_keys) -> String
+      def build_result: (Integer id, String disk, String node, **untyped attrs) -> Models::VolumeOperationResult
+    end
+  end
+end
