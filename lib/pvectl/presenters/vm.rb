@@ -7,8 +7,8 @@ module Pvectl
     # Defines column layout and formatting for table output.
     # Used by formatters to render VM data in various formats.
     #
-    # Standard columns: VMID, NAME, STATUS, CPU, MEMORY, NODE, UPTIME, TEMPLATE, TAGS
-    # Wide columns add: DISK, IP, AGENT, HA, BACKUP
+    # Standard columns: NAME, VMID, STATUS, NODE, CPU, MEMORY
+    # Wide columns add: UPTIME, TEMPLATE, TAGS, DISK, IP, AGENT, HA, BACKUP
     #
     # @example Using with formatter
     #   presenter = Vm.new
@@ -23,14 +23,14 @@ module Pvectl
       #
       # @return [Array<String>] column headers
       def columns
-        %w[VMID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS]
+        %w[NAME VMID STATUS NODE CPU MEMORY]
       end
 
       # Returns additional column headers for wide output.
       #
       # @return [Array<String>] extra column headers
       def extra_columns
-        %w[DISK IP AGENT HA BACKUP]
+        %w[UPTIME TEMPLATE TAGS DISK IP AGENT HA BACKUP]
       end
 
       # Converts VM model to table row values.
@@ -41,15 +41,12 @@ module Pvectl
       def to_row(model, **_context)
         @vm = model
         [
-          vm.vmid.to_s,
           display_name,
+          vm.vmid.to_s,
           vm.status,
-          cpu_percent,
-          memory_display,
           vm.node,
-          uptime_human,
-          template_display,
-          tags_display
+          cpu_percent,
+          memory_display
         ]
       end
 
@@ -64,6 +61,9 @@ module Pvectl
       def extra_values(model, **_context)
         @vm = model
         [
+          uptime_human,
+          template_display,
+          tags_display,
           disk_display,
           "-",              # IP - requires QEMU agent (future enhancement)
           "-",              # AGENT status (future enhancement)
@@ -236,53 +236,12 @@ module Pvectl
         "#{disk_used_gb}/#{disk_total_gb} GB"
       end
 
-      # Returns uptime in human-readable format.
-      #
-      # @return [String] formatted uptime (e.g., "15d 3h") or "-" if unavailable
-      def uptime_human
-        return "-" if vm.uptime.nil? || vm.uptime.zero?
-
-        days = vm.uptime / 86_400
-        hours = (vm.uptime % 86_400) / 3600
-        minutes = (vm.uptime % 3600) / 60
-
-        if days.positive?
-          "#{days}d #{hours}h"
-        elsif hours.positive?
-          "#{hours}h #{minutes}m"
-        else
-          "#{minutes}m"
-        end
-      end
-
-      # Returns tags as array.
-      #
-      # @return [Array<String>] array of tags, or empty array if no tags
-      def tags_array
-        return [] if vm.tags.nil? || vm.tags.empty?
-
-        vm.tags.split(";").map(&:strip)
-      end
-
-      # Returns tags as comma-separated string.
-      #
-      # @return [String] formatted tags (e.g., "prod, web") or "-" if no tags
-      def tags_display
-        arr = tags_array
-        arr.empty? ? "-" : arr.join(", ")
-      end
-
-      # Returns template display string.
-      #
-      # @return [String] "yes" if template, "-" otherwise
-      def template_display
-        vm.template? ? "yes" : "-"
-      end
-
       private
 
       # @return [Models::Vm] current VM model
       attr_reader :vm
+
+      alias resource vm
 
       # Formats system section.
       #
@@ -550,24 +509,6 @@ module Pvectl
           "Received" => format_bytes(vm.netin),
           "Transmitted" => format_bytes(vm.netout)
         }
-      end
-
-      # Formats bytes to human readable string.
-      #
-      # @param bytes [Integer, nil] bytes
-      # @return [String] formatted size
-      def format_bytes(bytes)
-        return "-" if bytes.nil? || bytes.zero?
-
-        if bytes >= 1024 * 1024 * 1024
-          "#{(bytes.to_f / 1024 / 1024 / 1024).round(1)} GiB"
-        elsif bytes >= 1024 * 1024
-          "#{(bytes.to_f / 1024 / 1024).round(1)} MiB"
-        elsif bytes >= 1024
-          "#{(bytes.to_f / 1024).round(1)} KiB"
-        else
-          "#{bytes} B"
-        end
       end
 
       # Formats HA section.

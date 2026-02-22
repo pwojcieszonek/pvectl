@@ -87,7 +87,7 @@ class PresentersVmTest < Minitest::Test
   # ---------------------------
 
   def test_columns_returns_expected_headers
-    expected = %w[VMID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS]
+    expected = %w[NAME VMID STATUS NODE CPU MEMORY]
     assert_equal expected, @presenter.columns
   end
 
@@ -96,7 +96,7 @@ class PresentersVmTest < Minitest::Test
   # ---------------------------
 
   def test_extra_columns_returns_wide_headers
-    expected = %w[DISK IP AGENT HA BACKUP]
+    expected = %w[UPTIME TEMPLATE TAGS DISK IP AGENT HA BACKUP]
     assert_equal expected, @presenter.extra_columns
   end
 
@@ -105,7 +105,7 @@ class PresentersVmTest < Minitest::Test
   # ---------------------------
 
   def test_wide_columns_combines_columns_and_extra_columns
-    expected = %w[VMID NAME STATUS CPU MEMORY NODE UPTIME TEMPLATE TAGS DISK IP AGENT HA BACKUP]
+    expected = %w[NAME VMID STATUS NODE CPU MEMORY UPTIME TEMPLATE TAGS DISK IP AGENT HA BACKUP]
     assert_equal expected, @presenter.wide_columns
   end
 
@@ -116,15 +116,13 @@ class PresentersVmTest < Minitest::Test
   def test_to_row_for_running_vm
     row = @presenter.to_row(@running_vm)
 
-    assert_equal "100", row[0]           # VMID
-    assert_equal "web-frontend-1", row[1] # NAME
+    assert_equal 6, row.length
+    assert_equal "web-frontend-1", row[0] # NAME
+    assert_equal "100", row[1]            # VMID
     assert_equal "running", row[2]        # STATUS
-    assert_equal "12%/4", row[3]          # CPU (usage/cores)
-    assert_equal "2.1/4.0 GB", row[4]     # MEMORY
-    assert_equal "pve-node1", row[5]      # NODE
-    assert_equal "15d 5h", row[6]         # UPTIME
-    assert_equal "-", row[7]              # TEMPLATE
-    assert_equal "prod, web", row[8]      # TAGS
+    assert_equal "pve-node1", row[3]      # NODE
+    assert_equal "12%/4", row[4]          # CPU
+    assert_equal "2.1/4.0 GB", row[5]     # MEMORY
   end
 
   # ---------------------------
@@ -134,15 +132,13 @@ class PresentersVmTest < Minitest::Test
   def test_to_row_for_stopped_vm
     row = @presenter.to_row(@stopped_vm)
 
-    assert_equal "200", row[0]           # VMID
-    assert_equal "dev-env-alice", row[1] # NAME
-    assert_equal "stopped", row[2]       # STATUS
-    assert_equal "-/4", row[3]           # CPU (usage/cores for stopped)
-    assert_equal "-/8.0 GB", row[4]      # MEMORY (usage/total for stopped)
-    assert_equal "pve-node3", row[5]     # NODE
-    assert_equal "-", row[6]             # UPTIME (nil for stopped)
-    assert_equal "-", row[7]             # TEMPLATE
-    assert_equal "dev, personal", row[8] # TAGS
+    assert_equal 6, row.length
+    assert_equal "dev-env-alice", row[0]  # NAME
+    assert_equal "200", row[1]            # VMID
+    assert_equal "stopped", row[2]        # STATUS
+    assert_equal "pve-node3", row[3]      # NODE
+    assert_equal "-/4", row[4]            # CPU
+    assert_equal "-/8.0 GB", row[5]       # MEMORY
   end
 
   # ---------------------------
@@ -152,15 +148,13 @@ class PresentersVmTest < Minitest::Test
   def test_to_row_for_template
     row = @presenter.to_row(@template_vm)
 
-    assert_equal "9000", row[0]         # VMID
-    assert_equal "ubuntu-template", row[1] # NAME
-    assert_equal "stopped", row[2]      # STATUS
-    assert_equal "-/2", row[3]          # CPU (usage/cores for template)
-    assert_equal "-/2.0 GB", row[4]     # MEMORY (usage/total for template)
-    assert_equal "pve-node1", row[5]    # NODE
-    assert_equal "-", row[6]            # UPTIME
-    assert_equal "yes", row[7]          # TEMPLATE
-    assert_equal "-", row[8]            # TAGS (nil)
+    assert_equal 6, row.length
+    assert_equal "ubuntu-template", row[0] # NAME
+    assert_equal "9000", row[1]            # VMID
+    assert_equal "stopped", row[2]         # STATUS
+    assert_equal "pve-node1", row[3]       # NODE
+    assert_equal "-/2", row[4]             # CPU
+    assert_equal "-/2.0 GB", row[5]        # MEMORY
   end
 
   # ---------------------------
@@ -170,21 +164,29 @@ class PresentersVmTest < Minitest::Test
   def test_extra_values_for_running_vm
     extra = @presenter.extra_values(@running_vm)
 
-    assert_equal "15/50 GB", extra[0]  # DISK
-    assert_equal "-", extra[1]          # IP (placeholder)
-    assert_equal "-", extra[2]          # AGENT (placeholder)
-    assert_equal "ignored", extra[3]    # HA
-    assert_equal "-", extra[4]          # BACKUP (placeholder)
+    assert_equal 8, extra.length
+    assert_equal "15d 5h", extra[0]    # UPTIME
+    assert_equal "-", extra[1]          # TEMPLATE
+    assert_equal "prod, web", extra[2]  # TAGS
+    assert_equal "15/50 GB", extra[3]   # DISK
+    assert_equal "-", extra[4]          # IP
+    assert_equal "-", extra[5]          # AGENT
+    assert_equal "ignored", extra[6]    # HA
+    assert_equal "-", extra[7]          # BACKUP
   end
 
   def test_extra_values_for_vm_without_hastate
     extra = @presenter.extra_values(@stopped_vm)
 
-    assert_equal "18/50 GB", extra[0]  # DISK
-    assert_equal "-", extra[1]          # IP
-    assert_equal "-", extra[2]          # AGENT
-    assert_equal "-", extra[3]          # HA (nil)
-    assert_equal "-", extra[4]          # BACKUP
+    assert_equal 8, extra.length
+    assert_equal "-", extra[0]             # UPTIME
+    assert_equal "-", extra[1]             # TEMPLATE
+    assert_equal "dev, personal", extra[2] # TAGS
+    assert_equal "18/50 GB", extra[3]      # DISK
+    assert_equal "-", extra[4]             # IP
+    assert_equal "-", extra[5]             # AGENT
+    assert_equal "-", extra[6]             # HA
+    assert_equal "-", extra[7]             # BACKUP
   end
 
   # ---------------------------
@@ -195,9 +197,10 @@ class PresentersVmTest < Minitest::Test
     wide_row = @presenter.to_wide_row(@running_vm)
 
     assert_equal 14, wide_row.length
-    assert_equal "100", wide_row[0]        # VMID
-    assert_equal "15/50 GB", wide_row[9]   # DISK (first extra column)
-    assert_equal "ignored", wide_row[12]   # HA
+    assert_equal "web-frontend-1", wide_row[0]  # NAME
+    assert_equal "100", wide_row[1]              # VMID
+    assert_equal "15d 5h", wide_row[6]           # UPTIME (first extra)
+    assert_equal "ignored", wide_row[12]         # HA
   end
 
   # ---------------------------
@@ -435,82 +438,6 @@ class PresentersVmTest < Minitest::Test
     )
     @presenter.to_row(vm)
     assert_equal "-", @presenter.disk_display
-  end
-
-  def test_uptime_human_for_days_and_hours
-    @presenter.to_row(@running_vm)
-    assert_equal "15d 5h", @presenter.uptime_human
-  end
-
-  def test_uptime_human_for_hours_and_minutes
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 8100  # 2h 15m
-    )
-    @presenter.to_row(vm)
-    assert_equal "2h 15m", @presenter.uptime_human
-  end
-
-  def test_uptime_human_for_minutes_only
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 900  # 15m
-    )
-    @presenter.to_row(vm)
-    assert_equal "15m", @presenter.uptime_human
-  end
-
-  def test_uptime_human_returns_dash_when_nil
-    @presenter.to_row(@stopped_vm)
-    assert_equal "-", @presenter.uptime_human
-  end
-
-  def test_uptime_human_returns_dash_when_zero
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      uptime: 0
-    )
-    @presenter.to_row(vm)
-    assert_equal "-", @presenter.uptime_human
-  end
-
-  def test_tags_array_parses_semicolon_separated_tags
-    @presenter.to_row(@running_vm)
-    assert_equal ["prod", "web"], @presenter.tags_array
-  end
-
-  def test_tags_array_returns_empty_array_when_tags_nil
-    @presenter.to_row(@template_vm)
-    assert_equal [], @presenter.tags_array
-  end
-
-  def test_tags_array_returns_empty_array_when_tags_empty
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      tags: ""
-    )
-    @presenter.to_row(vm)
-    assert_equal [], @presenter.tags_array
-  end
-
-  def test_tags_display_formats_as_comma_separated
-    @presenter.to_row(@running_vm)
-    assert_equal "prod, web", @presenter.tags_display
-  end
-
-  def test_tags_display_returns_dash_when_no_tags
-    @presenter.to_row(@template_vm)
-    assert_equal "-", @presenter.tags_display
-  end
-
-  def test_template_display_returns_yes_for_template
-    @presenter.to_row(@template_vm)
-    assert_equal "yes", @presenter.template_display
-  end
-
-  def test_template_display_returns_dash_for_regular_vm
-    @presenter.to_row(@running_vm)
-    assert_equal "-", @presenter.template_display
   end
 
   # ---------------------------

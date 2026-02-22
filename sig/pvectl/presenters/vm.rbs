@@ -29,17 +29,11 @@ module Pvectl
 
       def disk_display: () -> String
 
-      def uptime_human: () -> String
-
-      def tags_array: () -> Array[String]
-
-      def tags_display: () -> String
-
-      def template_display: () -> String
-
       private
 
       attr_reader vm: untyped
+
+      alias resource vm
 
       def format_system: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
@@ -64,8 +58,6 @@ module Pvectl
       def format_runtime: (Hash[Symbol, untyped] status) -> (Hash[String, untyped] | String)
 
       def format_network_io: () -> (Hash[String, String] | String)
-
-      def format_bytes: (Integer? bytes) -> String
 
       def format_ha: (Hash[Symbol, untyped] config) -> Hash[String, String]
     end
