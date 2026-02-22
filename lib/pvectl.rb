@@ -210,6 +210,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Set Volume
+require_relative "pvectl/services/set_volume"
+
 # Services - Clone Container
 require_relative "pvectl/services/clone_container"
 

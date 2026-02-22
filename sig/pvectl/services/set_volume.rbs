@@ -1,0 +1,12 @@
+module Pvectl
+  module Services
+    class SetVolume
+      def initialize: (repository: untyped, resource_type: Symbol) -> void
+      def execute: (id: Integer, disk: String, params: Hash[String | Symbol, untyped], node: String) -> Models::VolumeOperationResult
+
+      private
+      def rebuild_disk_config: (String current_value, Hash[String | Symbol, untyped] updates) -> String
+      def build_result: (Integer id, String disk, String node, **untyped attrs) -> Models::VolumeOperationResult
+    end
+  end
+end
