@@ -204,6 +204,9 @@ require_relative "pvectl/services/set_vm"
 # Services - Set Container
 require_relative "pvectl/services/set_container"
 
+# Services - Set Node
+require_relative "pvectl/services/set_node"
+
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
