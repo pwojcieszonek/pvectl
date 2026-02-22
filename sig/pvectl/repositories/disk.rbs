@@ -1,0 +1,15 @@
+module Pvectl
+  module Repositories
+    class Disk < Base
+      def list: (?node: String?) -> Array[Models::PhysicalDisk]
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::PhysicalDisk
+
+      def disks_for_node: (String node_name) -> Array[Models::PhysicalDisk]
+
+      def online_nodes: () -> Array[String]
+    end
+  end
+end
