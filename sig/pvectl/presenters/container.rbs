@@ -35,14 +35,6 @@ module Pvectl
 
       def disk_display: () -> String
 
-      def uptime_human: () -> String
-
-      def tags_array: () -> Array[String]
-
-      def tags_display: () -> String
-
-      def template_display: () -> String
-
       def pool_display: () -> String
 
       def netin_display: () -> String
@@ -52,6 +44,7 @@ module Pvectl
       private
 
       attr_reader container: untyped
+      alias resource container
 
       def format_system: () -> Hash[String, String]
 
@@ -68,8 +61,6 @@ module Pvectl
       def format_features: () -> String
 
       def format_runtime: () -> (Hash[String, untyped] | String)
-
-      def format_bytes: (Integer? bytes) -> String
     end
   end
 end
