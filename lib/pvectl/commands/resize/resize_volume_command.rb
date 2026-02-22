@@ -3,7 +3,7 @@
 module Pvectl
   module Commands
     module Resize
-      # Shared functionality for resize disk commands.
+      # Shared functionality for resize volume commands.
       #
       # Template Method pattern: provides common resize flow
       # (argument validation, config loading, preflight, confirmation, resize)
@@ -15,10 +15,10 @@ module Pvectl
       #   - #build_resize_service(connection)
       #   - #build_presenter
       #
-      module ResizeDiskCommand
+      module ResizeVolumeCommand
         # Class methods added when the module is included.
         module ClassMethods
-          # Executes the resize disk command.
+          # Executes the resize volume command.
           #
           # @param args [Array<String>] command arguments [id, disk, size]
           # @param options [Hash] command options
@@ -36,7 +36,7 @@ module Pvectl
           base.extend(ClassMethods)
         end
 
-        # Initializes a resize disk command.
+        # Initializes a resize volume command.
         #
         # @param args [Array<String>] command arguments
         # @param options [Hash] command options
@@ -47,7 +47,7 @@ module Pvectl
           @global_options = global_options
         end
 
-        # Executes the resize disk command.
+        # Executes the resize volume command.
         #
         # @return [Integer] exit code
         def execute
@@ -56,17 +56,17 @@ module Pvectl
           size_str = @args[2]
 
           return usage_error("#{resource_id_label} is required") unless resource_id
-          return usage_error("DISK name is required (e.g., scsi0, virtio0, rootfs)") unless disk
+          return usage_error("VOLUME name is required (e.g., scsi0, virtio0, rootfs)") unless disk
           return usage_error("SIZE is required (e.g., +10G, 50G)") unless size_str
 
-          parsed_size = Services::ResizeDisk.parse_size(size_str)
+          parsed_size = Services::ResizeVolume.parse_size(size_str)
           perform_resize(resource_id.to_i, disk, parsed_size)
         rescue ArgumentError => e
           usage_error(e.message)
-        rescue Services::ResizeDisk::DiskNotFoundError => e
+        rescue Services::ResizeVolume::VolumeNotFoundError => e
           $stderr.puts "Error: #{e.message}"
           ExitCodes::NOT_FOUND
-        rescue Services::ResizeDisk::SizeTooSmallError => e
+        rescue Services::ResizeVolume::SizeTooSmallError => e
           $stderr.puts "Error: #{e.message}"
           ExitCodes::GENERAL_ERROR
         rescue Pvectl::Config::ConfigNotFoundError,
@@ -95,7 +95,7 @@ module Pvectl
         # Builds the resize service for the given connection.
         #
         # @param connection [Connection] API connection
-        # @return [Services::ResizeDisk] resize service
+        # @return [Services::ResizeVolume] resize service
         def build_resize_service(connection)
           raise NotImplementedError, "#{self.class} must implement #build_resize_service"
         end
@@ -111,7 +111,7 @@ module Pvectl
         #
         # @param resource_id [Integer] VM or container ID
         # @param disk [String] disk name
-        # @param parsed_size [Services::ResizeDisk::ParsedSize] parsed size
+        # @param parsed_size [Services::ResizeVolume::ParsedSize] parsed size
         # @return [Integer] exit code
         def perform_resize(resource_id, disk, parsed_size)
           load_config
@@ -159,11 +159,11 @@ module Pvectl
         def confirm_operation(resource_id, info, node)
           return true if @options[:yes]
 
-          $stdout.puts "Resize disk #{info[:disk]} on #{resource_label} #{resource_id} on node #{node}:"
+          $stdout.puts "Resize volume #{info[:disk]} on #{resource_label} #{resource_id} on node #{node}:"
           $stdout.puts "  Current size: #{info[:current_size]}"
           $stdout.puts "  New size:     #{info[:new_size]}"
           $stdout.puts ""
-          $stdout.puts "This action is IRREVERSIBLE — disks cannot be shrunk via API."
+          $stdout.puts "This action is IRREVERSIBLE — volumes cannot be shrunk via API."
           $stdout.print "Proceed? [y/N]: "
 
           response = $stdin.gets&.strip&.downcase

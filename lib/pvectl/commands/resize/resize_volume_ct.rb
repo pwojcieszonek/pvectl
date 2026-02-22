@@ -3,16 +3,16 @@
 module Pvectl
   module Commands
     module Resize
-      # Handler for the `pvectl resize disk ct` command.
+      # Handler for the `pvectl resize volume ct` command.
       #
-      # Includes ResizeDiskCommand for shared workflow and overrides
+      # Includes ResizeVolumeCommand for shared workflow and overrides
       # template methods with container-specific behavior.
       #
       # @example
-      #   pvectl resize disk ct 200 rootfs +5G
+      #   pvectl resize volume ct 200 rootfs +5G
       #
-      class ResizeDiskCt
-        include ResizeDiskCommand
+      class ResizeVolumeCt
+        include ResizeVolumeCommand
 
         private
 
@@ -27,10 +27,10 @@ module Pvectl
         end
 
         # @param connection [Connection] API connection
-        # @return [Services::ResizeDisk] resize service with Container repository
+        # @return [Services::ResizeVolume] resize service with Container repository
         def build_resize_service(connection)
           repo = Pvectl::Repositories::Container.new(connection)
-          Pvectl::Services::ResizeDisk.new(repository: repo)
+          Pvectl::Services::ResizeVolume.new(repository: repo)
         end
 
         # @return [Presenters::ContainerOperationResult] container result presenter

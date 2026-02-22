@@ -190,8 +190,8 @@ require_relative "pvectl/services/edit_vm"
 # Services - Edit Container
 require_relative "pvectl/services/edit_container"
 
-# Services - Resize Disk
-require_relative "pvectl/services/resize_disk"
+# Services - Resize Volume
+require_relative "pvectl/services/resize_volume"
 
 # Services - Clone Container
 require_relative "pvectl/services/clone_container"
@@ -281,9 +281,9 @@ require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
 
 # Commands - Resize
-require_relative "pvectl/commands/resize/resize_disk_command"
-require_relative "pvectl/commands/resize/resize_disk_vm"
-require_relative "pvectl/commands/resize/resize_disk_ct"
+require_relative "pvectl/commands/resize/resize_volume_command"
+require_relative "pvectl/commands/resize/resize_volume_vm"
+require_relative "pvectl/commands/resize/resize_volume_ct"
 require_relative "pvectl/commands/resize/command"
 
 # Commands - Delete
