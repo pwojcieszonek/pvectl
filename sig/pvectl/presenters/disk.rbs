@@ -11,6 +11,8 @@ module Pvectl
 
       def to_hash: (untyped model) -> Hash[String, untyped]
 
+      def to_description: (untyped model) -> Hash[String, untyped]
+
       private
 
       attr_reader disk: untyped
@@ -18,6 +20,12 @@ module Pvectl
       def format_size: () -> String
 
       def format_boolean: (Integer? value) -> String
+
+      def device_info_section: () -> Hash[String, String]
+
+      def smart_attributes_section: () -> Array[Hash[String, String]]
+
+      def format_ata_attributes: () -> Array[Hash[String, String]]
     end
   end
 end
