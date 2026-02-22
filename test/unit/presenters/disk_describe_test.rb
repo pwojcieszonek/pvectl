@@ -41,20 +41,28 @@ class DiskPresenterDescribeTest < Minitest::Test
     assert_equal "932 GB", result["Device Info"]["Size"]
   end
 
-  def test_to_description_device_info_includes_wearout_when_present
-    disk = build_disk(wearout: 2)
+  def test_to_description_device_info_includes_life_remaining_when_present
+    disk = build_disk(wearout: 96)
 
     result = @presenter.to_description(disk)
 
-    assert_equal "2%", result["Device Info"]["Wearout"]
+    assert_equal "96%", result["Device Info"]["Life Remaining"]
   end
 
-  def test_to_description_device_info_omits_wearout_when_nil
+  def test_to_description_device_info_omits_life_remaining_when_nil
     disk = build_disk(wearout: nil)
 
     result = @presenter.to_description(disk)
 
-    refute result["Device Info"].key?("Wearout")
+    refute result["Device Info"].key?("Life Remaining")
+  end
+
+  def test_to_description_device_info_does_not_include_mounted
+    disk = build_disk(mounted: 1)
+
+    result = @presenter.to_description(disk)
+
+    refute result["Device Info"].key?("Mounted")
   end
 
   # ---------------------------

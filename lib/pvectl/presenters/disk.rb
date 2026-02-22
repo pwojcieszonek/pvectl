@@ -142,10 +142,9 @@ module Pvectl
           "Type"    => disk.type || "-",
           "Health"  => disk.health || "-"
         }
-        info["Wearout"] = "#{disk.wearout}%" if disk.wearout
+        info["Life Remaining"] = "#{disk.wearout}%" if disk.wearout
         info["Used"]    = disk.used || "-"
         info["GPT"]     = format_boolean(disk.gpt)
-        info["Mounted"] = format_boolean(disk.mounted)
         info["WWN"]     = disk.wwn || "-"
         info
       end
