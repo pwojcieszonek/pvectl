@@ -198,6 +198,9 @@ require_relative "pvectl/services/edit_vm"
 # Services - Edit Container
 require_relative "pvectl/services/edit_container"
 
+# Services - Edit Node
+require_relative "pvectl/services/edit_node"
+
 # Services - Set VM
 require_relative "pvectl/services/set_vm"
 

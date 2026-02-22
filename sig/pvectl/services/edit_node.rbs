@@ -1,0 +1,21 @@
+module Pvectl
+  module Services
+    class EditNode
+      READONLY_KEYS: Array[Symbol]
+
+      def initialize: (node_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (node_name: String) -> Models::NodeOperationResult?
+
+      private
+
+      def compute_diff: (Hash[Symbol, untyped] original, Hash[Symbol, untyped] edited) -> Hash[Symbol, untyped]
+
+      def build_update_params: (Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::NodeOperationResult
+
+      def not_found_result: (String node_name) -> Models::NodeOperationResult
+    end
+  end
+end
