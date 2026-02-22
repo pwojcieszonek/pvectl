@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **describe disk**: `pvectl describe disk /dev/xxx [--node NODE]` shows device info and structured SMART attributes (ATA table or parsed NVMe/SAS key-value pairs)
+- **parsers**: SmartText parser for converting NVMe/SAS smartctl text output into structured data
+- **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
+
 ### Documentation
 - **cli**: Added `long_desc` man-page style help text to all commands (~25 commands) with DESCRIPTION, EXAMPLES, NOTES, and SEE ALSO sections
 - **cli**: Enabled `wrap_help_text :verbatim` for proper formatting of code examples in help output
