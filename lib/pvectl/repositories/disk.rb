@@ -34,6 +34,18 @@ module Pvectl
         end
       end
 
+      # Fetches SMART data for a specific disk on a node.
+      #
+      # @param node_name [String] node name
+      # @param disk_path [String] device path (e.g., "/dev/nvme0n1")
+      # @return [Hash{Symbol => untyped}] SMART data with keys: :health, :type, :attributes, :text
+      def smart(node_name, disk_path)
+        response = connection.client["nodes/#{node_name}/disks/smart"].get(params: { disk: disk_path })
+        extract_data(response)
+      rescue StandardError
+        {}
+      end
+
       protected
 
       # Builds PhysicalDisk model from API response data.

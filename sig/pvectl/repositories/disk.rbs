@@ -3,6 +3,8 @@ module Pvectl
     class Disk < Base
       def list: (?node: String?) -> Array[Models::PhysicalDisk]
 
+      def smart: (String node_name, String disk_path) -> Hash[Symbol, untyped]
+
       private
 
       def build_model: (Hash[Symbol, untyped] data) -> Models::PhysicalDisk
