@@ -303,3 +303,170 @@ class PresentersBaseInterfaceTest < Minitest::Test
     end
   end
 end
+
+# =============================================================================
+# Presenters::Base Shared Helpers Tests
+# =============================================================================
+
+class PresentersBaseSharedHelpersTest < Minitest::Test
+  def setup
+    @presenter = SharedHelperPresenter.new
+  end
+
+  # ---------------------------
+  # format_bytes
+  # ---------------------------
+
+  def test_format_bytes_returns_dash_for_nil
+    assert_equal "-", @presenter.public_format_bytes(nil)
+  end
+
+  def test_format_bytes_returns_dash_for_zero
+    assert_equal "-", @presenter.public_format_bytes(0)
+  end
+
+  def test_format_bytes_formats_bytes
+    assert_equal "512 B", @presenter.public_format_bytes(512)
+  end
+
+  def test_format_bytes_formats_kib
+    assert_equal "1.5 KiB", @presenter.public_format_bytes(1536)
+  end
+
+  def test_format_bytes_formats_mib
+    assert_equal "1.5 MiB", @presenter.public_format_bytes(1_572_864)
+  end
+
+  def test_format_bytes_formats_gib
+    assert_equal "2.5 GiB", @presenter.public_format_bytes(2_684_354_560)
+  end
+
+  # ---------------------------
+  # uptime_human
+  # ---------------------------
+
+  def test_uptime_human_returns_dash_when_nil
+    model = SharedModel.new(uptime: nil, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "-", @presenter.uptime_human
+  end
+
+  def test_uptime_human_returns_dash_when_zero
+    model = SharedModel.new(uptime: 0, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "-", @presenter.uptime_human
+  end
+
+  def test_uptime_human_formats_days_and_hours
+    model = SharedModel.new(uptime: 1_314_000, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "15d 5h", @presenter.uptime_human
+  end
+
+  def test_uptime_human_formats_hours_and_minutes
+    model = SharedModel.new(uptime: 8100, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "2h 15m", @presenter.uptime_human
+  end
+
+  def test_uptime_human_formats_minutes_only
+    model = SharedModel.new(uptime: 900, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "15m", @presenter.uptime_human
+  end
+
+  # ---------------------------
+  # tags_array / tags_display
+  # ---------------------------
+
+  def test_tags_array_parses_semicolon_tags
+    model = SharedModel.new(uptime: 0, tags: "prod;web", template: 0)
+    @presenter.set_resource(model)
+    assert_equal ["prod", "web"], @presenter.tags_array
+  end
+
+  def test_tags_array_returns_empty_for_nil
+    model = SharedModel.new(uptime: 0, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal [], @presenter.tags_array
+  end
+
+  def test_tags_array_returns_empty_for_empty_string
+    model = SharedModel.new(uptime: 0, tags: "", template: 0)
+    @presenter.set_resource(model)
+    assert_equal [], @presenter.tags_array
+  end
+
+  def test_tags_display_formats_comma_separated
+    model = SharedModel.new(uptime: 0, tags: "prod;web", template: 0)
+    @presenter.set_resource(model)
+    assert_equal "prod, web", @presenter.tags_display
+  end
+
+  def test_tags_display_returns_dash_when_no_tags
+    model = SharedModel.new(uptime: 0, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "-", @presenter.tags_display
+  end
+
+  # ---------------------------
+  # template_display
+  # ---------------------------
+
+  def test_template_display_returns_yes_for_template
+    model = SharedModel.new(uptime: 0, tags: nil, template: 1)
+    @presenter.set_resource(model)
+    assert_equal "yes", @presenter.template_display
+  end
+
+  def test_template_display_returns_dash_for_non_template
+    model = SharedModel.new(uptime: 0, tags: nil, template: 0)
+    @presenter.set_resource(model)
+    assert_equal "-", @presenter.template_display
+  end
+
+  # ---------------------------
+  # resource (abstract)
+  # ---------------------------
+
+  def test_resource_raises_not_implemented_on_base
+    base = Pvectl::Presenters::Base.new
+    error = assert_raises(NotImplementedError) do
+      base.send(:resource)
+    end
+    assert_includes error.message, "resource must be implemented"
+  end
+
+  private
+
+  SharedModel = Struct.new(:uptime, :tags, :template, keyword_init: true) do
+    def template?
+      template == 1
+    end
+  end
+
+  class SharedHelperPresenter < Pvectl::Presenters::Base
+    attr_reader :resource
+
+    def set_resource(model)
+      @resource = model
+    end
+
+    def columns
+      ["NAME"]
+    end
+
+    def to_row(model, **_context)
+      [model.to_s]
+    end
+
+    def to_hash(model)
+      { "name" => model.to_s }
+    end
+
+    # Expose private method for testing
+    def public_format_bytes(bytes)
+      format_bytes(bytes)
+    end
+  end
+end
