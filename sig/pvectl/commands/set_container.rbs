@@ -1,0 +1,13 @@
+module Pvectl
+  module Commands
+    class SetContainer
+      include SetResourceCommand
+
+      private
+      def resource_label: () -> String
+      def resource_id_label: () -> String
+      def execute_params: (String resource_id, Hash[String, String] key_values) -> Hash[Symbol, untyped]
+      def build_set_service: (untyped connection) -> Services::SetContainer
+    end
+  end
+end
