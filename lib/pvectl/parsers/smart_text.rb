@@ -15,12 +15,11 @@ module Pvectl
     #   #     { "Attribute" => "Temperature", "Value" => "34 Celsius" }]
     #
     class SmartText
-      # Pattern: key (no colons), colon, whitespace, value.
-      # Uses negated character class [^:]+ for O(n) matching without
-      # backtracking (avoids ReDoS on lines with many spaces and no colon).
-      LINE_PATTERN = /\A\s*([^:]+):\s+(.+)\z/
-
       # Parses smartctl text output into structured attributes.
+      #
+      # Splits each line on the first colon. Lines without a colon or
+      # without a non-empty value after the colon are skipped.
+      # Uses String#split instead of regex to avoid ReDoS risk.
       #
       # @param text [String, nil] raw smartctl text output
       # @return [Array<Hash{String => String}>] parsed attributes
@@ -28,10 +27,14 @@ module Pvectl
         return [] if text.nil? || text.empty?
 
         text.each_line.filter_map { |line|
-          match = line.strip.match(LINE_PATTERN)
-          next unless match
+          key, value = line.strip.split(":", 2)
+          next unless value
 
-          { "Attribute" => match[1].strip, "Value" => match[2].strip }
+          key = key.strip
+          value = value.strip
+          next if key.empty? || value.empty?
+
+          { "Attribute" => key, "Value" => value }
         }
       end
     end

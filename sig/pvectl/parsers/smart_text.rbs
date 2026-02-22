@@ -1,8 +1,6 @@
 module Pvectl
   module Parsers
     class SmartText
-      LINE_PATTERN: Regexp
-
       def self.parse: (String? text) -> Array[Hash[String, String]]
     end
   end
