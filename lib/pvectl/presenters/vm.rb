@@ -135,8 +135,8 @@ module Pvectl
         config = data[:config] || {}
         status = data[:status] || {}
 
-        # Consume keys used at top level or without dedicated sections
         consume(:name, :description, :tags, :pool, :template)
+        consume_misc_keys(config)
 
         {
           "Name" => display_name,
@@ -162,8 +162,13 @@ module Pvectl
           "Audio" => format_audio(config),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Runtime" => format_runtime(status),
-          "Network I/O" => format_network_io,
+          "I/O Statistics" => format_io_statistics(status),
+          "Startup/Shutdown" => format_startup(config),
+          "Security" => format_security(config),
+          "Hotplug" => format_hotplug(config),
+          "Hookscript" => format_hookscript(config),
           "High Availability" => format_ha(config),
+          "Pending Changes" => format_pending_changes(data[:pending]),
           "Tags" => tags_display,
           "Description" => config[:description] || "-",
           "Additional Configuration" => format_remaining(config)
@@ -636,6 +641,102 @@ module Pvectl
           "Received" => format_bytes(vm.netin),
           "Transmitted" => format_bytes(vm.netout)
         }
+      end
+
+      # Formats I/O statistics section (merged network + disk I/O).
+      #
+      # @param status [Hash] VM status
+      # @return [Hash, String] I/O stats or "-"
+      def format_io_statistics(status)
+        return "-" unless vm.running?
+
+        {
+          "Network In" => format_bytes(vm.netin),
+          "Network Out" => format_bytes(vm.netout),
+          "Disk Read" => format_bytes(status[:diskread]),
+          "Disk Written" => format_bytes(status[:diskwrite])
+        }
+      end
+
+      # Formats startup/shutdown order section.
+      #
+      # @param config [Hash] VM config
+      # @return [Hash] startup info
+      def format_startup(config)
+        consume(:startup, :onboot)
+        startup = config[:startup]
+        on_boot = config[:onboot] == 1 ? "yes" : "no"
+
+        if startup.nil?
+          return { "Order" => "-", "Up Delay" => "-", "Down Delay" => "-", "On Boot" => on_boot }
+        end
+
+        parts = startup.to_s.split(",").to_h { |p| p.split("=", 2) }
+        {
+          "Order" => parts["order"] || "-",
+          "Up Delay" => parts["up"] || "-",
+          "Down Delay" => parts["down"] || "-",
+          "On Boot" => on_boot
+        }
+      end
+
+      # Formats security section (protection, firewall, lock).
+      #
+      # @param config [Hash] VM config
+      # @return [Hash] security info
+      def format_security(config)
+        consume(:protection, :firewall, :lock)
+        {
+          "Protection" => config[:protection] == 1 ? "yes" : "no",
+          "Firewall" => config[:firewall] == 1 ? "yes" : "no",
+          "Lock" => config[:lock] || "-"
+        }
+      end
+
+      # Formats hotplug setting.
+      #
+      # @param config [Hash] VM config
+      # @return [String] hotplug features or "-"
+      def format_hotplug(config)
+        consume(:hotplug)
+        hp = config[:hotplug]
+        return "-" if hp.nil?
+
+        hp.to_s.split(",").join(", ")
+      end
+
+      # Formats hookscript setting.
+      #
+      # @param config [Hash] VM config
+      # @return [String] hookscript path or "-"
+      def format_hookscript(config)
+        consume(:hookscript)
+        config[:hookscript] || "-"
+      end
+
+      # Formats pending configuration changes.
+      #
+      # @param pending [Array<Hash>, nil] pending changes from API
+      # @return [Array<Hash>, String] pending changes table or "-"
+      def format_pending_changes(pending)
+        return "-" if pending.nil? || pending.empty?
+
+        pending.map do |change|
+          row = { "KEY" => change[:key].to_s, "VALUE" => change[:value].to_s }
+          row["PENDING"] = change[:pending].to_s if change.key?(:pending)
+          row["DELETE"] = change[:delete].to_s if change[:delete]
+          row
+        end
+      end
+
+      # Consumes miscellaneous known keys that don't need dedicated sections.
+      #
+      # @param config [Hash] VM config
+      # @return [void]
+      def consume_misc_keys(config)
+        consume(:acpi, :tablet, :kvm, :freeze, :localtime, :args, :vmgenid, :meta)
+        consume_matching(config, /^numa\d+$/)
+        consume_matching(config, /^unused\d+$/)
       end
 
       # Formats HA section.

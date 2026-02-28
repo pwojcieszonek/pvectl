@@ -645,23 +645,31 @@ class PresentersVmTest < Minitest::Test
     assert_equal "pc-q35-8.1", desc["Runtime"]["Machine Type"]
   end
 
-  def test_to_description_includes_network_io_for_running_vm
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_kind_of Hash, desc["Network I/O"]
-    assert_includes desc["Network I/O"]["Received"], "MiB"
-    assert_includes desc["Network I/O"]["Transmitted"], "MiB"
-  end
-
-  def test_to_description_stopped_vm_network_io_shows_dash
+  def test_to_description_includes_io_statistics
+    data = base_describe_data.tap do |d|
+      d[:status][:diskread] = 1_610_612_736
+      d[:status][:diskwrite] = 268_435_456
+    end
     vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "stopped", node: "pve1",
-      describe_data: { config: {} }
+      @running_vm.instance_variable_get(:@attributes).merge(describe_data: data)
     )
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Network I/O"]
+    assert_kind_of Hash, desc["I/O Statistics"]
+    assert_includes desc["I/O Statistics"]["Disk Read"], "GiB"
+    assert_includes desc["I/O Statistics"]["Disk Written"], "MiB"
+    assert desc["I/O Statistics"].key?("Network In")
+    assert desc["I/O Statistics"].key?("Network Out")
+  end
+
+  def test_to_description_io_statistics_dash_when_stopped
+    data = base_describe_data
+    vm = Pvectl::Models::Vm.new(
+      @stopped_vm.instance_variable_get(:@attributes).merge(describe_data: data)
+    )
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["I/O Statistics"]
   end
 
   def test_to_description_includes_ha_section
@@ -1065,6 +1073,151 @@ class PresentersVmTest < Minitest::Test
     network = desc["Network"]
     assert_kind_of Array, network
     assert_equal "no", network.first["FIREWALL"]
+  end
+
+  # ---------------------------
+  # Startup/Shutdown Section
+  # ---------------------------
+
+  def test_to_description_includes_startup_section
+    data = base_describe_data.tap do |d|
+      d[:config][:startup] = "order=1,up=30,down=60"
+      d[:config][:onboot] = 1
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Startup/Shutdown"]
+    assert_equal "1", desc["Startup/Shutdown"]["Order"]
+    assert_equal "30", desc["Startup/Shutdown"]["Up Delay"]
+    assert_equal "60", desc["Startup/Shutdown"]["Down Delay"]
+    assert_equal "yes", desc["Startup/Shutdown"]["On Boot"]
+  end
+
+  def test_to_description_startup_defaults
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Startup/Shutdown"]
+    assert_equal "-", desc["Startup/Shutdown"]["Order"]
+    assert_equal "no", desc["Startup/Shutdown"]["On Boot"]
+  end
+
+  # ---------------------------
+  # Security Section
+  # ---------------------------
+
+  def test_to_description_includes_security_section
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(protection: 1, firewall: 1, lock: "backup")
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Security"]
+    assert_equal "yes", desc["Security"]["Protection"]
+    assert_equal "yes", desc["Security"]["Firewall"]
+    assert_equal "backup", desc["Security"]["Lock"]
+  end
+
+  def test_to_description_security_defaults
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "no", desc["Security"]["Protection"]
+    assert_equal "no", desc["Security"]["Firewall"]
+    assert_equal "-", desc["Security"]["Lock"]
+  end
+
+  # ---------------------------
+  # Hotplug Section
+  # ---------------------------
+
+  def test_to_description_includes_hotplug
+    data = base_describe_data.tap { |d| d[:config][:hotplug] = "disk,network,usb" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "disk, network, usb", desc["Hotplug"]
+  end
+
+  def test_to_description_hotplug_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Hotplug"]
+  end
+
+  # ---------------------------
+  # Hookscript Section
+  # ---------------------------
+
+  def test_to_description_includes_hookscript
+    data = base_describe_data.tap { |d| d[:config][:hookscript] = "local:snippets/hook.pl" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "local:snippets/hook.pl", desc["Hookscript"]
+  end
+
+  def test_to_description_hookscript_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Hookscript"]
+  end
+
+  # ---------------------------
+  # Pending Changes Section
+  # ---------------------------
+
+  def test_to_description_includes_pending_changes
+    data = base_describe_data.tap do |d|
+      d[:pending] = [
+        { key: "memory", value: 4096, pending: 8192 },
+        { key: "cores", value: 2, pending: 4 }
+      ]
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["Pending Changes"]
+    assert_equal 2, desc["Pending Changes"].length
+    assert_equal "memory", desc["Pending Changes"].first["KEY"]
+    assert_equal "8192", desc["Pending Changes"].first["PENDING"]
+  end
+
+  def test_to_description_pending_dash_when_empty
+    data = base_describe_data.tap { |d| d[:pending] = [] }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Pending Changes"]
+  end
+
+  # ---------------------------
+  # Misc Keys Consumed
+  # ---------------------------
+
+  def test_to_description_misc_keys_consumed
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(acpi: 1, tablet: 1, kvm: 1, numa0: "cpus=0-3,memory=4096")
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "acpi"
+      refute_includes keys, "tablet"
+      refute_includes keys, "kvm"
+      refute_includes keys, "numa0"
+    end
   end
 
   private
