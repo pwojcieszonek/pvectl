@@ -94,9 +94,9 @@ module Pvectl
 
       def format_physical_disks: (Array[Hash[Symbol, untyped]]? disks) -> (Array[Hash[String, untyped]] | String)
 
-      def format_cpu_models: (Array[Hash[Symbol, untyped]]? models) -> String
+      def format_cpu_models: (Array[Hash[Symbol, untyped]]? models) -> (Array[Hash[String, untyped]] | String)
 
-      def format_machines: (Array[Hash[Symbol, untyped]]? machines) -> String
+      def format_machines: (Array[Hash[Symbol, untyped]]? machines) -> (Array[Hash[String, untyped]] | String)
 
       def memory_percent: (untyped model) -> Float?
 

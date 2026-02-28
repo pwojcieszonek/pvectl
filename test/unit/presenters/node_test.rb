@@ -584,15 +584,25 @@ class PresentersNodeTest < Minitest::Test
   def test_to_description_capabilities_section
     node_with_caps = Pvectl::Models::Node.new(
       @online_node.instance_variable_get(:@attributes).merge(
-        qemu_cpu_models: [{ name: "host" }, { name: "max" }, { name: "kvm64" }],
-        qemu_machines: [{ id: "pc-q35-8.1" }, { id: "pc-i440fx-8.1" }]
+        qemu_cpu_models: [{ name: "host", vendor: "KVM" }, { name: "max", vendor: "QEMU" }, { name: "kvm64", vendor: "QEMU" }],
+        qemu_machines: [{ id: "pc-q35-8.1", type: "q35" }, { id: "pc-i440fx-8.1", type: "i440fx" }]
       )
     )
     desc = @presenter.to_description(node_with_caps)
 
     assert_kind_of Hash, desc["Capabilities"]
-    assert_includes desc["Capabilities"]["QEMU CPU Models"], "host"
-    assert_includes desc["Capabilities"]["QEMU Machines"], "pc-q35-8.1"
+
+    cpu_models = desc["Capabilities"]["QEMU CPU Models"]
+    assert_kind_of Array, cpu_models
+    assert_equal 3, cpu_models.size
+    assert_equal "host", cpu_models[0]["Name"]
+    assert_equal "KVM", cpu_models[0]["Vendor"]
+
+    machines = desc["Capabilities"]["QEMU Machines"]
+    assert_kind_of Array, machines
+    assert_equal 2, machines.size
+    assert_equal "pc-q35-8.1", machines[0]["ID"]
+    assert_equal "q35", machines[0]["Type"]
   end
 
   def test_to_description_offline_node_minimal_output
