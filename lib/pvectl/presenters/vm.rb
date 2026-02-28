@@ -152,7 +152,10 @@ module Pvectl
           "Display" => format_display(config),
           "Agent" => format_agent(config),
           "Disks" => parse_disks(config),
+          "EFI Disk" => format_efi_disk(config),
+          "TPM" => format_tpm(config),
           "Network" => format_network(config, data[:agent_ips]),
+          "Cloud-Init" => format_cloud_init(config),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Runtime" => format_runtime(status),
           "Network I/O" => format_network_io,
@@ -454,17 +457,17 @@ module Pvectl
       def parse_network_string(name, value, mac_to_ip)
         return nil if value.nil? || value.to_s.empty?
 
-        # Format: "model=MAC,bridge=X,..." or "virtio=MAC,bridge=X,..."
         parts = value.to_s.split(",")
-
         model = nil
         mac = nil
         bridge = nil
+        firewall = "no"
 
         parts.each do |part|
           key, val = part.split("=", 2)
           case key
           when "bridge" then bridge = val
+          when "firewall" then firewall = val == "1" ? "yes" : "no"
           when "virtio", "e1000", "rtl8139", "vmxnet3"
             model = key
             mac = val&.upcase
@@ -473,16 +476,64 @@ module Pvectl
           end
         end
 
-        # Look up IP from agent data
         ip = mac ? mac_to_ip[mac.downcase] : nil
 
         {
           "NAME" => name,
           "MODEL" => model || "-",
           "BRIDGE" => bridge || "-",
+          "FIREWALL" => firewall,
           "MAC" => mac || "-",
           "IP" => ip || "-"
         }
+      end
+
+      # Formats Cloud-Init section.
+      #
+      # @param config [Hash] VM config
+      # @return [Hash, String] cloud-init info or "-"
+      def format_cloud_init(config)
+        ci_keys = %i[citype ciuser cipassword cicustom searchdomain nameserver sshkeys]
+        ipconfig_keys = config.keys.select { |k| k.to_s.match?(/^ipconfig\d+$/) }
+        consume(*ci_keys)
+        consume_matching(config, /^ipconfig\d+$/)
+
+        has_ci = ci_keys.any? { |k| config[k] } || ipconfig_keys.any?
+        return "-" unless has_ci
+
+        result = {
+          "Type" => config[:citype] || "-",
+          "User" => config[:ciuser] || "-",
+          "DNS Server" => config[:nameserver] || "-",
+          "Search Domain" => config[:searchdomain] || "-",
+          "SSH Keys" => config[:sshkeys] ? "configured" : "-"
+        }
+
+        if ipconfig_keys.any?
+          result["IP Config"] = ipconfig_keys.sort.map do |key|
+            { "INTERFACE" => key.to_s.sub("ipconfig", "net"), "CONFIG" => config[key].to_s }
+          end
+        end
+
+        result
+      end
+
+      # Formats EFI disk section.
+      #
+      # @param config [Hash] VM config
+      # @return [String] EFI disk info or "-"
+      def format_efi_disk(config)
+        consume(:efidisk0)
+        config[:efidisk0]&.to_s || "-"
+      end
+
+      # Formats TPM section.
+      #
+      # @param config [Hash] VM config
+      # @return [String] TPM info or "-"
+      def format_tpm(config)
+        consume(:tpmstate0)
+        config[:tpmstate0]&.to_s || "-"
       end
 
       # Formats snapshots for table display.

@@ -864,6 +864,112 @@ class PresentersVmTest < Minitest::Test
     assert_equal "-", desc["Agent"]["Type"]
   end
 
+  # ---------------------------
+  # Cloud-Init Section
+  # ---------------------------
+
+  def test_to_description_includes_cloud_init_section
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(
+        citype: "nocloud",
+        ciuser: "admin",
+        ipconfig0: "ip=192.168.1.100/24,gw=192.168.1.1",
+        ipconfig1: "ip=10.0.0.5/24",
+        nameserver: "8.8.8.8",
+        searchdomain: "example.com",
+        sshkeys: "ssh-rsa%20AAAA...%20user%40host"
+      )
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Cloud-Init"]
+    assert_equal "nocloud", desc["Cloud-Init"]["Type"]
+    assert_equal "admin", desc["Cloud-Init"]["User"]
+    assert_equal "8.8.8.8", desc["Cloud-Init"]["DNS Server"]
+    assert_equal "example.com", desc["Cloud-Init"]["Search Domain"]
+    assert_equal "configured", desc["Cloud-Init"]["SSH Keys"]
+    assert_kind_of Array, desc["Cloud-Init"]["IP Config"]
+    assert_equal 2, desc["Cloud-Init"]["IP Config"].length
+    assert_equal "net0", desc["Cloud-Init"]["IP Config"].first["INTERFACE"]
+  end
+
+  def test_to_description_cloud_init_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Cloud-Init"]
+  end
+
+  # ---------------------------
+  # EFI Disk Section
+  # ---------------------------
+
+  def test_to_description_includes_efi_disk
+    data = base_describe_data.tap { |d| d[:config][:efidisk0] = "local-lvm:vm-100-disk-1,efitype=4m,pre-enrolled-keys=1,size=4M" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_includes desc["EFI Disk"], "local-lvm"
+  end
+
+  def test_to_description_efi_disk_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["EFI Disk"]
+  end
+
+  # ---------------------------
+  # TPM Section
+  # ---------------------------
+
+  def test_to_description_includes_tpm
+    data = base_describe_data.tap { |d| d[:config][:tpmstate0] = "local-lvm:vm-100-disk-2,size=4M,version=v2.0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_includes desc["TPM"], "local-lvm"
+  end
+
+  def test_to_description_tpm_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["TPM"]
+  end
+
+  # ---------------------------
+  # Network Firewall Column
+  # ---------------------------
+
+  def test_to_description_network_includes_firewall_column
+    data = base_describe_data.tap do |d|
+      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0,firewall=1"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    network = desc["Network"]
+    assert_kind_of Array, network
+    assert_equal "yes", network.first["FIREWALL"]
+  end
+
+  def test_to_description_network_firewall_no_by_default
+    data = base_describe_data.tap do |d|
+      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    network = desc["Network"]
+    assert_kind_of Array, network
+    assert_equal "no", network.first["FIREWALL"]
+  end
+
   private
 
   def base_describe_data
