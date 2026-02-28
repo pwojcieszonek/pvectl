@@ -122,8 +122,9 @@ module Pvectl
 
       # Converts VM model to description format for describe command.
       #
-      # Returns a structured Hash with sections for kubectl-style vertical output.
-      # Nested Hashes create indented subsections.
+      # Returns a structured Hash organized by Proxmox VE web UI tabs:
+      # Summary, Hardware, Cloud-Init, Options, Task History, Snapshots,
+      # Pending Changes. Nested Hashes create indented subsections.
       # Arrays of Hashes render as inline tables.
       #
       # @param model [Models::Vm] VM model with describe details
@@ -136,41 +137,21 @@ module Pvectl
         status = data[:status] || {}
 
         consume(:name, :description, :tags, :pool, :template)
-        consume_misc_keys(config)
 
         {
           "Name" => display_name,
           "VMID" => vm.vmid,
           "Status" => vm.status,
           "Node" => vm.node,
-          "Template" => vm.template? ? "yes" : "no",
-          "Pool" => vm.pool || "-",
-          "System" => format_system(config),
-          "Boot" => format_boot(config),
-          "CPU" => format_cpu(config, status),
-          "Memory" => format_memory(config, status),
-          "Display" => format_display(config),
-          "Agent" => format_agent(config),
-          "Disks" => parse_disks(config),
-          "EFI Disk" => format_efi_disk(config),
-          "TPM" => format_tpm(config),
-          "Network" => format_network(config, data[:agent_ips]),
-          "Cloud-Init" => format_cloud_init(config),
-          "USB Devices" => format_usb_devices(config),
-          "PCI Passthrough" => format_pci_passthrough(config),
-          "Serial Ports" => format_serial_ports(config),
-          "Audio" => format_audio(config),
-          "Snapshots" => format_snapshots(data[:snapshots]),
-          "Runtime" => format_runtime(status),
-          "I/O Statistics" => format_io_statistics(status),
-          "Startup/Shutdown" => format_startup(config),
-          "Security" => format_security(config),
-          "Hotplug" => format_hotplug(config),
-          "Hookscript" => format_hookscript(config),
-          "High Availability" => format_ha(config),
-          "Pending Changes" => format_pending_changes(data[:pending]),
           "Tags" => tags_display,
           "Description" => config[:description] || "-",
+          "Summary" => format_summary(config, status),
+          "Hardware" => format_hardware(config, data),
+          "Cloud-Init" => format_cloud_init(config),
+          "Options" => format_options(config),
+          "Task History" => format_task_history(data[:tasks]),
+          "Snapshots" => format_snapshots(data[:snapshots]),
+          "Pending Changes" => format_pending_changes(data[:pending]),
           "Additional Configuration" => format_remaining(config)
         }
       end
@@ -266,24 +247,202 @@ module Pvectl
 
       alias resource vm
 
-      # Formats system section.
+      # Formats Summary section (PVE Summary tab).
+      #
+      # Shows HA state, resource usage, and (for running VMs) runtime info
+      # including uptime, PID, QEMU version, machine type, and I/O statistics.
       #
       # @param config [Hash] VM config
-      # @return [Hash] system info
-      def format_system(config)
-        consume(:bios, :machine, :ostype, :scsihw)
+      # @param status [Hash] VM status
+      # @return [Hash] summary info
+      def format_summary(config, status)
+        sockets = config[:sockets] || 1
+        cores = config[:cores] || 1
+        total_cpus = sockets * cores
+        cpu_usage = vm.running? && vm.cpu ? "#{(vm.cpu * 100).round(2)}% of #{total_cpus} CPU(s)" : "-"
+
+        mem_usage = if vm.running? && vm.mem && vm.maxmem && vm.maxmem > 0
+                      pct = ((vm.mem.to_f / vm.maxmem) * 100).round(2)
+                      "#{pct}% (#{format_bytes(vm.mem)} of #{format_bytes(vm.maxmem)})"
+                    else
+                      "-"
+                    end
+
+        bootdisk_size = find_bootdisk_size(config)
+
+        result = { "HA State" => vm.hastate || "-", "CPU Usage" => cpu_usage,
+                   "Memory Usage" => mem_usage, "Bootdisk Size" => bootdisk_size }
+        if vm.running?
+          result["Uptime"] = uptime_human
+          result["PID"] = (status[:pid] || "-").to_s
+          result["QEMU Version"] = status[:"running-qemu"] || "-"
+          result["Machine Type"] = status[:"running-machine"] || "-"
+          result["Network In"] = format_bytes(vm.netin)
+          result["Network Out"] = format_bytes(vm.netout)
+          result["Disk Read"] = format_bytes(status[:diskread])
+          result["Disk Written"] = format_bytes(status[:diskwrite])
+        end
+        result
+      end
+
+      # Finds the bootdisk size from boot order config.
+      #
+      # Parses the boot order to find the first device, then extracts its
+      # size from the disk config string. Falls back to maxdisk from model.
+      #
+      # @param config [Hash] VM config
+      # @return [String] bootdisk size or "-"
+      def find_bootdisk_size(config)
+        boot = config[:boot]
+        if boot
+          first_dev = boot.to_s.sub(/^order=/, "").split(";").first
+          if first_dev && config[first_dev.to_sym]
+            disk_str = config[first_dev.to_sym].to_s
+            size_part = disk_str.split(",").find { |p| p.start_with?("size=") }
+            return size_part.sub("size=", "") if size_part
+          end
+        end
+        vm.maxdisk ? format_bytes(vm.maxdisk) : "-"
+      end
+
+      # Formats Hardware section (PVE Hardware tab).
+      #
+      # Shows memory, balloon, processors, BIOS, machine type, display,
+      # SCSI controller, disks, network, and peripheral devices.
+      #
+      # @param config [Hash] VM config
+      # @param data [Hash] full describe data (for agent_ips)
+      # @return [Hash] hardware info with mixed String values and Array sub-tables
+      def format_hardware(config, data)
+        consume(:bios, :machine, :scsihw, :memory, :balloon, :shares,
+                :sockets, :cores, :cpu, :vcpus, :cpulimit, :cpuunits, :vga)
+
+        # Memory line
+        total_mb = config[:memory] || (vm.maxmem ? vm.maxmem / 1024 / 1024 : nil)
+        memory_str = total_mb ? "#{(total_mb.to_f / 1024).round(2)} GiB" : "-"
+
+        # Balloon line
+        balloon = config[:balloon]
+        balloon_str = if balloon && balloon > 0
+                        "enabled (min: #{(balloon.to_f / 1024).round(1)} GiB)"
+                      else
+                        "disabled"
+                      end
+
+        # Processors line: "4 (2 sockets, 2 cores) [host]"
+        sockets = config[:sockets] || 1
+        cores = config[:cores] || 1
+        cpu_type = config[:cpu] || "kvm64"
+        total = sockets * cores
+        processors_str = "#{total} (#{sockets} sockets, #{cores} cores) [#{cpu_type}]"
+
+        # BIOS
         bios = config[:bios] || "seabios"
         bios_display = bios == "ovmf" ? "UEFI (OVMF)" : "SeaBIOS"
 
-        ostype = config[:ostype]
-        ostype_display = format_ostype(ostype)
+        # Machine
+        machine_str = config[:machine] || "i440fx"
 
         {
+          "Memory" => memory_str,
+          "Balloon" => balloon_str,
+          "Processors" => processors_str,
           "BIOS" => bios_display,
-          "Machine" => config[:machine] || "i440fx",
-          "OS Type" => ostype_display,
-          "SCSI Controller" => config[:scsihw] || "lsi"
+          "Machine" => machine_str,
+          "Display" => config[:vga] || "Default",
+          "SCSI Controller" => config[:scsihw] || "lsi",
+          "EFI Disk" => format_efi_disk(config),
+          "TPM" => format_tpm(config),
+          "Disks" => parse_disks(config),
+          "Network" => format_network(config, data[:agent_ips]),
+          "USB Devices" => format_usb_devices(config),
+          "PCI Passthrough" => format_pci_passthrough(config),
+          "Serial Ports" => format_serial_ports(config),
+          "Audio" => format_audio(config)
         }
+      end
+
+      # Formats Options section (PVE Options tab).
+      #
+      # Shows boot, startup, OS type, agent, security, and other VM options.
+      #
+      # @param config [Hash] VM config
+      # @return [Hash] options info
+      def format_options(config)
+        consume(:onboot, :startup, :ostype, :boot, :tablet, :hotplug,
+                :acpi, :kvm, :freeze, :localtime, :numa, :agent,
+                :protection, :firewall, :lock, :hookscript,
+                :args, :vmgenid, :meta, :ha)
+        consume_matching(config, /^numa\d+$/)
+        consume_matching(config, /^unused\d+$/)
+
+        on_boot = config[:onboot] == 1 ? "Yes" : "No"
+
+        startup = config[:startup]
+        startup_display = startup ? startup.to_s : "-"
+
+        ostype_display = format_ostype(config[:ostype])
+
+        boot = config[:boot]
+        boot_display = if boot
+                         order = boot.to_s.sub(/^order=/, "").split(";").join(", ")
+                         order.empty? ? "-" : order
+                       else
+                         "-"
+                       end
+
+        tablet = config[:tablet] == 0 ? "No" : "Yes"
+        hotplug = config[:hotplug] ? config[:hotplug].to_s.split(",").join(", ") : "-"
+        acpi = config[:acpi] == 0 ? "No" : "Yes"
+        kvm = config[:kvm] == 0 ? "No" : "Yes"
+        freeze_cpu = config[:freeze] == 1 ? "Yes" : "No"
+        localtime = config[:localtime] == 1 ? "Yes" : "Default"
+        numa = config[:numa] == 1 ? "Yes" : "No"
+
+        agent_display = format_agent_inline(config)
+        protection = config[:protection] == 1 ? "Yes" : "No"
+        firewall = config[:firewall] == 1 ? "Yes" : "No"
+        hookscript = config[:hookscript] || "-"
+
+        {
+          "Start at Boot" => on_boot,
+          "Start/Shutdown Order" => startup_display,
+          "OS Type" => ostype_display,
+          "Boot Order" => boot_display,
+          "Use Tablet for Pointer" => tablet,
+          "Hotplug" => hotplug,
+          "ACPI Support" => acpi,
+          "KVM Hardware Virtualization" => kvm,
+          "Freeze CPU at Startup" => freeze_cpu,
+          "Use Local Time for RTC" => localtime,
+          "NUMA" => numa,
+          "QEMU Guest Agent" => agent_display,
+          "Protection" => protection,
+          "Firewall" => firewall,
+          "Hookscript" => hookscript
+        }
+      end
+
+      # Formats QEMU guest agent as inline string for Options section.
+      #
+      # @param config [Hash] VM config
+      # @return [String] agent description (e.g., "Enabled, Type: virtio")
+      def format_agent_inline(config)
+        agent = config[:agent]
+        return "Disabled" if agent.nil?
+
+        parts = agent.to_s.split(",")
+        enabled = parts.first == "1"
+        return "Disabled" unless enabled
+
+        opts = {}
+        parts[1..].each { |p| k, v = p.split("=", 2); opts[k] = v }
+
+        components = ["Enabled"]
+        components << "Type: #{opts['type']}" if opts["type"]
+        components << "Trim Cloned Disks: #{opts['fstrim_cloned_disks'] == '1' ? 'yes' : 'no'}" if opts.key?("fstrim_cloned_disks")
+        components << "Freeze FS on Backup: #{opts['freeze-fs-on-backup'] == '1' ? 'yes' : 'no'}" if opts.key?("freeze-fs-on-backup")
+        components.join(", ")
       end
 
       # Formats OS type for display.
@@ -302,60 +461,6 @@ module Pvectl
         when "other" then "other"
         else ostype || "-"
         end
-      end
-
-      # Formats CPU section.
-      #
-      # @param config [Hash] VM config
-      # @param status [Hash] VM status
-      # @return [Hash] CPU info
-      def format_cpu(config, status)
-        consume(:sockets, :cores, :cpu, :numa, :vcpus, :cpulimit, :cpuunits)
-        usage = vm.running? && vm.cpu ? "#{(vm.cpu * 100).round}%" : "-"
-
-        {
-          "Sockets" => config[:sockets] || 1,
-          "Cores" => config[:cores] || 1,
-          "Type" => config[:cpu] || "kvm64",
-          "NUMA" => config[:numa] == 1 ? "enabled" : "disabled",
-          "vCPUs" => config[:vcpus] || "-",
-          "Limit" => config[:cpulimit] || "-",
-          "Units" => config[:cpuunits] || 1024,
-          "Usage" => usage
-        }
-      end
-
-      # Formats memory section.
-      #
-      # @param config [Hash] VM config
-      # @param status [Hash] VM status
-      # @return [Hash] memory info
-      def format_memory(config, status)
-        consume(:memory, :balloon, :shares)
-        total_mb = config[:memory] || (vm.maxmem ? vm.maxmem / 1024 / 1024 : nil)
-        total_gib = total_mb ? "#{(total_mb.to_f / 1024).round(1)} GiB" : "-"
-
-        used_gib = vm.running? && vm.mem ? "#{(vm.mem.to_f / 1024 / 1024 / 1024).round(1)} GiB" : "-"
-
-        usage = if vm.running? && vm.mem && vm.maxmem && vm.maxmem > 0
-                  "#{((vm.mem.to_f / vm.maxmem) * 100).round}%"
-                else
-                  "-"
-                end
-
-        balloon = config[:balloon]
-        balloon_display = if balloon && balloon > 0
-                            "enabled (min: #{(balloon.to_f / 1024).round(1)} GiB)"
-                          else
-                            "disabled"
-                          end
-
-        {
-          "Total" => total_gib,
-          "Used" => used_gib,
-          "Usage" => usage,
-          "Balloon" => balloon_display
-        }
       end
 
       # Parses disk configuration strings from VM config.
@@ -616,92 +721,6 @@ module Pvectl
         end
       end
 
-      # Formats runtime section (only for running VMs).
-      #
-      # @param status [Hash] VM status
-      # @return [Hash, String] runtime info or "-"
-      def format_runtime(status)
-        return "-" unless vm.running?
-
-        {
-          "Uptime" => uptime_human,
-          "PID" => status[:pid] || "-",
-          "QEMU Version" => status[:"running-qemu"] || "-",
-          "Machine Type" => status[:"running-machine"] || "-"
-        }
-      end
-
-      # Formats I/O statistics section (merged network + disk I/O).
-      #
-      # @param status [Hash] VM status
-      # @return [Hash, String] I/O stats or "-"
-      def format_io_statistics(status)
-        return "-" unless vm.running?
-
-        {
-          "Network In" => format_bytes(vm.netin),
-          "Network Out" => format_bytes(vm.netout),
-          "Disk Read" => format_bytes(status[:diskread]),
-          "Disk Written" => format_bytes(status[:diskwrite])
-        }
-      end
-
-      # Formats startup/shutdown order section.
-      #
-      # @param config [Hash] VM config
-      # @return [Hash] startup info
-      def format_startup(config)
-        consume(:startup, :onboot)
-        startup = config[:startup]
-        on_boot = config[:onboot] == 1 ? "yes" : "no"
-
-        if startup.nil?
-          return { "Order" => "-", "Up Delay" => "-", "Down Delay" => "-", "On Boot" => on_boot }
-        end
-
-        parts = startup.to_s.split(",").to_h { |p| p.split("=", 2) }
-        {
-          "Order" => parts["order"] || "-",
-          "Up Delay" => parts["up"] || "-",
-          "Down Delay" => parts["down"] || "-",
-          "On Boot" => on_boot
-        }
-      end
-
-      # Formats security section (protection, firewall, lock).
-      #
-      # @param config [Hash] VM config
-      # @return [Hash] security info
-      def format_security(config)
-        consume(:protection, :firewall, :lock)
-        {
-          "Protection" => config[:protection] == 1 ? "yes" : "no",
-          "Firewall" => config[:firewall] == 1 ? "yes" : "no",
-          "Lock" => config[:lock] || "-"
-        }
-      end
-
-      # Formats hotplug setting.
-      #
-      # @param config [Hash] VM config
-      # @return [String] hotplug features or "-"
-      def format_hotplug(config)
-        consume(:hotplug)
-        hp = config[:hotplug]
-        return "-" if hp.nil?
-
-        hp.to_s.split(",").join(", ")
-      end
-
-      # Formats hookscript setting.
-      #
-      # @param config [Hash] VM config
-      # @return [String] hookscript path or "-"
-      def format_hookscript(config)
-        consume(:hookscript)
-        config[:hookscript] || "-"
-      end
-
       # Formats pending configuration changes.
       #
       # @param pending [Array<Hash>, nil] pending changes from API
@@ -719,73 +738,6 @@ module Pvectl
           row["DELETE"] = "yes" if change[:delete]
           row
         end
-      end
-
-      # Consumes miscellaneous known keys that don't need dedicated sections.
-      #
-      # @param config [Hash] VM config
-      # @return [void]
-      def consume_misc_keys(config)
-        consume(:acpi, :tablet, :kvm, :freeze, :localtime, :args, :vmgenid, :meta)
-        consume_matching(config, /^numa\d+$/)
-        consume_matching(config, /^unused\d+$/)
-      end
-
-      # Formats HA section.
-      #
-      # @param config [Hash] VM config
-      # @return [Hash] HA info
-      def format_ha(config)
-        consume(:ha)
-        {
-          "State" => vm.hastate || "-",
-          "Group" => config[:ha] || "-"
-        }
-      end
-
-      # Formats boot order section.
-      #
-      # @param config [Hash] VM config
-      # @return [Hash, String] boot info or "-"
-      def format_boot(config)
-        consume(:boot)
-        boot = config[:boot]
-        return "-" if boot.nil?
-
-        order = boot.to_s.sub(/^order=/, "").split(";").join(", ")
-        { "Order" => order.empty? ? "-" : order }
-      end
-
-      # Formats display/VGA section.
-      #
-      # @param config [Hash] VM config
-      # @return [String] display type or "-"
-      def format_display(config)
-        consume(:vga)
-        config[:vga] || "-"
-      end
-
-      # Formats QEMU guest agent section.
-      #
-      # @param config [Hash] VM config
-      # @return [Hash] agent info
-      def format_agent(config)
-        consume(:agent)
-        agent = config[:agent]
-        return { "Enabled" => "no", "Type" => "-" } if agent.nil?
-
-        parts = agent.to_s.split(",")
-        enabled = parts.first == "1" ? "yes" : "no"
-        opts = {}
-        parts[1..].each do |part|
-          key, val = part.split("=", 2)
-          opts[key] = val
-        end
-
-        result = { "Enabled" => enabled, "Type" => opts.fetch("type", "-") }
-        result["Trim Cloned Disks"] = opts["fstrim_cloned_disks"] == "1" ? "yes" : "no" if opts.key?("fstrim_cloned_disks")
-        result["Freeze FS on Backup"] = opts["freeze-fs-on-backup"] == "1" ? "yes" : "no" if opts.key?("freeze-fs-on-backup")
-        result
       end
 
       # Registers config keys as consumed by a format method.

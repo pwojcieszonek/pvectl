@@ -451,6 +451,10 @@ class PresentersVmTest < Minitest::Test
     assert_kind_of Hash, desc
   end
 
+  # ---------------------------
+  # Header Fields
+  # ---------------------------
+
   def test_to_description_includes_basic_fields
     vm_with_describe_data = create_vm_with_describe_data(@running_vm)
     desc = @presenter.to_description(vm_with_describe_data)
@@ -459,53 +463,226 @@ class PresentersVmTest < Minitest::Test
     assert_equal 100, desc["VMID"]
     assert_equal "running", desc["Status"]
     assert_equal "pve-node1", desc["Node"]
-    assert_equal "no", desc["Template"]
+    assert_equal "prod, web", desc["Tags"]
+    assert_equal "Main production web server", desc["Description"]
   end
 
-  def test_to_description_includes_system_section
+  def test_to_description_with_nil_describe_data
+    desc = @presenter.to_description(@running_vm)
+
+    # Should handle nil describe_data gracefully
+    assert_kind_of Hash, desc
+    assert_equal "web-frontend-1", desc["Name"]
+  end
+
+  def test_to_description_description_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Description"]
+  end
+
+  # ---------------------------
+  # Summary Section
+  # ---------------------------
+
+  def test_to_description_summary_running_vm
+    data = base_describe_data.tap do |d|
+      d[:config][:sockets] = 2
+      d[:config][:cores] = 4
+      d[:status][:pid] = 12345
+      d[:status][:"running-qemu"] = "8.1.5"
+      d[:status][:"running-machine"] = "pc-i440fx-8.1"
+      d[:status][:diskread] = 1_073_741_824
+      d[:status][:diskwrite] = 536_870_912
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    summary = desc["Summary"]
+    assert_kind_of Hash, summary
+    assert_includes summary["CPU Usage"], "of 8 CPU(s)"
+    assert_includes summary["Memory Usage"], "GiB"
+    refute_nil summary["Uptime"]
+    assert_equal "12345", summary["PID"]
+    assert_equal "8.1.5", summary["QEMU Version"]
+    assert_equal "pc-i440fx-8.1", summary["Machine Type"]
+    assert summary.key?("Network In")
+    assert summary.key?("Network Out")
+    assert summary.key?("Disk Read")
+    assert summary.key?("Disk Written")
+  end
+
+  def test_to_description_summary_stopped_vm
+    data = base_describe_data
+    vm = Pvectl::Models::Vm.new(
+      @stopped_vm.instance_variable_get(:@attributes).merge(describe_data: data)
+    )
+    desc = @presenter.to_description(vm)
+
+    summary = desc["Summary"]
+    assert_kind_of Hash, summary
+    assert_equal "-", summary["HA State"]
+    assert_equal "-", summary["CPU Usage"]
+    assert_equal "-", summary["Memory Usage"]
+    refute summary.key?("Uptime"), "Stopped VM should not have Uptime"
+    refute summary.key?("PID"), "Stopped VM should not have PID"
+    refute summary.key?("QEMU Version"), "Stopped VM should not have QEMU Version"
+  end
+
+  def test_to_description_summary_ha_state
     vm_with_describe_data = create_vm_with_describe_data(@running_vm)
     desc = @presenter.to_description(vm_with_describe_data)
 
-    assert_kind_of Hash, desc["System"]
-    assert_equal "UEFI (OVMF)", desc["System"]["BIOS"]
-    assert_equal "q35", desc["System"]["Machine"]
-    assert_equal "l26 (Linux 2.6+)", desc["System"]["OS Type"]
+    assert_equal "ignored", desc["Summary"]["HA State"]
   end
 
-  def test_to_description_includes_cpu_section
+  def test_to_description_summary_bootdisk_from_boot_order
+    data = base_describe_data.tap do |d|
+      d[:config][:boot] = "order=scsi0;net0"
+      d[:config][:scsi0] = "local-lvm:vm-100-disk-0,size=50G,format=raw"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "50G", desc["Summary"]["Bootdisk Size"]
+  end
+
+  def test_to_description_summary_bootdisk_fallback_to_maxdisk
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    # Falls back to format_bytes(vm.maxdisk) which is 50.0 GiB
+    assert_includes desc["Summary"]["Bootdisk Size"], "GiB"
+  end
+
+  def test_to_description_summary_io_statistics_for_running_vm
+    data = base_describe_data.tap do |d|
+      d[:status][:diskread] = 1_610_612_736
+      d[:status][:diskwrite] = 268_435_456
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    summary = desc["Summary"]
+    assert_includes summary["Disk Read"], "GiB"
+    assert_includes summary["Disk Written"], "MiB"
+    assert summary.key?("Network In")
+    assert summary.key?("Network Out")
+  end
+
+  # ---------------------------
+  # Hardware Section
+  # ---------------------------
+
+  def test_to_description_hardware_basic
     vm_with_describe_data = create_vm_with_describe_data(@running_vm)
     desc = @presenter.to_description(vm_with_describe_data)
 
-    assert_kind_of Hash, desc["CPU"]
-    assert_equal 1, desc["CPU"]["Sockets"]
-    assert_equal 4, desc["CPU"]["Cores"]
-    assert_equal "host", desc["CPU"]["Type"]
-    assert_equal "12%", desc["CPU"]["Usage"]
+    hw = desc["Hardware"]
+    assert_kind_of Hash, hw
+    assert_includes hw["Memory"], "GiB"
+    assert_includes hw["Processors"], "sockets"
+    assert_includes hw["Processors"], "cores"
+    assert_equal "UEFI (OVMF)", hw["BIOS"]
+    assert_equal "q35", hw["Machine"]
   end
 
-  def test_to_description_includes_memory_section
+  def test_to_description_hardware_memory_and_processors
+    data = base_describe_data.tap do |d|
+      d[:config][:memory] = 8192
+      d[:config][:sockets] = 2
+      d[:config][:cores] = 4
+      d[:config][:cpu] = "host"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    hw = desc["Hardware"]
+    assert_equal "8.0 GiB", hw["Memory"]
+    assert_equal "8 (2 sockets, 4 cores) [host]", hw["Processors"]
+  end
+
+  def test_to_description_hardware_balloon_enabled
+    data = base_describe_data.tap { |d| d[:config][:balloon] = 2048 }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_includes desc["Hardware"]["Balloon"], "enabled"
+    assert_includes desc["Hardware"]["Balloon"], "2.0 GiB"
+  end
+
+  def test_to_description_hardware_balloon_disabled
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "disabled", desc["Hardware"]["Balloon"]
+  end
+
+  def test_to_description_hardware_bios_seabios_default
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "SeaBIOS", desc["Hardware"]["BIOS"]
+  end
+
+  def test_to_description_hardware_bios_ovmf
+    data = base_describe_data.tap { |d| d[:config][:bios] = "ovmf" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "UEFI (OVMF)", desc["Hardware"]["BIOS"]
+  end
+
+  def test_to_description_hardware_display_default
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "Default", desc["Hardware"]["Display"]
+  end
+
+  def test_to_description_hardware_display_custom
+    data = base_describe_data.tap { |d| d[:config][:vga] = "virtio" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "virtio", desc["Hardware"]["Display"]
+  end
+
+  def test_to_description_hardware_scsi_controller
+    data = base_describe_data.tap { |d| d[:config][:scsihw] = "virtio-scsi-single" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "virtio-scsi-single", desc["Hardware"]["SCSI Controller"]
+  end
+
+  def test_to_description_hardware_scsi_controller_default
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "lsi", desc["Hardware"]["SCSI Controller"]
+  end
+
+  def test_to_description_hardware_disks
     vm_with_describe_data = create_vm_with_describe_data(@running_vm)
     desc = @presenter.to_description(vm_with_describe_data)
 
-    assert_kind_of Hash, desc["Memory"]
-    assert_includes desc["Memory"]["Total"], "GiB"
-    assert_includes desc["Memory"]["Balloon"], "enabled"
-  end
-
-  def test_to_description_parses_disks_scsi_format
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_kind_of Array, desc["Disks"]
-    assert desc["Disks"].any? { |d| d["NAME"] == "scsi0" }
-
-    disk = desc["Disks"].find { |d| d["NAME"] == "scsi0" }
+    disks = desc["Hardware"]["Disks"]
+    assert_kind_of Array, disks
+    disk = disks.find { |d| d["NAME"] == "scsi0" }
     assert_equal "local-lvm", disk["STORAGE"]
     assert_equal "50G", disk["SIZE"]
     assert_equal "raw", disk["FORMAT"]
   end
 
-  def test_to_description_parses_disks_ide_format
+  def test_to_description_hardware_disks_ide_format
     describe_data = {
       config: {
         ide0: "local:iso/ubuntu.iso,media=cdrom",
@@ -518,10 +695,10 @@ class PresentersVmTest < Minitest::Test
     )
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Array, desc["Disks"]
+    assert_kind_of Array, desc["Hardware"]["Disks"]
   end
 
-  def test_to_description_parses_disks_virtio_format
+  def test_to_description_hardware_disks_virtio_format
     describe_data = {
       config: {
         virtio0: "ceph:vm-100-disk-0,size=100G"
@@ -533,12 +710,12 @@ class PresentersVmTest < Minitest::Test
     )
     desc = @presenter.to_description(vm)
 
-    disk = desc["Disks"].find { |d| d["NAME"] == "virtio0" }
+    disk = desc["Hardware"]["Disks"].find { |d| d["NAME"] == "virtio0" }
     assert_equal "ceph", disk["STORAGE"]
     assert_equal "100G", disk["SIZE"]
   end
 
-  def test_to_description_parses_disks_sata_format
+  def test_to_description_hardware_disks_sata_format
     describe_data = {
       config: {
         sata0: "local-lvm:vm-100-disk-0,size=250G,format=raw"
@@ -550,12 +727,12 @@ class PresentersVmTest < Minitest::Test
     )
     desc = @presenter.to_description(vm)
 
-    disk = desc["Disks"].find { |d| d["NAME"] == "sata0" }
+    disk = desc["Hardware"]["Disks"].find { |d| d["NAME"] == "sata0" }
     assert_equal "local-lvm", disk["STORAGE"]
     assert_equal "250G", disk["SIZE"]
   end
 
-  def test_to_description_returns_dash_when_no_disks
+  def test_to_description_hardware_disks_dash_when_none
     describe_data = { config: { cores: 4 } }
     vm = Pvectl::Models::Vm.new(
       vmid: 100, name: "test", status: "running", node: "pve1",
@@ -563,22 +740,23 @@ class PresentersVmTest < Minitest::Test
     )
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Disks"]
+    assert_equal "-", desc["Hardware"]["Disks"]
   end
 
-  def test_to_description_parses_network_virtio_with_mac_and_bridge
+  def test_to_description_hardware_network
     vm_with_describe_data = create_vm_with_describe_data(@running_vm)
     desc = @presenter.to_description(vm_with_describe_data)
 
-    assert_kind_of Array, desc["Network"]
-    net = desc["Network"].find { |n| n["NAME"] == "net0" }
+    network = desc["Hardware"]["Network"]
+    assert_kind_of Array, network
+    net = network.find { |n| n["NAME"] == "net0" }
     assert_equal "virtio", net["MODEL"]
     assert_equal "vmbr0", net["BRIDGE"]
     assert_equal "BC:24:11:AA:BB:CC", net["MAC"]
     assert_equal "192.168.1.100", net["IP"]
   end
 
-  def test_to_description_network_shows_dash_when_no_agent_ip
+  def test_to_description_hardware_network_no_agent_ip
     describe_data = {
       config: {
         net0: "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0"
@@ -591,311 +769,148 @@ class PresentersVmTest < Minitest::Test
     )
     desc = @presenter.to_description(vm)
 
-    net = desc["Network"].find { |n| n["NAME"] == "net0" }
+    net = desc["Hardware"]["Network"].find { |n| n["NAME"] == "net0" }
     assert_equal "-", net["IP"]
   end
 
-  def test_to_description_formats_snapshots
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_kind_of Array, desc["Snapshots"]
-    snap = desc["Snapshots"].find { |s| s["NAME"] == "before-update" }
-    assert_equal "yes", snap["VMSTATE"]
-    assert_equal "Before system update", snap["DESCRIPTION"]
-    assert_match(/\d{4}-\d{2}-\d{2}/, snap["DATE"])
-  end
-
-  def test_to_description_returns_no_snapshots_message_when_empty
-    describe_data = {
-      config: { cores: 4 },
-      snapshots: []
-    }
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "running", node: "pve1",
-      describe_data: describe_data
-    )
-    desc = @presenter.to_description(vm)
-
-    assert_equal "No snapshots", desc["Snapshots"]
-  end
-
-  def test_to_description_stopped_vm_runtime_shows_dash
-    describe_data = {
-      config: { cores: 4 },
-      status: { status: "stopped" }
-    }
-    vm = Pvectl::Models::Vm.new(
-      vmid: 100, name: "test", status: "stopped", node: "pve1",
-      describe_data: describe_data
-    )
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["Runtime"]
-  end
-
-  def test_to_description_running_vm_includes_runtime_section
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_kind_of Hash, desc["Runtime"]
-    assert_equal "15d 5h", desc["Runtime"]["Uptime"]
-    assert_equal 12345, desc["Runtime"]["PID"]
-    assert_equal "8.1.5", desc["Runtime"]["QEMU Version"]
-    assert_equal "pc-q35-8.1", desc["Runtime"]["Machine Type"]
-  end
-
-  def test_to_description_includes_io_statistics
+  def test_to_description_hardware_network_firewall
     data = base_describe_data.tap do |d|
-      d[:status][:diskread] = 1_610_612_736
-      d[:status][:diskwrite] = 268_435_456
+      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0,firewall=1"
     end
-    vm = Pvectl::Models::Vm.new(
-      @running_vm.instance_variable_get(:@attributes).merge(describe_data: data)
-    )
+    vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Hash, desc["I/O Statistics"]
-    assert_includes desc["I/O Statistics"]["Disk Read"], "GiB"
-    assert_includes desc["I/O Statistics"]["Disk Written"], "MiB"
-    assert desc["I/O Statistics"].key?("Network In")
-    assert desc["I/O Statistics"].key?("Network Out")
+    network = desc["Hardware"]["Network"]
+    assert_kind_of Array, network
+    assert_equal "yes", network.first["FIREWALL"]
   end
 
-  def test_to_description_io_statistics_dash_when_stopped
-    data = base_describe_data
-    vm = Pvectl::Models::Vm.new(
-      @stopped_vm.instance_variable_get(:@attributes).merge(describe_data: data)
-    )
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["I/O Statistics"]
-  end
-
-  def test_to_description_includes_ha_section
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_kind_of Hash, desc["High Availability"]
-    assert_equal "ignored", desc["High Availability"]["State"]
-  end
-
-  def test_to_description_includes_tags
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_equal "prod, web", desc["Tags"]
-  end
-
-  def test_to_description_includes_description
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert_equal "Main production web server", desc["Description"]
-  end
-
-  def test_to_description_with_nil_describe_data
-    desc = @presenter.to_description(@running_vm)
-
-    # Should handle nil describe_data gracefully
-    assert_kind_of Hash, desc
-    assert_equal "web-frontend-1", desc["Name"]
-  end
-
-  def test_to_description_includes_pool
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert desc.key?("Pool")
-  end
-
-  def test_to_description_catch_all_shows_unknown_keys
+  def test_to_description_hardware_network_firewall_no_by_default
     data = base_describe_data.tap do |d|
-      d[:config][:some_future_key] = "future_value"
-      d[:config][:another_unknown] = "42"
+      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0"
     end
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert desc.key?("Additional Configuration"), "Should have Additional Configuration section"
-    additional = desc["Additional Configuration"]
-    assert_kind_of Array, additional
-    keys = additional.map { |row| row["KEY"] }
-    assert_includes keys, "some_future_key"
-    assert_includes keys, "another_unknown"
+    network = desc["Hardware"]["Network"]
+    assert_kind_of Array, network
+    assert_equal "no", network.first["FIREWALL"]
   end
 
-  def test_to_description_catch_all_excludes_digest
-    data = base_describe_data.tap { |d| d[:config][:digest] = "abc123def456" }
+  def test_to_description_hardware_efi_disk
+    data = base_describe_data.tap { |d| d[:config][:efidisk0] = "local-lvm:vm-100-disk-1,efitype=4m,pre-enrolled-keys=1,size=4M" }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    additional = desc["Additional Configuration"]
-    if additional.is_a?(Array)
-      keys = additional.map { |row| row["KEY"] }
-      refute_includes keys, "digest"
-    end
+    assert_includes desc["Hardware"]["EFI Disk"], "local-lvm"
   end
 
-  def test_to_description_catch_all_dash_when_all_consumed
+  def test_to_description_hardware_efi_disk_dash_when_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Additional Configuration"]
+    assert_equal "-", desc["Hardware"]["EFI Disk"]
   end
 
-  def test_to_description_includes_additional_configuration_key
-    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
-    desc = @presenter.to_description(vm_with_describe_data)
-
-    assert desc.key?("Additional Configuration")
-  end
-
-  # ---------------------------
-  # Boot Section
-  # ---------------------------
-
-  def test_to_description_includes_boot_section
-    data = base_describe_data.tap { |d| d[:config][:boot] = "order=scsi0;ide2;net0" }
+  def test_to_description_hardware_tpm
+    data = base_describe_data.tap { |d| d[:config][:tpmstate0] = "local-lvm:vm-100-disk-2,size=4M,version=v2.0" }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Hash, desc["Boot"]
-    assert_equal "scsi0, ide2, net0", desc["Boot"]["Order"]
+    assert_includes desc["Hardware"]["TPM"], "local-lvm"
   end
 
-  def test_to_description_boot_dash_when_absent
+  def test_to_description_hardware_tpm_dash_when_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Boot"]
+    assert_equal "-", desc["Hardware"]["TPM"]
   end
 
-  # ---------------------------
-  # System SCSI Controller
-  # ---------------------------
-
-  def test_to_description_system_includes_scsi_controller
-    data = base_describe_data.tap { |d| d[:config][:scsihw] = "virtio-scsi-single" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "virtio-scsi-single", desc["System"]["SCSI Controller"]
-  end
-
-  def test_to_description_system_default_scsi_controller
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "lsi", desc["System"]["SCSI Controller"]
-  end
-
-  # ---------------------------
-  # CPU NUMA and Limits
-  # ---------------------------
-
-  def test_to_description_cpu_includes_numa_and_limits
+  def test_to_description_hardware_usb_devices
     data = base_describe_data.tap do |d|
-      d[:config].merge!(numa: 1, vcpus: 2, cpulimit: 2.5, cpuunits: 2048)
+      d[:config][:usb0] = "host=1234:5678"
+      d[:config][:usb1] = "spice"
     end
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "enabled", desc["CPU"]["NUMA"]
-    assert_equal 2, desc["CPU"]["vCPUs"]
-    assert_equal 2.5, desc["CPU"]["Limit"]
-    assert_equal 2048, desc["CPU"]["Units"]
+    usb = desc["Hardware"]["USB Devices"]
+    assert_kind_of Array, usb
+    assert_equal 2, usb.length
+    assert_equal "usb0", usb.first["NAME"]
+    assert_equal "host=1234:5678", usb.first["CONFIG"]
   end
 
-  def test_to_description_cpu_defaults_for_numa_and_limits
+  def test_to_description_hardware_usb_dash_when_none
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "disabled", desc["CPU"]["NUMA"]
-    assert_equal "-", desc["CPU"]["vCPUs"]
-    assert_equal "-", desc["CPU"]["Limit"]
-    assert_equal 1024, desc["CPU"]["Units"]
+    assert_equal "-", desc["Hardware"]["USB Devices"]
   end
 
-  # ---------------------------
-  # Display Section
-  # ---------------------------
-
-  def test_to_description_includes_display_section
-    data = base_describe_data.tap { |d| d[:config][:vga] = "virtio" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "virtio", desc["Display"]
-  end
-
-  def test_to_description_display_dash_when_absent
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["Display"]
-  end
-
-  # ---------------------------
-  # Agent Section
-  # ---------------------------
-
-  def test_to_description_includes_agent_section
-    data = base_describe_data.tap { |d| d[:config][:agent] = "1,type=virtio" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_kind_of Hash, desc["Agent"]
-    assert_equal "yes", desc["Agent"]["Enabled"]
-    assert_equal "virtio", desc["Agent"]["Type"]
-    refute desc["Agent"].key?("Trim Cloned Disks"), "should not show fstrim when absent"
-    refute desc["Agent"].key?("Freeze FS on Backup"), "should not show freeze-fs when absent"
-  end
-
-  def test_to_description_agent_with_fstrim_and_freeze
+  def test_to_description_hardware_pci_passthrough
     data = base_describe_data.tap do |d|
-      d[:config][:agent] = "1,fstrim_cloned_disks=1,freeze-fs-on-backup=1,type=virtio"
+      d[:config][:hostpci0] = "0000:01:00.0,pcie=1,x-vga=1"
     end
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "yes", desc["Agent"]["Enabled"]
-    assert_equal "virtio", desc["Agent"]["Type"]
-    assert_equal "yes", desc["Agent"]["Trim Cloned Disks"]
-    assert_equal "yes", desc["Agent"]["Freeze FS on Backup"]
+    pci = desc["Hardware"]["PCI Passthrough"]
+    assert_kind_of Array, pci
+    assert_equal 1, pci.length
+    assert_equal "hostpci0", pci.first["NAME"]
+    assert_equal "0000:01:00.0,pcie=1,x-vga=1", pci.first["CONFIG"]
   end
 
-  def test_to_description_agent_with_fstrim_disabled
-    data = base_describe_data.tap do |d|
-      d[:config][:agent] = "1,fstrim_cloned_disks=0,type=virtio"
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "no", desc["Agent"]["Trim Cloned Disks"]
-    refute desc["Agent"].key?("Freeze FS on Backup")
-  end
-
-  def test_to_description_agent_disabled
-    data = base_describe_data.tap { |d| d[:config][:agent] = "0" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "no", desc["Agent"]["Enabled"]
-  end
-
-  def test_to_description_agent_absent
+  def test_to_description_hardware_pci_dash_when_none
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "no", desc["Agent"]["Enabled"]
-    assert_equal "-", desc["Agent"]["Type"]
+    assert_equal "-", desc["Hardware"]["PCI Passthrough"]
+  end
+
+  def test_to_description_hardware_serial_ports
+    data = base_describe_data.tap do |d|
+      d[:config][:serial0] = "socket"
+      d[:config][:serial1] = "/dev/ttyS0"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    serial = desc["Hardware"]["Serial Ports"]
+    assert_kind_of Array, serial
+    assert_equal 2, serial.length
+    assert_equal "serial0", serial.first["NAME"]
+    assert_equal "socket", serial.first["TYPE"]
+  end
+
+  def test_to_description_hardware_serial_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Hardware"]["Serial Ports"]
+  end
+
+  def test_to_description_hardware_audio
+    data = base_describe_data.tap { |d| d[:config][:audio0] = "device=ich9-intel-hda,driver=spice" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "device=ich9-intel-hda,driver=spice", desc["Hardware"]["Audio"]
+  end
+
+  def test_to_description_hardware_audio_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Hardware"]["Audio"]
   end
 
   # ---------------------------
@@ -937,175 +952,82 @@ class PresentersVmTest < Minitest::Test
   end
 
   # ---------------------------
-  # USB Devices Section
+  # Options Section
   # ---------------------------
 
-  def test_to_description_includes_usb_devices
+  def test_to_description_options_defaults
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    options = desc["Options"]
+    assert_kind_of Hash, options
+    assert_equal "No", options["Start at Boot"]
+    assert_equal "Yes", options["ACPI Support"]
+    assert_equal "Yes", options["KVM Hardware Virtualization"]
+    assert_equal "Yes", options["Use Tablet for Pointer"]
+    assert_equal "No", options["Freeze CPU at Startup"]
+    assert_equal "Default", options["Use Local Time for RTC"]
+    assert_equal "No", options["NUMA"]
+    assert_equal "No", options["Protection"]
+    assert_equal "No", options["Firewall"]
+  end
+
+  def test_to_description_options_boot_order
+    data = base_describe_data.tap { |d| d[:config][:boot] = "order=scsi0;ide2;net0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "scsi0, ide2, net0", desc["Options"]["Boot Order"]
+  end
+
+  def test_to_description_options_boot_order_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Options"]["Boot Order"]
+  end
+
+  def test_to_description_options_agent_inline
+    data = base_describe_data.tap { |d| d[:config][:agent] = "1,type=virtio" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "Enabled, Type: virtio", desc["Options"]["QEMU Guest Agent"]
+  end
+
+  def test_to_description_options_agent_with_fstrim
     data = base_describe_data.tap do |d|
-      d[:config][:usb0] = "host=1234:5678"
-      d[:config][:usb1] = "spice"
+      d[:config][:agent] = "1,fstrim_cloned_disks=1,freeze-fs-on-backup=1,type=virtio"
     end
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Array, desc["USB Devices"]
-    assert_equal 2, desc["USB Devices"].length
-    assert_equal "usb0", desc["USB Devices"].first["NAME"]
-    assert_equal "host=1234:5678", desc["USB Devices"].first["CONFIG"]
+    agent = desc["Options"]["QEMU Guest Agent"]
+    assert_includes agent, "Enabled"
+    assert_includes agent, "Type: virtio"
+    assert_includes agent, "Trim Cloned Disks: yes"
+    assert_includes agent, "Freeze FS on Backup: yes"
   end
 
-  def test_to_description_usb_dash_when_none
+  def test_to_description_options_agent_disabled
+    data = base_describe_data.tap { |d| d[:config][:agent] = "0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "Disabled", desc["Options"]["QEMU Guest Agent"]
+  end
+
+  def test_to_description_options_agent_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["USB Devices"]
+    assert_equal "Disabled", desc["Options"]["QEMU Guest Agent"]
   end
 
-  # ---------------------------
-  # PCI Passthrough Section
-  # ---------------------------
-
-  def test_to_description_includes_pci_passthrough
-    data = base_describe_data.tap do |d|
-      d[:config][:hostpci0] = "0000:01:00.0,pcie=1,x-vga=1"
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_kind_of Array, desc["PCI Passthrough"]
-    assert_equal 1, desc["PCI Passthrough"].length
-    assert_equal "hostpci0", desc["PCI Passthrough"].first["NAME"]
-    assert_equal "0000:01:00.0,pcie=1,x-vga=1", desc["PCI Passthrough"].first["CONFIG"]
-  end
-
-  def test_to_description_pci_dash_when_none
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["PCI Passthrough"]
-  end
-
-  # ---------------------------
-  # Serial Ports Section
-  # ---------------------------
-
-  def test_to_description_includes_serial_ports
-    data = base_describe_data.tap do |d|
-      d[:config][:serial0] = "socket"
-      d[:config][:serial1] = "/dev/ttyS0"
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_kind_of Array, desc["Serial Ports"]
-    assert_equal 2, desc["Serial Ports"].length
-    assert_equal "serial0", desc["Serial Ports"].first["NAME"]
-    assert_equal "socket", desc["Serial Ports"].first["TYPE"]
-  end
-
-  def test_to_description_serial_dash_when_none
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["Serial Ports"]
-  end
-
-  # ---------------------------
-  # Audio Section
-  # ---------------------------
-
-  def test_to_description_includes_audio
-    data = base_describe_data.tap { |d| d[:config][:audio0] = "device=ich9-intel-hda,driver=spice" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "device=ich9-intel-hda,driver=spice", desc["Audio"]
-  end
-
-  def test_to_description_audio_dash_when_none
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["Audio"]
-  end
-
-  # ---------------------------
-  # EFI Disk Section
-  # ---------------------------
-
-  def test_to_description_includes_efi_disk
-    data = base_describe_data.tap { |d| d[:config][:efidisk0] = "local-lvm:vm-100-disk-1,efitype=4m,pre-enrolled-keys=1,size=4M" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_includes desc["EFI Disk"], "local-lvm"
-  end
-
-  def test_to_description_efi_disk_dash_when_absent
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["EFI Disk"]
-  end
-
-  # ---------------------------
-  # TPM Section
-  # ---------------------------
-
-  def test_to_description_includes_tpm
-    data = base_describe_data.tap { |d| d[:config][:tpmstate0] = "local-lvm:vm-100-disk-2,size=4M,version=v2.0" }
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_includes desc["TPM"], "local-lvm"
-  end
-
-  def test_to_description_tpm_dash_when_absent
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "-", desc["TPM"]
-  end
-
-  # ---------------------------
-  # Network Firewall Column
-  # ---------------------------
-
-  def test_to_description_network_includes_firewall_column
-    data = base_describe_data.tap do |d|
-      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0,firewall=1"
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    network = desc["Network"]
-    assert_kind_of Array, network
-    assert_equal "yes", network.first["FIREWALL"]
-  end
-
-  def test_to_description_network_firewall_no_by_default
-    data = base_describe_data.tap do |d|
-      d[:config][:net0] = "virtio=BC:24:11:AA:BB:CC,bridge=vmbr0"
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    network = desc["Network"]
-    assert_kind_of Array, network
-    assert_equal "no", network.first["FIREWALL"]
-  end
-
-  # ---------------------------
-  # Startup/Shutdown Section
-  # ---------------------------
-
-  def test_to_description_includes_startup_section
+  def test_to_description_options_startup_order
     data = base_describe_data.tap do |d|
       d[:config][:startup] = "order=1,up=30,down=60"
       d[:config][:onboot] = 1
@@ -1113,88 +1035,133 @@ class PresentersVmTest < Minitest::Test
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Hash, desc["Startup/Shutdown"]
-    assert_equal "1", desc["Startup/Shutdown"]["Order"]
-    assert_equal "30", desc["Startup/Shutdown"]["Up Delay"]
-    assert_equal "60", desc["Startup/Shutdown"]["Down Delay"]
-    assert_equal "yes", desc["Startup/Shutdown"]["On Boot"]
+    assert_equal "order=1,up=30,down=60", desc["Options"]["Start/Shutdown Order"]
+    assert_equal "Yes", desc["Options"]["Start at Boot"]
   end
 
-  def test_to_description_startup_defaults
+  def test_to_description_options_startup_defaults
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_kind_of Hash, desc["Startup/Shutdown"]
-    assert_equal "-", desc["Startup/Shutdown"]["Order"]
-    assert_equal "no", desc["Startup/Shutdown"]["On Boot"]
+    assert_equal "-", desc["Options"]["Start/Shutdown Order"]
+    assert_equal "No", desc["Options"]["Start at Boot"]
   end
 
-  # ---------------------------
-  # Security Section
-  # ---------------------------
-
-  def test_to_description_includes_security_section
-    data = base_describe_data.tap do |d|
-      d[:config].merge!(protection: 1, firewall: 1, lock: "backup")
-    end
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_kind_of Hash, desc["Security"]
-    assert_equal "yes", desc["Security"]["Protection"]
-    assert_equal "yes", desc["Security"]["Firewall"]
-    assert_equal "backup", desc["Security"]["Lock"]
-  end
-
-  def test_to_description_security_defaults
-    data = base_describe_data
-    vm = create_vm_from_data(data)
-    desc = @presenter.to_description(vm)
-
-    assert_equal "no", desc["Security"]["Protection"]
-    assert_equal "no", desc["Security"]["Firewall"]
-    assert_equal "-", desc["Security"]["Lock"]
-  end
-
-  # ---------------------------
-  # Hotplug Section
-  # ---------------------------
-
-  def test_to_description_includes_hotplug
+  def test_to_description_options_hotplug
     data = base_describe_data.tap { |d| d[:config][:hotplug] = "disk,network,usb" }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "disk, network, usb", desc["Hotplug"]
+    assert_equal "disk, network, usb", desc["Options"]["Hotplug"]
   end
 
-  def test_to_description_hotplug_dash_when_absent
+  def test_to_description_options_hotplug_dash_when_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Hotplug"]
+    assert_equal "-", desc["Options"]["Hotplug"]
   end
 
-  # ---------------------------
-  # Hookscript Section
-  # ---------------------------
-
-  def test_to_description_includes_hookscript
+  def test_to_description_options_hookscript
     data = base_describe_data.tap { |d| d[:config][:hookscript] = "local:snippets/hook.pl" }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "local:snippets/hook.pl", desc["Hookscript"]
+    assert_equal "local:snippets/hook.pl", desc["Options"]["Hookscript"]
   end
 
-  def test_to_description_hookscript_dash_when_absent
+  def test_to_description_options_hookscript_dash_when_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Hookscript"]
+    assert_equal "-", desc["Options"]["Hookscript"]
+  end
+
+  def test_to_description_options_ostype
+    data = base_describe_data.tap { |d| d[:config][:ostype] = "l26" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "l26 (Linux 2.6+)", desc["Options"]["OS Type"]
+  end
+
+  def test_to_description_options_security
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(protection: 1, firewall: 1)
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "Yes", desc["Options"]["Protection"]
+    assert_equal "Yes", desc["Options"]["Firewall"]
+  end
+
+  # ---------------------------
+  # Task History Section
+  # ---------------------------
+
+  def test_to_description_task_history_present
+    task = Pvectl::Models::TaskEntry.new(
+      type: "qmstart", status: "stopped", exitstatus: "OK",
+      starttime: 1_700_000_000, endtime: 1_700_000_005, user: "root@pam", node: "pve1"
+    )
+    data = base_describe_data.tap { |d| d[:tasks] = [task] }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["Task History"]
+    assert_equal "qmstart", desc["Task History"].first["TYPE"]
+    assert_equal "OK", desc["Task History"].first["STATUS"]
+    assert_equal "5s", desc["Task History"].first["DURATION"]
+    assert_equal "root@pam", desc["Task History"].first["USER"]
+  end
+
+  def test_to_description_task_history_empty
+    data = base_describe_data.tap { |d| d[:tasks] = [] }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "No task history", desc["Task History"]
+  end
+
+  def test_to_description_task_history_nil
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "No task history", desc["Task History"]
+  end
+
+  # ---------------------------
+  # Snapshots Section
+  # ---------------------------
+
+  def test_to_description_snapshots_present
+    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
+    desc = @presenter.to_description(vm_with_describe_data)
+
+    assert_kind_of Array, desc["Snapshots"]
+    snap = desc["Snapshots"].find { |s| s["NAME"] == "before-update" }
+    assert_equal "yes", snap["VMSTATE"]
+    assert_equal "Before system update", snap["DESCRIPTION"]
+    assert_match(/\d{4}-\d{2}-\d{2}/, snap["DATE"])
+  end
+
+  def test_to_description_snapshots_empty
+    describe_data = {
+      config: { cores: 4 },
+      snapshots: []
+    }
+    vm = Pvectl::Models::Vm.new(
+      vmid: 100, name: "test", status: "running", node: "pve1",
+      describe_data: describe_data
+    )
+    desc = @presenter.to_description(vm)
+
+    assert_equal "No snapshots", desc["Snapshots"]
   end
 
   # ---------------------------
@@ -1256,7 +1223,54 @@ class PresentersVmTest < Minitest::Test
   end
 
   # ---------------------------
-  # Misc Keys Consumed
+  # Catch-All / Additional Configuration
+  # ---------------------------
+
+  def test_to_description_catch_all_shows_unknown_keys
+    data = base_describe_data.tap do |d|
+      d[:config][:some_future_key] = "future_value"
+      d[:config][:another_unknown] = "42"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert desc.key?("Additional Configuration"), "Should have Additional Configuration section"
+    additional = desc["Additional Configuration"]
+    assert_kind_of Array, additional
+    keys = additional.map { |row| row["KEY"] }
+    assert_includes keys, "some_future_key"
+    assert_includes keys, "another_unknown"
+  end
+
+  def test_to_description_catch_all_excludes_digest
+    data = base_describe_data.tap { |d| d[:config][:digest] = "abc123def456" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "digest"
+    end
+  end
+
+  def test_to_description_catch_all_dash_when_all_consumed
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Additional Configuration"]
+  end
+
+  def test_to_description_includes_additional_configuration_key
+    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
+    desc = @presenter.to_description(vm_with_describe_data)
+
+    assert desc.key?("Additional Configuration")
+  end
+
+  # ---------------------------
+  # Misc Keys Consumed via Options
   # ---------------------------
 
   def test_to_description_misc_keys_consumed
