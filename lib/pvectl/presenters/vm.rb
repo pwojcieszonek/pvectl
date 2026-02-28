@@ -707,12 +707,16 @@ module Pvectl
       # @param pending [Array<Hash>, nil] pending changes from API
       # @return [Array<Hash>, String] pending changes table or "-"
       def format_pending_changes(pending)
-        return "-" if pending.nil? || pending.empty?
+        return "No pending changes" if pending.nil? || pending.empty?
 
-        pending.map do |change|
-          row = { "KEY" => change[:key].to_s, "VALUE" => change[:value].to_s }
+        # Only show entries with actual pending changes (new value or deletion)
+        changes = pending.select { |c| c.key?(:pending) || c[:delete] }
+        return "No pending changes" if changes.empty?
+
+        changes.map do |change|
+          row = { "KEY" => change[:key].to_s, "CURRENT" => change[:value].to_s }
           row["PENDING"] = change[:pending].to_s if change.key?(:pending)
-          row["DELETE"] = change[:delete].to_s if change[:delete]
+          row["DELETE"] = "yes" if change[:delete]
           row
         end
       end

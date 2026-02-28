@@ -138,7 +138,7 @@ module Pvectl
           end
         end
 
-        lines.join("\n").strip
+        lines.join("\n").sub(/\A\n+/, "").rstrip
       end
 
       # Formats array of hashes as inline table.

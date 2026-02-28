@@ -1188,15 +1188,45 @@ class PresentersVmTest < Minitest::Test
     assert_kind_of Array, desc["Pending Changes"]
     assert_equal 2, desc["Pending Changes"].length
     assert_equal "memory", desc["Pending Changes"].first["KEY"]
+    assert_equal "4096", desc["Pending Changes"].first["CURRENT"]
     assert_equal "8192", desc["Pending Changes"].first["PENDING"]
   end
 
-  def test_to_description_pending_dash_when_empty
+  def test_to_description_pending_filters_unchanged_entries
+    data = base_describe_data.tap do |d|
+      d[:pending] = [
+        { key: "memory", value: 4096, pending: 8192 },
+        { key: "cores", value: 2 },
+        { key: "sockets", value: 1 }
+      ]
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["Pending Changes"]
+    assert_equal 1, desc["Pending Changes"].length
+    assert_equal "memory", desc["Pending Changes"].first["KEY"]
+  end
+
+  def test_to_description_pending_no_changes_when_empty
     data = base_describe_data.tap { |d| d[:pending] = [] }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Pending Changes"]
+    assert_equal "No pending changes", desc["Pending Changes"]
+  end
+
+  def test_to_description_pending_no_changes_when_all_current
+    data = base_describe_data.tap do |d|
+      d[:pending] = [
+        { key: "memory", value: 4096 },
+        { key: "cores", value: 2 }
+      ]
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "No pending changes", desc["Pending Changes"]
   end
 
   # ---------------------------
