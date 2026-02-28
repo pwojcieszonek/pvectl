@@ -37,19 +37,17 @@ module Pvectl
 
       @consumed_keys: Set[Symbol]
 
-      def format_system: (Hash[Symbol, untyped] config) -> Hash[String, String]
+      def format_summary: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, untyped]
+
+      def find_bootdisk_size: (Hash[Symbol, untyped] config) -> String
+
+      def format_hardware: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] data) -> Hash[String, untyped]
+
+      def format_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_agent_inline: (Hash[Symbol, untyped] config) -> String
 
       def format_ostype: (String? ostype) -> String
-
-      def format_boot: (Hash[Symbol, untyped] config) -> (Hash[String, untyped] | String)
-
-      def format_cpu: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, untyped]
-
-      def format_memory: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, String]
-
-      def format_display: (Hash[Symbol, untyped] config) -> String
-
-      def format_agent: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
       def parse_disks: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
 
@@ -77,27 +75,11 @@ module Pvectl
 
       def format_snapshots: (Array[Hash[Symbol, untyped]]? snapshots) -> (Array[Hash[String, String]] | String)
 
-      def format_runtime: (Hash[Symbol, untyped] status) -> (Hash[String, untyped] | String)
-
-      def format_io_statistics: (Hash[Symbol, untyped] status) -> (Hash[String, String] | String)
-
-      def format_startup: (Hash[Symbol, untyped] config) -> Hash[String, String]
-
-      def format_security: (Hash[Symbol, untyped] config) -> Hash[String, String]
-
-      def format_hotplug: (Hash[Symbol, untyped] config) -> String
-
-      def format_hookscript: (Hash[Symbol, untyped] config) -> String
-
       def format_pending_changes: (Array[Hash[Symbol, untyped]]? pending) -> (Array[Hash[String, String]] | String)
-
-      def format_ha: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
       def consume: (*Symbol keys) -> void
 
       def consume_matching: (Hash[Symbol, untyped] config, Regexp pattern) -> void
-
-      def consume_misc_keys: (Hash[Symbol, untyped] config) -> void
 
       def format_remaining: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
     end

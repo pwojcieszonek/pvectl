@@ -49,7 +49,9 @@ module Pvectl
 
       def parse_network_interface: (String key, String value) -> Hash[Symbol, untyped]?
 
-      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status, ?Array[Hash[Symbol, untyped]] snapshots) -> Models::Container
+      def fetch_tasks: (String node, Integer ctid, ?limit: Integer) -> Array[Models::TaskEntry]
+
+      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status, ?Array[Hash[Symbol, untyped]] snapshots, ?Array[Models::TaskEntry] tasks) -> Models::Container
     end
   end
 end
