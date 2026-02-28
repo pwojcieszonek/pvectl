@@ -146,8 +146,11 @@ module Pvectl
           "Template" => vm.template? ? "yes" : "no",
           "Pool" => vm.pool || "-",
           "System" => format_system(config),
+          "Boot" => format_boot(config),
           "CPU" => format_cpu(config, status),
           "Memory" => format_memory(config, status),
+          "Display" => format_display(config),
+          "Agent" => format_agent(config),
           "Disks" => parse_disks(config),
           "Network" => format_network(config, data[:agent_ips]),
           "Snapshots" => format_snapshots(data[:snapshots]),
@@ -256,7 +259,7 @@ module Pvectl
       # @param config [Hash] VM config
       # @return [Hash] system info
       def format_system(config)
-        consume(:bios, :machine, :ostype)
+        consume(:bios, :machine, :ostype, :scsihw)
         bios = config[:bios] || "seabios"
         bios_display = bios == "ovmf" ? "UEFI (OVMF)" : "SeaBIOS"
 
@@ -266,7 +269,8 @@ module Pvectl
         {
           "BIOS" => bios_display,
           "Machine" => config[:machine] || "i440fx",
-          "OS Type" => ostype_display
+          "OS Type" => ostype_display,
+          "SCSI Controller" => config[:scsihw] || "lsi"
         }
       end
 
@@ -294,13 +298,17 @@ module Pvectl
       # @param status [Hash] VM status
       # @return [Hash] CPU info
       def format_cpu(config, status)
-        consume(:sockets, :cores, :cpu)
+        consume(:sockets, :cores, :cpu, :numa, :vcpus, :cpulimit, :cpuunits)
         usage = vm.running? && vm.cpu ? "#{(vm.cpu * 100).round}%" : "-"
 
         {
           "Sockets" => config[:sockets] || 1,
           "Cores" => config[:cores] || 1,
           "Type" => config[:cpu] || "kvm64",
+          "NUMA" => config[:numa] == 1 ? "enabled" : "disabled",
+          "vCPUs" => config[:vcpus] || "-",
+          "Limit" => config[:cpulimit] || "-",
+          "Units" => config[:cpuunits] || 1024,
           "Usage" => usage
         }
       end
@@ -534,6 +542,48 @@ module Pvectl
           "State" => vm.hastate || "-",
           "Group" => config[:ha] || "-"
         }
+      end
+
+      # Formats boot order section.
+      #
+      # @param config [Hash] VM config
+      # @return [Hash, String] boot info or "-"
+      def format_boot(config)
+        consume(:boot)
+        boot = config[:boot]
+        return "-" if boot.nil?
+
+        order = boot.to_s.sub(/^order=/, "").split(";").join(", ")
+        { "Order" => order.empty? ? "-" : order }
+      end
+
+      # Formats display/VGA section.
+      #
+      # @param config [Hash] VM config
+      # @return [String] display type or "-"
+      def format_display(config)
+        consume(:vga)
+        config[:vga] || "-"
+      end
+
+      # Formats QEMU guest agent section.
+      #
+      # @param config [Hash] VM config
+      # @return [Hash] agent info
+      def format_agent(config)
+        consume(:agent)
+        agent = config[:agent]
+        return { "Enabled" => "no", "Type" => "-" } if agent.nil?
+
+        parts = agent.to_s.split(",")
+        enabled = parts.first == "1" ? "yes" : "no"
+        type = "-"
+        parts[1..].each do |part|
+          key, val = part.split("=", 2)
+          type = val if key == "type"
+        end
+
+        { "Enabled" => enabled, "Type" => type }
       end
 
       # Registers config keys as consumed by a format method.

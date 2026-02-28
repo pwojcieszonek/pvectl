@@ -744,6 +744,126 @@ class PresentersVmTest < Minitest::Test
     assert desc.key?("Additional Configuration")
   end
 
+  # ---------------------------
+  # Boot Section
+  # ---------------------------
+
+  def test_to_description_includes_boot_section
+    data = base_describe_data.tap { |d| d[:config][:boot] = "order=scsi0;ide2;net0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Boot"]
+    assert_equal "scsi0, ide2, net0", desc["Boot"]["Order"]
+  end
+
+  def test_to_description_boot_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Boot"]
+  end
+
+  # ---------------------------
+  # System SCSI Controller
+  # ---------------------------
+
+  def test_to_description_system_includes_scsi_controller
+    data = base_describe_data.tap { |d| d[:config][:scsihw] = "virtio-scsi-single" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "virtio-scsi-single", desc["System"]["SCSI Controller"]
+  end
+
+  def test_to_description_system_default_scsi_controller
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "lsi", desc["System"]["SCSI Controller"]
+  end
+
+  # ---------------------------
+  # CPU NUMA and Limits
+  # ---------------------------
+
+  def test_to_description_cpu_includes_numa_and_limits
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(numa: 1, vcpus: 2, cpulimit: 2.5, cpuunits: 2048)
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "enabled", desc["CPU"]["NUMA"]
+    assert_equal 2, desc["CPU"]["vCPUs"]
+    assert_equal 2.5, desc["CPU"]["Limit"]
+    assert_equal 2048, desc["CPU"]["Units"]
+  end
+
+  def test_to_description_cpu_defaults_for_numa_and_limits
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "disabled", desc["CPU"]["NUMA"]
+    assert_equal "-", desc["CPU"]["vCPUs"]
+    assert_equal "-", desc["CPU"]["Limit"]
+    assert_equal 1024, desc["CPU"]["Units"]
+  end
+
+  # ---------------------------
+  # Display Section
+  # ---------------------------
+
+  def test_to_description_includes_display_section
+    data = base_describe_data.tap { |d| d[:config][:vga] = "virtio" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "virtio", desc["Display"]
+  end
+
+  def test_to_description_display_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Display"]
+  end
+
+  # ---------------------------
+  # Agent Section
+  # ---------------------------
+
+  def test_to_description_includes_agent_section
+    data = base_describe_data.tap { |d| d[:config][:agent] = "1,type=virtio" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Hash, desc["Agent"]
+    assert_equal "yes", desc["Agent"]["Enabled"]
+    assert_equal "virtio", desc["Agent"]["Type"]
+  end
+
+  def test_to_description_agent_disabled
+    data = base_describe_data.tap { |d| d[:config][:agent] = "0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "no", desc["Agent"]["Enabled"]
+  end
+
+  def test_to_description_agent_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "no", desc["Agent"]["Enabled"]
+    assert_equal "-", desc["Agent"]["Type"]
+  end
+
   private
 
   def base_describe_data
