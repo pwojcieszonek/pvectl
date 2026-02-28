@@ -43,11 +43,13 @@ module Pvectl
 
       def fetch_status: (String node, Integer ctid) -> Hash[Symbol, untyped]
 
+      def fetch_snapshots: (String node, Integer ctid) -> Array[Hash[Symbol, untyped]]
+
       def extract_network_interfaces: (Hash[Symbol, untyped] config) -> Array[Hash[Symbol, untyped]]
 
       def parse_network_interface: (String key, String value) -> Hash[Symbol, untyped]?
 
-      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Models::Container
+      def build_describe_model: (Hash[Symbol, untyped] basic_data, Hash[Symbol, untyped] config, Hash[Symbol, untyped] status, ?Array[Hash[Symbol, untyped]] snapshots) -> Models::Container
     end
   end
 end

@@ -52,17 +52,16 @@ module Pvectl
       def describe(ctid)
         ctid = ctid.to_i
 
-        # 1. Find container in cluster to get node
         basic_data = find_container_basic_data(ctid)
         return nil if basic_data.nil?
 
         node = basic_data[:node]
 
-        # 2. Fetch detailed data from node-specific endpoints
         config = fetch_config(node, ctid)
         status = fetch_status(node, ctid)
+        snapshots = fetch_snapshots(node, ctid)
 
-        build_describe_model(basic_data, config, status)
+        build_describe_model(basic_data, config, status, snapshots)
       end
 
       # Deletes a container from the cluster.
@@ -312,6 +311,18 @@ module Pvectl
         {}
       end
 
+      # Fetches container snapshots.
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @return [Array<Hash>] snapshots list (excluding "current")
+      def fetch_snapshots(node, ctid)
+        resp = connection.client["nodes/#{node}/lxc/#{ctid}/snapshot"].get
+        unwrap(resp).reject { |s| s[:name] == "current" }
+      rescue StandardError
+        []
+      end
+
       # Extracts network interfaces from config.
       # Network interfaces are stored as net0, net1, etc. keys.
       #
@@ -352,8 +363,9 @@ module Pvectl
       # @param basic_data [Hash] basic container data from cluster/resources
       # @param config [Hash] container config from /nodes/{node}/lxc/{ctid}/config
       # @param status [Hash] container status from /nodes/{node}/lxc/{ctid}/status/current
+      # @param snapshots [Array<Hash>] container snapshots
       # @return [Models::Container] Container model
-      def build_describe_model(basic_data, config, status)
+      def build_describe_model(basic_data, config, status, snapshots = [])
         network_interfaces = extract_network_interfaces(config)
 
         Models::Container.new(
@@ -379,7 +391,7 @@ module Pvectl
           netin: basic_data[:netin],
           netout: basic_data[:netout],
 
-          # Config attributes
+          # Config attributes (kept for backward compat)
           ostype: config[:ostype],
           arch: config[:arch],
           unprivileged: config[:unprivileged],
@@ -393,7 +405,10 @@ module Pvectl
           ha: status[:ha],
 
           # Parsed network interfaces
-          network_interfaces: network_interfaces
+          network_interfaces: network_interfaces,
+
+          # Raw API data for comprehensive describe
+          describe_data: { config: config, status: status, snapshots: snapshots }
         )
       end
     end
