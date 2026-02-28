@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "set"
+require_relative "task_list"
 
 module Pvectl
   module Repositories
@@ -65,7 +66,10 @@ module Pvectl
           config: fetch_config(node, vmid),
           status: fetch_status(node, vmid),
           snapshots: fetch_snapshots(node, vmid),
-          agent_ips: fetch_agent_ips(node, vmid)
+          agent_ips: fetch_agent_ips(node, vmid),
+          pending: fetch_pending(node, vmid),
+          tasks: fetch_tasks(node, vmid),
+          firewall: fetch_firewall(node, vmid)
         }
 
         build_describe_model(basic_data, describe_data)
@@ -381,6 +385,47 @@ module Pvectl
         data[:result]
       rescue StandardError
         nil
+      end
+
+      # Fetches pending configuration changes.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @return [Array<Hash>] pending changes
+      def fetch_pending(node, vmid)
+        resp = connection.client["nodes/#{node}/qemu/#{vmid}/pending"].get
+        normalize_response(resp)
+      rescue StandardError
+        []
+      end
+
+      # Fetches firewall configuration (options, rules, aliases, IP sets).
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
+      def fetch_firewall(node, vmid)
+        base = "nodes/#{node}/qemu/#{vmid}/firewall"
+        options = (normalize_hash_response(connection.client["#{base}/options"].get) rescue {})
+        rules = (normalize_response(connection.client["#{base}/rules"].get) rescue [])
+        aliases_data = (normalize_response(connection.client["#{base}/aliases"].get) rescue [])
+        ipset = (normalize_response(connection.client["#{base}/ipset"].get) rescue [])
+        { options: options, rules: rules, aliases: aliases_data, ipset: ipset }
+      rescue StandardError
+        {}
+      end
+
+      # Fetches recent task history for the VM.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @param limit [Integer] max entries (default 10)
+      # @return [Array<Models::TaskEntry>] recent tasks
+      def fetch_tasks(node, vmid, limit: 10)
+        task_list_repo = TaskList.new(connection)
+        task_list_repo.list(node: node, vmid: vmid, limit: limit)
+      rescue StandardError
+        []
       end
 
       # Normalizes hash response that may be wrapped in :data key.

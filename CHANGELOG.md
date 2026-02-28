@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
 
 ### Changed
+- **describe vm**: reorganize output to match PVE web UI tabs (Summary, Hardware, Cloud-Init, Options, Task History, Snapshots, Pending Changes) with previously hidden config keys (ACPI, KVM, Tablet, Freeze CPU, Local Time, NUMA) now visible in Options section
+- **describe container**: reorganize output to match PVE web UI tabs (Summary, Resources, Network, DNS, Options, Task History, Snapshots, High Availability) with all options visible
+- **describe**: add Task History section showing recent operations for VM and container resources
 - **get**: `storages` is now the primary resource name (consistent with `vms`, `nodes`, etc.); `storage` and `stor` remain as aliases
 
 ### Fixed

@@ -584,15 +584,25 @@ class PresentersNodeTest < Minitest::Test
   def test_to_description_capabilities_section
     node_with_caps = Pvectl::Models::Node.new(
       @online_node.instance_variable_get(:@attributes).merge(
-        qemu_cpu_models: [{ name: "host" }, { name: "max" }, { name: "kvm64" }],
-        qemu_machines: [{ id: "pc-q35-8.1" }, { id: "pc-i440fx-8.1" }]
+        qemu_cpu_models: [{ name: "host", vendor: "KVM" }, { name: "max", vendor: "QEMU" }, { name: "kvm64", vendor: "QEMU" }],
+        qemu_machines: [{ id: "pc-q35-8.1", type: "q35" }, { id: "pc-i440fx-8.1", type: "i440fx" }]
       )
     )
     desc = @presenter.to_description(node_with_caps)
 
     assert_kind_of Hash, desc["Capabilities"]
-    assert_includes desc["Capabilities"]["QEMU CPU Models"], "host"
-    assert_includes desc["Capabilities"]["QEMU Machines"], "pc-q35-8.1"
+
+    cpu_models = desc["Capabilities"]["QEMU CPU Models"]
+    assert_kind_of Array, cpu_models
+    assert_equal 3, cpu_models.size
+    assert_equal "host", cpu_models[0]["Name"]
+    assert_equal "KVM", cpu_models[0]["Vendor"]
+
+    machines = desc["Capabilities"]["QEMU Machines"]
+    assert_kind_of Array, machines
+    assert_equal 2, machines.size
+    assert_equal "pc-q35-8.1", machines[0]["ID"]
+    assert_equal "q35", machines[0]["Type"]
   end
 
   def test_to_description_offline_node_minimal_output
@@ -607,6 +617,72 @@ class PresentersNodeTest < Minitest::Test
     assert_equal "pve-node4", desc["Name"]
     assert_equal "offline", desc["Status"]
     assert_equal "Node is offline. Detailed metrics unavailable.", desc["Note"]
+  end
+
+  # ---------------------------
+  # Firewall section
+  # ---------------------------
+
+  def test_to_description_firewall_dash_when_absent
+    desc = @presenter.to_description(@online_node)
+
+    assert_equal "-", desc["Firewall"]
+  end
+
+  def test_to_description_firewall_with_options_and_rules
+    node_with_fw = Pvectl::Models::Node.new(
+      @online_node.instance_variable_get(:@attributes).merge(
+        firewall: {
+          options: { enable: 1, policy_in: "DROP", policy_out: "ACCEPT" },
+          rules: [
+            { pos: 0, enable: 1, type: "in", action: "ACCEPT", proto: "tcp", dport: "8006", comment: "PVE Web UI" }
+          ],
+          aliases: [],
+          ipset: []
+        }
+      )
+    )
+    desc = @presenter.to_description(node_with_fw)
+
+    fw = desc["Firewall"]
+    assert_kind_of Hash, fw
+    assert_equal "Yes", fw["Enable"]
+    assert_equal "DROP", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+
+    rules = fw["Rules"]
+    assert_kind_of Array, rules
+    assert_equal 1, rules.length
+    assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "8006", rules[0]["D.PORT"]
+    assert_equal "PVE Web UI", rules[0]["COMMENT"]
+  end
+
+  # ---------------------------
+  # Task History section
+  # ---------------------------
+
+  def test_to_description_task_history_empty
+    desc = @presenter.to_description(@online_node)
+
+    assert_equal "No task history", desc["Task History"]
+  end
+
+  def test_to_description_task_history_with_tasks
+    task = Pvectl::Models::TaskEntry.new(
+      type: "aptupdate", status: "stopped", exitstatus: "OK",
+      starttime: 1_700_000_000, endtime: 1_700_000_010, user: "root@pam", node: "pve1"
+    )
+    node_with_tasks = Pvectl::Models::Node.new(
+      @online_node.instance_variable_get(:@attributes).merge(tasks: [task])
+    )
+    desc = @presenter.to_description(node_with_tasks)
+
+    assert_kind_of Array, desc["Task History"]
+    assert_equal 1, desc["Task History"].length
+    assert_equal "aptupdate", desc["Task History"].first["TYPE"]
+    assert_equal "OK", desc["Task History"].first["STATUS"]
+    assert_equal "10s", desc["Task History"].first["DURATION"]
   end
 
   # ===========================================================================

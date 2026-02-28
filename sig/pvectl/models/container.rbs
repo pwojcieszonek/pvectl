@@ -31,6 +31,7 @@ module Pvectl
       attr_reader pid: Integer?
       attr_reader ha: Hash[untyped, untyped]?
       attr_reader type: String?
+      attr_reader describe_data: Hash[Symbol, untyped]?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 

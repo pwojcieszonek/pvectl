@@ -35,17 +35,27 @@ module Pvectl
 
       alias resource vm
 
-      def format_system: (Hash[Symbol, untyped] config) -> Hash[String, String]
+      @consumed_keys: Set[Symbol]
+
+      def format_summary: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, untyped]
+
+      def find_bootdisk_size: (Hash[Symbol, untyped] config) -> String
+
+      def format_hardware: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] data) -> Hash[String, untyped]
+
+      def format_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_agent_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
       def format_ostype: (String? ostype) -> String
-
-      def format_cpu: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, untyped]
-
-      def format_memory: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] status) -> Hash[String, String]
 
       def parse_disks: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
 
       def parse_disk_string: (String name, untyped value) -> Hash[String, String]?
+
+      def format_efi_disk: (Hash[Symbol, untyped] config) -> String
+
+      def format_tpm: (Hash[Symbol, untyped] config) -> String
 
       def format_network: (Hash[Symbol, untyped] config, Array[Hash[Symbol, untyped]]? agent_ips) -> (Array[Hash[String, String]] | String)
 
@@ -53,13 +63,25 @@ module Pvectl
 
       def parse_network_string: (String name, untyped value, Hash[String, String] mac_to_ip) -> Hash[String, String]?
 
+      def format_cloud_init: (Hash[Symbol, untyped] config) -> (Hash[String, untyped] | String)
+
+      def format_usb_devices: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
+
+      def format_pci_passthrough: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
+
+      def format_serial_ports: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
+
+      def format_audio: (Hash[Symbol, untyped] config) -> String
+
       def format_snapshots: (Array[Hash[Symbol, untyped]]? snapshots) -> (Array[Hash[String, String]] | String)
 
-      def format_runtime: (Hash[Symbol, untyped] status) -> (Hash[String, untyped] | String)
+      def format_pending_changes: (Array[Hash[Symbol, untyped]]? pending) -> (Array[Hash[String, String]] | String)
 
-      def format_network_io: () -> (Hash[String, String] | String)
+      def consume: (*Symbol keys) -> void
 
-      def format_ha: (Hash[Symbol, untyped] config) -> Hash[String, String]
+      def consume_matching: (Hash[Symbol, untyped] config, Regexp pattern) -> void
+
+      def format_remaining: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
     end
   end
 end

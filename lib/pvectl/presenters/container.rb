@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 module Pvectl
   module Presenters
     # Presenter for LXC containers.
@@ -9,6 +11,9 @@ module Pvectl
     #
     # Standard columns: NAME, CTID, STATUS, NODE, CPU, MEMORY
     # Wide columns add: UPTIME, TEMPLATE, TAGS, SWAP, DISK, NETIN, NETOUT, POOL
+    #
+    # Description output is organized by Proxmox VE web UI tabs:
+    # Summary, Resources, Network, DNS, Options, Task History, Snapshots, HA.
     #
     # @example Using with formatter
     #   presenter = Container.new
@@ -121,31 +126,38 @@ module Pvectl
 
       # Converts Container model to description format for describe command.
       #
-      # Returns a structured Hash with sections for kubectl-style vertical output.
-      # Nested Hashes create indented subsections.
+      # Returns a structured Hash organized by Proxmox VE web UI tabs:
+      # Summary, Resources, Network, DNS, Options, Task History, Snapshots,
+      # High Availability. Nested Hashes create indented subsections.
       # Arrays of Hashes render as inline tables.
       #
       # @param model [Models::Container] Container model with describe details
       # @return [Hash] structured hash for describe formatter
       def to_description(model)
         @container = model
+        @consumed_keys = Set.new
+        data = container.describe_data || {}
+        config = data[:config] || {}
+
+        consume(:hostname, :description, :tags, :pool, :template, :lxc)
 
         {
           "Name" => display_name,
           "CTID" => container.vmid,
           "Status" => container.status,
           "Node" => container.node,
-          "Template" => container.template? ? "yes" : "no",
-          "System" => format_system,
-          "CPU" => format_cpu,
-          "Memory" => format_memory,
-          "Swap" => format_swap,
-          "Root Filesystem" => format_rootfs,
-          "Network" => format_network_interfaces,
-          "Features" => format_features,
-          "Runtime" => format_runtime,
           "Tags" => tags_display,
-          "Description" => container.description || "-"
+          "Description" => container.description || config[:description] || "-",
+          "Summary" => format_summary,
+          "Resources" => format_resources(config),
+          "Network" => format_network_interfaces(config),
+          "DNS" => format_dns(config),
+          "Options" => format_options(config),
+          "Firewall" => format_firewall(data[:firewall]),
+          "Task History" => format_task_history(data[:tasks]),
+          "Snapshots" => format_snapshots(data[:snapshots]),
+          "High Availability" => format_ha,
+          "Additional Configuration" => format_remaining(config)
         }
       end
 
@@ -289,66 +301,92 @@ module Pvectl
       attr_reader :container
       alias resource container
 
-      # Formats system section.
+      # Formats Summary section (PVE Summary tab).
       #
-      # @return [Hash] system info
-      def format_system
-        {
-          "OS Type" => container.ostype || "-",
-          "Architecture" => container.arch || "-",
-          "Unprivileged" => container.unprivileged? ? "yes" : "no"
+      # Shows resource usage and (for running containers) runtime info
+      # including uptime, PID, and network I/O statistics.
+      #
+      # @return [Hash] summary info
+      def format_summary
+        cpu_usage = if container.running? && container.cpu
+                      "#{(container.cpu * 100).round(2)}% of #{container.maxcpu || '-'} core(s)"
+                    else
+                      "-"
+                    end
+
+        mem_usage = if container.running? && container.mem && container.maxmem && container.maxmem > 0
+                      pct = ((container.mem.to_f / container.maxmem) * 100).round(2)
+                      "#{pct}% (#{format_bytes(container.mem)} of #{format_bytes(container.maxmem)})"
+                    else
+                      "-"
+                    end
+
+        swap_usage = if container.running? && container.swap && container.maxswap && container.maxswap > 0
+                       "#{format_bytes(container.swap)} / #{format_bytes(container.maxswap)}"
+                     else
+                       "-"
+                     end
+
+        rootfs_usage = if container.disk && container.maxdisk && container.maxdisk > 0
+                         "#{format_bytes(container.disk)} / #{format_bytes(container.maxdisk)}"
+                       else
+                         "-"
+                       end
+
+        result = {
+          "CPU Usage" => cpu_usage,
+          "Memory Usage" => mem_usage,
+          "Swap Usage" => swap_usage,
+          "Root FS Usage" => rootfs_usage
         }
+
+        if container.running?
+          result["Uptime"] = uptime_human
+          result["PID"] = (container.pid || "-").to_s
+          result["Network In"] = format_bytes(container.netin)
+          result["Network Out"] = format_bytes(container.netout)
+        end
+
+        result
       end
 
-      # Formats CPU section.
+      # Formats Resources section (PVE Resources tab).
       #
-      # @return [Hash] CPU info
-      def format_cpu
-        usage = container.running? && container.cpu ? "#{(container.cpu * 100).round}%" : "-"
+      # Shows configured memory, swap, cores, rootfs, and mountpoints.
+      #
+      # @param config [Hash] raw config hash for key consumption
+      # @return [Hash] resources info
+      def format_resources(config)
+        consume(:memory, :swap, :cores, :rootfs)
+
+        mem_mb = config[:memory]
+        memory_str = if mem_mb
+                       "#{(mem_mb.to_f / 1024).round(2)} GiB"
+                     else
+                       container.maxmem ? format_bytes(container.maxmem) : "-"
+                     end
+
+        swap_mb = config[:swap]
+        swap_str = if swap_mb
+                     "#{swap_mb} MiB"
+                   else
+                     container.maxswap ? format_bytes(container.maxswap) : "-"
+                   end
 
         {
-          "Cores" => container.maxcpu || "-",
-          "Usage" => usage
-        }
-      end
-
-      # Formats memory section.
-      #
-      # @return [Hash] memory info
-      def format_memory
-        total_gib = memory_total_gib ? "#{memory_total_gib} GiB" : "-"
-        used_gib = container.running? && memory_used_gib ? "#{memory_used_gib} GiB" : "-"
-
-        usage = if container.running? && container.mem && container.maxmem && container.maxmem > 0
-                  "#{((container.mem.to_f / container.maxmem) * 100).round}%"
-                else
-                  "-"
-                end
-
-        {
-          "Total" => total_gib,
-          "Used" => used_gib,
-          "Usage" => usage
-        }
-      end
-
-      # Formats swap section.
-      #
-      # @return [Hash] swap info
-      def format_swap
-        total_mib = swap_total_mib ? "#{swap_total_mib.round} MiB" : "-"
-        used_mib = container.running? && swap_used_mib ? "#{swap_used_mib.round} MiB" : "-"
-
-        {
-          "Total" => total_mib,
-          "Used" => used_mib
+          "Memory" => memory_str,
+          "Swap" => swap_str,
+          "Cores" => (config[:cores] || container.maxcpu || "-").to_s,
+          "Root Filesystem" => format_rootfs(config),
+          "Mountpoints" => format_mountpoints(config)
         }
       end
 
       # Formats rootfs section.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Hash] rootfs info
-      def format_rootfs
+      def format_rootfs(config = {})
         size_gib = disk_total_gib ? "#{disk_total_gib} GiB" : "-"
         used_gib = disk_used_gib ? "#{disk_used_gib} GiB" : "-"
 
@@ -360,8 +398,10 @@ module Pvectl
 
       # Formats network interfaces for table display.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Array<Hash>, String] network interfaces or "-"
-      def format_network_interfaces
+      def format_network_interfaces(config = {})
+        consume_matching(config, /^net\d+$/)
         interfaces = container.network_interfaces
         return "-" if interfaces.nil? || interfaces.empty?
 
@@ -377,27 +417,155 @@ module Pvectl
 
       # Formats features for display.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [String] formatted features or "-"
-      def format_features
-        return "-" if container.features.nil? || container.features.empty?
+      def format_features(config = {})
+        consume(:features)
+        features_str = container.features || config[:features]
+        return "-" if features_str.nil? || features_str.empty?
 
         # Parse "nesting=1,keyctl=1" to "nesting, keyctl"
-        container.features.split(",").map do |f|
+        features_str.split(",").map do |f|
           key, value = f.split("=")
           value == "1" ? key : nil
         end.compact.join(", ")
       end
 
-      # Formats runtime section.
+      # Formats mountpoints section (mp0-mp255).
       #
-      # @return [Hash, String] runtime info or "-"
-      def format_runtime
-        return "-" unless container.running?
+      # @param config [Hash] container config
+      # @return [Array<Hash>, String] mountpoints table or "-"
+      def format_mountpoints(config)
+        mp_keys = config.keys.select { |k| k.to_s.match?(/^mp\d+$/) }
+        consume_matching(config, /^mp\d+$/)
+        consume_matching(config, /^unused\d+$/)
+        return "-" if mp_keys.empty?
+
+        mp_keys.sort.map do |key|
+          parts = config[key].to_s.split(",")
+          storage_part = parts.first
+          storage = storage_part.include?(":") ? storage_part.split(":").first : storage_part
+          mp_path = nil
+          size = nil
+          parts[1..].each do |part|
+            k, v = part.split("=", 2)
+            case k
+            when "mp" then mp_path = v
+            when "size" then size = v
+            end
+          end
+          { "NAME" => key.to_s, "PATH" => mp_path || "-", "STORAGE" => storage, "SIZE" => size || "-" }
+        end
+      end
+
+      # Formats DNS section.
+      #
+      # @param config [Hash] container config
+      # @return [Hash, String] DNS info or "-"
+      def format_dns(config)
+        consume(:nameserver, :searchdomain)
+        ns = config[:nameserver]
+        sd = config[:searchdomain]
+        return "-" if ns.nil? && sd.nil?
+
+        { "Nameserver" => ns || "-", "Search Domain" => sd || "-" }
+      end
+
+      # Formats Options section (PVE Options tab).
+      #
+      # Shows boot, startup, OS type, architecture, security, and
+      # other container options.
+      #
+      # @param config [Hash] container config
+      # @return [Hash] options info
+      def format_options(config)
+        consume(:onboot, :startup, :ostype, :arch, :unprivileged,
+                :features, :cmode, :tty, :protection, :lock, :hookscript)
+
+        on_boot = config[:onboot] == 1 ? "Yes" : "No"
+        startup = config[:startup]
+        startup_display = startup ? startup.to_s : "-"
+        ostype = container.ostype || config[:ostype] || "-"
+        arch = container.arch || config[:arch] || "-"
+        unpriv = container.unprivileged? ? "Yes" : "No"
+        features = format_features(config)
+        cmode = config[:cmode] || "tty"
+        tty_count = (config[:tty] || 2).to_s
+        protection = config[:protection] == 1 ? "Yes" : "No"
+        hookscript = config[:hookscript] || "-"
 
         {
-          "Uptime" => uptime_human,
-          "PID" => container.pid || "-"
+          "Start at Boot" => on_boot,
+          "Startup Order" => startup_display,
+          "OS Type" => ostype,
+          "Architecture" => arch,
+          "Unprivileged" => unpriv,
+          "Features" => features,
+          "Console Mode" => cmode,
+          "TTY" => tty_count,
+          "Protection" => protection,
+          "Hookscript" => hookscript
         }
+      end
+
+      # Formats snapshots section.
+      #
+      # @param snapshots [Array<Hash>, nil] snapshots from API
+      # @return [Array<Hash>, String] snapshots table or "No snapshots"
+      def format_snapshots(snapshots)
+        return "No snapshots" if snapshots.nil? || snapshots.empty?
+
+        snapshots.map do |snap|
+          snaptime = snap[:snaptime]
+          date = snaptime ? Time.at(snaptime).strftime("%Y-%m-%d %H:%M:%S") : "-"
+          {
+            "NAME" => snap[:name],
+            "DATE" => date,
+            "DESCRIPTION" => snap[:description] || "-"
+          }
+        end
+      end
+
+      # Formats High Availability section.
+      #
+      # @return [Hash] HA info
+      def format_ha
+        ha = container.ha
+        return { "State" => "-", "Group" => "-" } if ha.nil?
+
+        {
+          "State" => ha[:managed] == 1 ? "managed" : "-",
+          "Group" => ha[:group] || "-"
+        }
+      end
+
+      # Registers config keys as consumed by a format method.
+      #
+      # @param keys [Array<Symbol>] config keys to mark as consumed
+      # @return [void]
+      def consume(*keys)
+        @consumed_keys.merge(keys.map(&:to_sym))
+      end
+
+      # Consumes all config keys matching a pattern.
+      #
+      # @param config [Hash] config hash
+      # @param pattern [Regexp] pattern to match key names
+      # @return [void]
+      def consume_matching(config, pattern)
+        config.keys.select { |k| k.to_s.match?(pattern) }.each { |k| consume(k) }
+      end
+
+      # Formats remaining unconsumed config keys as catch-all table.
+      #
+      # @param config [Hash] full config hash
+      # @return [Array<Hash>, String] remaining keys table or "-"
+      def format_remaining(config)
+        excluded = %i[digest]
+        remaining = config.keys.map(&:to_sym) - @consumed_keys.to_a - excluded
+        return "-" if remaining.empty?
+
+        remaining.sort.map { |k| { "KEY" => k.to_s, "VALUE" => config[k].to_s } }
       end
 
     end

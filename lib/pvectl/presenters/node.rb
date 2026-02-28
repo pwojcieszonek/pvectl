@@ -191,6 +191,8 @@ module Pvectl
           "Updates" => {
             "Available" => "#{node.updates_available} packages"
           },
+          "Firewall" => format_firewall(node.firewall),
+          "Task History" => format_task_history(node.tasks),
           "Alerts" => alerts_display
         }
       end
@@ -627,26 +629,28 @@ module Pvectl
         end
       end
 
-      # Formats CPU models list for display.
+      # Formats CPU models list as a table.
       #
-      # @param models [Array<Hash>] CPU models
-      # @return [String] formatted list
+      # @param models [Array<Hash>] CPU models from API
+      # @return [Array<Hash>, String] table rows or "-"
       def format_cpu_models(models)
         return "-" if models.nil? || models.empty?
 
-        names = models.take(6).map { |m| m[:name] }
-        names.size < models.size ? "#{names.join(', ')}, ..." : names.join(", ")
+        models.map do |m|
+          { "Name" => m[:name] || "-", "Vendor" => m[:vendor] || "-" }
+        end
       end
 
-      # Formats machine types list for display.
+      # Formats machine types list as a table.
       #
-      # @param machines [Array<Hash>] machine types
-      # @return [String] formatted list
+      # @param machines [Array<Hash>] machine types from API
+      # @return [Array<Hash>, String] table rows or "-"
       def format_machines(machines)
         return "-" if machines.nil? || machines.empty?
 
-        names = machines.take(4).map { |m| m[:id] }
-        names.size < machines.size ? "#{names.join(', ')}, ..." : names.join(", ")
+        machines.map do |m|
+          { "ID" => m[:id] || "-", "Type" => m[:type] || "-" }
+        end
       end
 
       # Calculates memory usage percentage.

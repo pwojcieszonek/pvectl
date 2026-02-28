@@ -164,6 +164,96 @@ module Pvectl
         raise NotImplementedError, "#{self.class}#resource must be implemented"
       end
 
+      # Formats task history for describe output.
+      #
+      # @param tasks [Array<Models::TaskEntry>, nil] recent tasks
+      # @return [Array<Hash>, String] table data or "No task history"
+      def format_task_history(tasks)
+        return "No task history" if tasks.nil? || tasks.empty?
+
+        tasks.map do |task|
+          start = task.starttime ? Time.at(task.starttime).strftime("%Y-%m-%d %H:%M:%S") : "-"
+          dur = task.duration ? "#{task.duration}s" : "-"
+          {
+            "TYPE" => task.type || "-",
+            "STATUS" => task.exitstatus || task.status || "-",
+            "DATE" => start,
+            "DURATION" => dur,
+            "USER" => task.user || "-"
+          }
+        end
+      end
+
+      # Formats Firewall section from dedicated API data.
+      #
+      # Shows firewall options, rules, aliases, and IP sets
+      # from the /firewall/ API endpoints. Shared by VM and CT presenters.
+      #
+      # @param firewall_data [Hash, nil] firewall data with :options, :rules, :aliases, :ipset
+      # @return [Hash, String] firewall info or "-" if no data
+      def format_firewall(firewall_data)
+        return "-" if firewall_data.nil? || firewall_data.empty?
+
+        options = firewall_data[:options]
+        options = {} unless options.is_a?(Hash)
+        rules = firewall_data[:rules]
+        rules = [] unless rules.is_a?(Array)
+        aliases = firewall_data[:aliases]
+        aliases = [] unless aliases.is_a?(Array)
+        ipset = firewall_data[:ipset]
+        ipset = [] unless ipset.is_a?(Array)
+
+        result = {
+          "Enable" => options[:enable] == 1 ? "Yes" : "No",
+          "Input Policy" => (options[:policy_in] || "DROP").to_s,
+          "Output Policy" => (options[:policy_out] || "ACCEPT").to_s
+        }
+
+        # Optional options
+        result["DHCP"] = options[:dhcp] == 1 ? "Yes" : "No" if options.key?(:dhcp)
+        result["MAC Filter"] = options[:macfilter] == 1 ? "Yes" : "No" if options.key?(:macfilter)
+        result["IP Filter"] = options[:ipfilter] == 1 ? "Yes" : "No" if options.key?(:ipfilter)
+        result["NDP"] = options[:ndp] == 1 ? "Yes" : "No" if options.key?(:ndp)
+        result["Router Advertisement"] = options[:radv] == 1 ? "Yes" : "No" if options.key?(:radv)
+        result["Log Level In"] = options[:log_level_in].to_s if options[:log_level_in] && options[:log_level_in] != "nolog"
+        result["Log Level Out"] = options[:log_level_out].to_s if options[:log_level_out] && options[:log_level_out] != "nolog"
+
+        # Rules table
+        result["Rules"] = if rules.empty?
+                            "No rules configured"
+                          else
+                            rules.sort_by { |r| r[:pos].to_i }.map do |rule|
+                              {
+                                "ON" => rule[:enable] == 1 ? "Yes" : "No",
+                                "TYPE" => rule[:type]&.to_s&.upcase || "-",
+                                "ACTION" => rule[:action] || "-",
+                                "PROTO" => rule[:proto] || "-",
+                                "S.PORT" => rule[:sport] || "-",
+                                "D.PORT" => rule[:dport] || "-",
+                                "SOURCE" => rule[:source] || "-",
+                                "DEST" => rule[:dest] || "-",
+                                "COMMENT" => rule[:comment] || "-"
+                              }
+                            end
+                          end
+
+        # Aliases table
+        if aliases.any?
+          result["Aliases"] = aliases.map do |a|
+            { "NAME" => a[:name] || "-", "CIDR" => a[:cidr] || "-", "COMMENT" => a[:comment] || "-" }
+          end
+        end
+
+        # IP Sets table
+        if ipset.any?
+          result["IP Sets"] = ipset.map do |s|
+            { "NAME" => s[:name] || "-", "COMMENT" => s[:comment] || "-" }
+          end
+        end
+
+        result
+      end
+
       # Formats bytes to human readable string.
       #
       # @param bytes [Integer, nil] bytes

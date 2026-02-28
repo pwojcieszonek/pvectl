@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "task_list"
+
 module Pvectl
   module Repositories
     # Repository for LXC containers.
@@ -52,17 +54,18 @@ module Pvectl
       def describe(ctid)
         ctid = ctid.to_i
 
-        # 1. Find container in cluster to get node
         basic_data = find_container_basic_data(ctid)
         return nil if basic_data.nil?
 
         node = basic_data[:node]
 
-        # 2. Fetch detailed data from node-specific endpoints
         config = fetch_config(node, ctid)
         status = fetch_status(node, ctid)
+        snapshots = fetch_snapshots(node, ctid)
+        tasks = fetch_tasks(node, ctid)
+        firewall = fetch_firewall(node, ctid)
 
-        build_describe_model(basic_data, config, status)
+        build_describe_model(basic_data, config, status, snapshots, tasks, firewall)
       end
 
       # Deletes a container from the cluster.
@@ -312,6 +315,47 @@ module Pvectl
         {}
       end
 
+      # Fetches container snapshots.
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @return [Array<Hash>] snapshots list (excluding "current")
+      def fetch_snapshots(node, ctid)
+        resp = connection.client["nodes/#{node}/lxc/#{ctid}/snapshot"].get
+        unwrap(resp).reject { |s| s[:name] == "current" }
+      rescue StandardError
+        []
+      end
+
+      # Fetches firewall configuration (options, rules, aliases, IP sets).
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
+      def fetch_firewall(node, ctid)
+        base = "nodes/#{node}/lxc/#{ctid}/firewall"
+        options = (extract_data(connection.client["#{base}/options"].get) rescue {})
+        rules = (unwrap(connection.client["#{base}/rules"].get) rescue [])
+        aliases_data = (unwrap(connection.client["#{base}/aliases"].get) rescue [])
+        ipset = (unwrap(connection.client["#{base}/ipset"].get) rescue [])
+        { options: options, rules: rules, aliases: aliases_data, ipset: ipset }
+      rescue StandardError
+        {}
+      end
+
+      # Fetches recent task history for the container.
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @param limit [Integer] max entries (default 10)
+      # @return [Array<Models::TaskEntry>] recent tasks
+      def fetch_tasks(node, ctid, limit: 10)
+        task_list_repo = TaskList.new(connection)
+        task_list_repo.list(node: node, vmid: ctid, limit: limit)
+      rescue StandardError
+        []
+      end
+
       # Extracts network interfaces from config.
       # Network interfaces are stored as net0, net1, etc. keys.
       #
@@ -352,8 +396,9 @@ module Pvectl
       # @param basic_data [Hash] basic container data from cluster/resources
       # @param config [Hash] container config from /nodes/{node}/lxc/{ctid}/config
       # @param status [Hash] container status from /nodes/{node}/lxc/{ctid}/status/current
+      # @param snapshots [Array<Hash>] container snapshots
       # @return [Models::Container] Container model
-      def build_describe_model(basic_data, config, status)
+      def build_describe_model(basic_data, config, status, snapshots = [], tasks = [], firewall = {})
         network_interfaces = extract_network_interfaces(config)
 
         Models::Container.new(
@@ -379,7 +424,7 @@ module Pvectl
           netin: basic_data[:netin],
           netout: basic_data[:netout],
 
-          # Config attributes
+          # Config attributes (kept for backward compat)
           ostype: config[:ostype],
           arch: config[:arch],
           unprivileged: config[:unprivileged],
@@ -393,7 +438,10 @@ module Pvectl
           ha: status[:ha],
 
           # Parsed network interfaces
-          network_interfaces: network_interfaces
+          network_interfaces: network_interfaces,
+
+          # Raw API data for comprehensive describe
+          describe_data: { config: config, status: status, snapshots: snapshots, tasks: tasks, firewall: firewall }
         )
       end
     end

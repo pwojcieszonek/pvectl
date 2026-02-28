@@ -129,6 +129,9 @@ module Pvectl
       # @return [String, nil] resource type from API ("lxc")
       attr_reader :type
 
+      # @return [Hash, nil] raw API responses for describe command
+      attr_reader :describe_data
+
       # @!endgroup
 
       # Creates a new Container model from attributes.
@@ -167,6 +170,7 @@ module Pvectl
         @pid = @attributes[:pid]
         @ha = @attributes[:ha]
         @type = @attributes[:type]
+        @describe_data = @attributes[:describe_data]
       end
 
       # Checks if the container is running.

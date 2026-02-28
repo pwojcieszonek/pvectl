@@ -468,7 +468,7 @@ class PresentersContainerTest < Minitest::Test
   end
 
   # ---------------------------
-  # to_description() Method
+  # to_description() Method — Returns Hash
   # ---------------------------
 
   def test_to_description_returns_hash
@@ -478,63 +478,239 @@ class PresentersContainerTest < Minitest::Test
     assert_kind_of Hash, desc
   end
 
-  def test_to_description_includes_basic_fields
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_with_minimal_container
+    desc = @presenter.to_description(@running_container)
+
+    # Should handle container without describe attributes gracefully
+    assert_kind_of Hash, desc
+    assert_equal "web-container", desc["Name"]
+  end
+
+  # ---------------------------
+  # to_description() — Header fields
+  # ---------------------------
+
+  def test_to_description_includes_name
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
     assert_equal "web-container", desc["Name"]
+  end
+
+  def test_to_description_includes_ctid
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
     assert_equal 200, desc["CTID"]
+  end
+
+  def test_to_description_includes_status
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
     assert_equal "running", desc["Status"]
-    assert_equal "pve1", desc["Node"]
-    assert_equal "no", desc["Template"]
   end
 
-  def test_to_description_includes_system_section
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_includes_node
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_kind_of Hash, desc["System"]
-    assert_equal "debian", desc["System"]["OS Type"]
-    assert_equal "amd64", desc["System"]["Architecture"]
-    assert_equal "yes", desc["System"]["Unprivileged"]
+    assert_equal "pve-node1", desc["Node"]
   end
 
-  def test_to_description_includes_cpu_section
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_includes_tags
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_kind_of Hash, desc["CPU"]
-    assert_equal 2, desc["CPU"]["Cores"]
-    assert_equal "5%", desc["CPU"]["Usage"]
+    assert_equal "prod, web", desc["Tags"]
   end
 
-  def test_to_description_includes_memory_section
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_includes_description
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_kind_of Hash, desc["Memory"]
-    assert_includes desc["Memory"]["Total"], "GiB"
-    assert_includes desc["Memory"]["Used"], "GiB"
-    assert_includes desc["Memory"]["Usage"], "%"
+    assert_equal "Production web container", desc["Description"]
   end
 
-  def test_to_description_includes_swap_section
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  # ---------------------------
+  # to_description() — Summary section (running)
+  # ---------------------------
 
-    assert_kind_of Hash, desc["Swap"]
-    assert_includes desc["Swap"]["Total"], "MiB"
-    assert_includes desc["Swap"]["Used"], "MiB"
+  def test_to_description_summary_is_hash
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Summary"]
   end
 
-  def test_to_description_includes_root_filesystem_section
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_summary_cpu_usage_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_kind_of Hash, desc["Root Filesystem"]
-    assert_includes desc["Root Filesystem"]["Size"], "GiB"
-    assert_includes desc["Root Filesystem"]["Used"], "GiB"
+    assert_includes desc["Summary"]["CPU Usage"], "% of"
+    assert_includes desc["Summary"]["CPU Usage"], "core(s)"
   end
+
+  def test_to_description_summary_memory_usage_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_includes desc["Summary"]["Memory Usage"], "%"
+    assert_includes desc["Summary"]["Memory Usage"], "GiB"
+  end
+
+  def test_to_description_summary_swap_usage_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    # swap = 52_428_800 > 0, maxswap = 536_870_912 > 0
+    refute_equal "-", desc["Summary"]["Swap Usage"]
+    assert_includes desc["Summary"]["Swap Usage"], "MiB"
+  end
+
+  def test_to_description_summary_rootfs_usage
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    refute_equal "-", desc["Summary"]["Root FS Usage"]
+    assert_includes desc["Summary"]["Root FS Usage"], "GiB"
+  end
+
+  def test_to_description_summary_includes_uptime_when_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert desc["Summary"].key?("Uptime")
+    assert_equal "1d 0h", desc["Summary"]["Uptime"]
+  end
+
+  def test_to_description_summary_includes_pid_when_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert desc["Summary"].key?("PID")
+    assert_equal "54321", desc["Summary"]["PID"]
+  end
+
+  def test_to_description_summary_includes_network_io_when_running
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert desc["Summary"].key?("Network In")
+    assert desc["Summary"].key?("Network Out")
+  end
+
+  # ---------------------------
+  # to_description() — Summary section (stopped)
+  # ---------------------------
+
+  def test_to_description_summary_stopped_cpu_dash
+    ct = create_stopped_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Summary"]["CPU Usage"]
+  end
+
+  def test_to_description_summary_stopped_memory_dash
+    ct = create_stopped_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Summary"]["Memory Usage"]
+  end
+
+  def test_to_description_summary_stopped_no_uptime
+    ct = create_stopped_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    refute desc["Summary"].key?("Uptime")
+  end
+
+  def test_to_description_summary_stopped_no_pid
+    ct = create_stopped_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    refute desc["Summary"].key?("PID")
+  end
+
+  def test_to_description_summary_stopped_no_network
+    ct = create_stopped_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    refute desc["Summary"].key?("Network In")
+    refute desc["Summary"].key?("Network Out")
+  end
+
+  # ---------------------------
+  # to_description() — Resources section
+  # ---------------------------
+
+  def test_to_description_resources_is_hash
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Resources"]
+  end
+
+  def test_to_description_resources_memory
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    # config[:memory] = 4096 => 4.0 GiB
+    assert_includes desc["Resources"]["Memory"], "GiB"
+  end
+
+  def test_to_description_resources_swap
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    # config[:swap] = 512 => "512 MiB"
+    assert_equal "512 MiB", desc["Resources"]["Swap"]
+  end
+
+  def test_to_description_resources_cores
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "2", desc["Resources"]["Cores"]
+  end
+
+  def test_to_description_resources_root_filesystem
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Resources"]["Root Filesystem"]
+    assert_includes desc["Resources"]["Root Filesystem"]["Size"], "GiB"
+  end
+
+  def test_to_description_resources_mountpoints_dash_when_none
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Resources"]["Mountpoints"]
+  end
+
+  def test_to_description_resources_mountpoints_with_mps
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(
+          mp0: "local-lvm:vm-200-disk-1,mp=/mnt/data,size=50G",
+          mp1: "local-lvm:vm-200-disk-2,mp=/mnt/backup,size=100G,ro=1"
+        ),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Array, desc["Resources"]["Mountpoints"]
+    assert_equal 2, desc["Resources"]["Mountpoints"].length
+    assert_equal "/mnt/data", desc["Resources"]["Mountpoints"].first["PATH"]
+  end
+
+  # ---------------------------
+  # to_description() — Network section
+  # ---------------------------
 
   def test_to_description_includes_network_interfaces_table
     ct_with_describe_data = create_container_with_describe_data(@running_container)
@@ -548,52 +724,469 @@ class PresentersContainerTest < Minitest::Test
     assert_equal "192.168.1.50/24", net["IP"]
   end
 
-  def test_to_description_includes_features
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  # ---------------------------
+  # to_description() — DNS section
+  # ---------------------------
 
-    assert_equal "nesting, keyctl", desc["Features"]
+  def test_to_description_includes_dns
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(nameserver: "8.8.8.8 1.1.1.1", searchdomain: "example.com"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["DNS"]
+    assert_equal "8.8.8.8 1.1.1.1", desc["DNS"]["Nameserver"]
+    assert_equal "example.com", desc["DNS"]["Search Domain"]
   end
 
-  def test_to_description_includes_runtime_for_running_container
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_dns_dash_when_not_configured
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_kind_of Hash, desc["Runtime"]
-    assert_equal "5d 2h", desc["Runtime"]["Uptime"]
-    assert_equal 54321, desc["Runtime"]["PID"]
+    assert_equal "-", desc["DNS"]
   end
 
-  def test_to_description_stopped_container_runtime_shows_dash
-    ct_with_describe_data = create_container_with_describe_data(@stopped_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  # ---------------------------
+  # to_description() — Options section
+  # ---------------------------
 
-    assert_equal "-", desc["Runtime"]
+  def test_to_description_options_is_hash
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Options"]
   end
 
-  def test_to_description_includes_tags
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_options_start_at_boot_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
 
-    assert_equal "prod, web", desc["Tags"]
+    assert_equal "No", desc["Options"]["Start at Boot"]
   end
 
-  def test_to_description_includes_description
-    ct_with_describe_data = create_container_with_describe_data(@running_container)
-    desc = @presenter.to_description(ct_with_describe_data)
+  def test_to_description_options_start_at_boot_yes
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(onboot: 1),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
 
-    assert_equal "Production web container", desc["Description"]
+    assert_equal "Yes", desc["Options"]["Start at Boot"]
   end
 
-  def test_to_description_with_minimal_container
-    desc = @presenter.to_description(@running_container)
+  def test_to_description_options_startup_order
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(startup: "order=1,up=30,down=60"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
 
-    # Should handle container without describe attributes gracefully
-    assert_kind_of Hash, desc
-    assert_equal "web-container", desc["Name"]
+    assert_equal "order=1,up=30,down=60", desc["Options"]["Startup Order"]
+  end
+
+  def test_to_description_options_startup_order_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Options"]["Startup Order"]
+  end
+
+  def test_to_description_options_os_type
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "debian", desc["Options"]["OS Type"]
+  end
+
+  def test_to_description_options_architecture
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "amd64", desc["Options"]["Architecture"]
+  end
+
+  def test_to_description_options_unprivileged
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "Yes", desc["Options"]["Unprivileged"]
+  end
+
+  def test_to_description_options_features
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "nesting, keyctl", desc["Options"]["Features"]
+  end
+
+  def test_to_description_options_console_mode_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "tty", desc["Options"]["Console Mode"]
+  end
+
+  def test_to_description_options_console_mode_custom
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(cmode: "console"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "console", desc["Options"]["Console Mode"]
+  end
+
+  def test_to_description_options_tty_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "2", desc["Options"]["TTY"]
+  end
+
+  def test_to_description_options_tty_custom
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(tty: 4),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "4", desc["Options"]["TTY"]
+  end
+
+  def test_to_description_options_protection_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "No", desc["Options"]["Protection"]
+  end
+
+  def test_to_description_options_protection_yes
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(protection: 1),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "Yes", desc["Options"]["Protection"]
+  end
+
+  def test_to_description_options_hookscript
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(hookscript: "local:snippets/hook.sh"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "local:snippets/hook.sh", desc["Options"]["Hookscript"]
+  end
+
+  def test_to_description_options_hookscript_default
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Options"]["Hookscript"]
+  end
+
+  # ---------------------------
+  # to_description() — Task History section
+  # ---------------------------
+
+  def test_to_description_task_history_with_tasks
+    task = Pvectl::Models::TaskEntry.new(
+      type: "vzstart", status: "stopped", exitstatus: "OK",
+      starttime: 1_700_000_000, endtime: 1_700_000_003, user: "root@pam", node: "pve1"
+    )
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        tasks: [task]
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Array, desc["Task History"]
+    assert_equal 1, desc["Task History"].length
+    assert_equal "vzstart", desc["Task History"].first["TYPE"]
+    assert_equal "OK", desc["Task History"].first["STATUS"]
+    assert_equal "3s", desc["Task History"].first["DURATION"]
+    assert_equal "root@pam", desc["Task History"].first["USER"]
+  end
+
+  def test_to_description_task_history_empty
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "No task history", desc["Task History"]
+  end
+
+  # ---------------------------
+  # to_description() — Firewall section
+  # ---------------------------
+
+  def test_to_description_firewall_dash_when_absent
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Firewall"]
+  end
+
+  def test_to_description_firewall_with_options
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        firewall: {
+          options: { enable: 1, policy_in: "DROP", policy_out: "ACCEPT", macfilter: 1 },
+          rules: [],
+          aliases: [],
+          ipset: []
+        }
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    fw = desc["Firewall"]
+    assert_kind_of Hash, fw
+    assert_equal "Yes", fw["Enable"]
+    assert_equal "DROP", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+    assert_equal "Yes", fw["MAC Filter"]
+    assert_equal "No rules configured", fw["Rules"]
+  end
+
+  def test_to_description_firewall_with_rules
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        firewall: {
+          options: { enable: 1 },
+          rules: [
+            { pos: 0, enable: 1, type: "in", action: "ACCEPT", proto: "tcp", dport: "22", comment: "SSH" }
+          ],
+          aliases: [],
+          ipset: []
+        }
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    rules = desc["Firewall"]["Rules"]
+    assert_kind_of Array, rules
+    assert_equal 1, rules.length
+    assert_equal "Yes", rules[0]["ON"]
+    assert_equal "IN", rules[0]["TYPE"]
+    assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "SSH", rules[0]["COMMENT"]
+  end
+
+  # ---------------------------
+  # to_description() — Snapshots section
+  # ---------------------------
+
+  def test_to_description_includes_snapshots
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: [
+          { name: "baseline", snaptime: 1705240365, description: "Initial setup" }
+        ]
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Array, desc["Snapshots"]
+    assert_equal "baseline", desc["Snapshots"].first["NAME"]
+    assert_includes desc["Snapshots"].first["DATE"], "2024"
+    assert_equal "Initial setup", desc["Snapshots"].first["DESCRIPTION"]
+  end
+
+  def test_to_description_snapshots_no_snapshots
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "No snapshots", desc["Snapshots"]
+  end
+
+  # ---------------------------
+  # to_description() — High Availability section
+  # ---------------------------
+
+  def test_to_description_includes_ha
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: []
+      },
+      ha: { managed: 1, group: "ha-group1" }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["High Availability"]
+    assert_equal "managed", desc["High Availability"]["State"]
+    assert_equal "ha-group1", desc["High Availability"]["Group"]
+  end
+
+  def test_to_description_ha_defaults
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["High Availability"]
+    assert_equal "-", desc["High Availability"]["State"]
+  end
+
+  # ---------------------------
+  # to_description() — Catch-all mechanism
+  # ---------------------------
+
+  def test_to_description_catch_all_shows_unknown_keys
+    ct = create_ct_from_data(some_future_key: "future_value", another_unknown: "42")
+    desc = @presenter.to_description(ct)
+
+    assert desc.key?("Additional Configuration")
+    additional = desc["Additional Configuration"]
+    assert_kind_of Array, additional
+    keys = additional.map { |row| row["KEY"] }
+    assert_includes keys, "some_future_key"
+    assert_includes keys, "another_unknown"
+  end
+
+  def test_to_description_catch_all_excludes_digest
+    ct = create_ct_from_data(digest: "abc123def456")
+    desc = @presenter.to_description(ct)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "digest"
+    end
+  end
+
+  def test_to_description_catch_all_dash_when_all_consumed
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Additional Configuration"]
   end
 
   private
+
+  # Returns base container config hash for describe_data tests.
+  def base_container_config
+    {
+      ostype: "debian", arch: "amd64", unprivileged: 1,
+      features: "nesting=1,keyctl=1",
+      rootfs: "local-lvm:vm-200-disk-0,size=8G",
+      hostname: "web-container.example.com",
+      cores: 2, memory: 4096, swap: 512
+    }
+  end
+
+  # Returns full attribute hash for creating a container with describe_data.
+  def create_describe_attrs
+    {
+      vmid: 200, name: "web-container", node: "pve-node1",
+      status: "running", cpu: 0.12, maxcpu: 2,
+      mem: 1_073_741_824, maxmem: 4_294_967_296,
+      swap: 52_428_800, maxswap: 536_870_912,
+      disk: 2_147_483_648, maxdisk: 8_589_934_592,
+      uptime: 86400, template: 0, tags: "prod;web",
+      pool: nil, netin: 123_456_789, netout: 987_654_321,
+      ostype: "debian", arch: "amd64", unprivileged: 1,
+      features: "nesting=1,keyctl=1",
+      rootfs: "local-lvm:vm-200-disk-0,size=8G",
+      network_interfaces: [
+        { name: "eth0", bridge: "vmbr0", ip: "192.168.1.50/24", hwaddr: "BC:24:11:AB:CD:EF" }
+      ],
+      description: "Production web container",
+      hostname: "web-container.example.com",
+      pid: 54321
+    }
+  end
+
+  # Creates a Container model with describe_data including config overrides.
+  def create_ct_from_data(config_overrides = {})
+    config = base_container_config.merge(config_overrides)
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: config,
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    Pvectl::Models::Container.new(attrs)
+  end
+
+  # Creates a stopped Container model with describe_data.
+  def create_stopped_ct_from_data(config_overrides = {})
+    config = base_container_config.merge(config_overrides)
+    attrs = create_describe_attrs.merge(
+      status: "stopped",
+      cpu: nil,
+      mem: nil,
+      swap: nil,
+      uptime: nil,
+      netin: nil,
+      netout: nil,
+      pid: nil,
+      describe_data: {
+        config: config,
+        status: {},
+        snapshots: []
+      }
+    )
+    Pvectl::Models::Container.new(attrs)
+  end
 
   # Creates container model with describe attributes for testing
   def create_container_with_describe_data(base_container)
