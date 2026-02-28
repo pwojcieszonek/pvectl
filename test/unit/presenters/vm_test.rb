@@ -1152,6 +1152,127 @@ class PresentersVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # Firewall Section
+  # ---------------------------
+
+  def test_to_description_firewall_dash_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Firewall"]
+  end
+
+  def test_to_description_firewall_options_defaults
+    data = base_describe_data.merge(
+      firewall: {
+        options: {},
+        rules: [],
+        aliases: [],
+        ipset: []
+      }
+    )
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    fw = desc["Firewall"]
+    assert_kind_of Hash, fw
+    assert_equal "No", fw["Enable"]
+    assert_equal "DROP", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+    assert_equal "No rules configured", fw["Rules"]
+  end
+
+  def test_to_description_firewall_with_options
+    data = base_describe_data.merge(
+      firewall: {
+        options: {
+          enable: 1,
+          policy_in: "ACCEPT",
+          policy_out: "ACCEPT",
+          macfilter: 1,
+          ipfilter: 0,
+          log_level_in: "warning",
+          log_level_out: "nolog"
+        },
+        rules: [],
+        aliases: [],
+        ipset: []
+      }
+    )
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    fw = desc["Firewall"]
+    assert_equal "Yes", fw["Enable"]
+    assert_equal "ACCEPT", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+    assert_equal "Yes", fw["MAC Filter"]
+    assert_equal "No", fw["IP Filter"]
+    assert_equal "warning", fw["Log Level In"]
+    refute fw.key?("Log Level Out"), "nolog should be omitted"
+  end
+
+  def test_to_description_firewall_with_rules
+    data = base_describe_data.merge(
+      firewall: {
+        options: { enable: 1 },
+        rules: [
+          { pos: 0, enable: 1, type: "in", action: "ACCEPT", proto: "tcp",
+            dport: "22", source: "10.0.0.0/8", comment: "Allow SSH" },
+          { pos: 1, enable: 0, type: "out", action: "DROP", proto: "udp",
+            dport: "53" }
+        ],
+        aliases: [],
+        ipset: []
+      }
+    )
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    rules = desc["Firewall"]["Rules"]
+    assert_kind_of Array, rules
+    assert_equal 2, rules.length
+
+    assert_equal "Yes", rules[0]["ON"]
+    assert_equal "IN", rules[0]["TYPE"]
+    assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "tcp", rules[0]["PROTO"]
+    assert_equal "22", rules[0]["D.PORT"]
+    assert_equal "10.0.0.0/8", rules[0]["SOURCE"]
+    assert_equal "Allow SSH", rules[0]["COMMENT"]
+
+    assert_equal "No", rules[1]["ON"]
+    assert_equal "OUT", rules[1]["TYPE"]
+    assert_equal "DROP", rules[1]["ACTION"]
+  end
+
+  def test_to_description_firewall_with_aliases_and_ipsets
+    data = base_describe_data.merge(
+      firewall: {
+        options: {},
+        rules: [],
+        aliases: [
+          { name: "web_server", cidr: "10.0.1.5", comment: "Web server" }
+        ],
+        ipset: [
+          { name: "trusted_nets", comment: "Trusted networks" }
+        ]
+      }
+    )
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    fw = desc["Firewall"]
+    assert_kind_of Array, fw["Aliases"]
+    assert_equal "web_server", fw["Aliases"].first["NAME"]
+    assert_equal "10.0.1.5", fw["Aliases"].first["CIDR"]
+
+    assert_kind_of Array, fw["IP Sets"]
+    assert_equal "trusted_nets", fw["IP Sets"].first["NAME"]
+  end
+
+  # ---------------------------
   # Task History Section
   # ---------------------------
 

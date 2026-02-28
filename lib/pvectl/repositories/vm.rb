@@ -68,7 +68,8 @@ module Pvectl
           snapshots: fetch_snapshots(node, vmid),
           agent_ips: fetch_agent_ips(node, vmid),
           pending: fetch_pending(node, vmid),
-          tasks: fetch_tasks(node, vmid)
+          tasks: fetch_tasks(node, vmid),
+          firewall: fetch_firewall(node, vmid)
         }
 
         build_describe_model(basic_data, describe_data)
@@ -396,6 +397,23 @@ module Pvectl
         normalize_response(resp)
       rescue StandardError
         []
+      end
+
+      # Fetches firewall configuration (options, rules, aliases, IP sets).
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
+      def fetch_firewall(node, vmid)
+        base = "nodes/#{node}/qemu/#{vmid}/firewall"
+        {
+          options: normalize_hash_response(connection.client["#{base}/options"].get),
+          rules: normalize_response(connection.client["#{base}/rules"].get),
+          aliases: normalize_response(connection.client["#{base}/aliases"].get),
+          ipset: normalize_response(connection.client["#{base}/ipset"].get)
+        }
+      rescue StandardError
+        {}
       end
 
       # Fetches recent task history for the VM.
