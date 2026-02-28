@@ -65,7 +65,8 @@ module Pvectl
           config: fetch_config(node, vmid),
           status: fetch_status(node, vmid),
           snapshots: fetch_snapshots(node, vmid),
-          agent_ips: fetch_agent_ips(node, vmid)
+          agent_ips: fetch_agent_ips(node, vmid),
+          pending: fetch_pending(node, vmid)
         }
 
         build_describe_model(basic_data, describe_data)
@@ -381,6 +382,18 @@ module Pvectl
         data[:result]
       rescue StandardError
         nil
+      end
+
+      # Fetches pending configuration changes.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @return [Array<Hash>] pending changes
+      def fetch_pending(node, vmid)
+        resp = connection.client["nodes/#{node}/qemu/#{vmid}/pending"].get
+        normalize_response(resp)
+      rescue StandardError
+        []
       end
 
       # Normalizes hash response that may be wrapped in :data key.

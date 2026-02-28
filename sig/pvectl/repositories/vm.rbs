@@ -55,6 +55,8 @@ module Pvectl
 
       def fetch_agent_ips: (String node, Integer vmid) -> Array[Hash[Symbol, untyped]]?
 
+      def fetch_pending: (String node, Integer vmid) -> Array[Hash[Symbol, untyped]]
+
       def normalize_hash_response: (Hash[Symbol, untyped] response) -> Hash[Symbol, untyped]
 
       def normalize_response: (Array[untyped] | Hash[Symbol, untyped] response) -> Array[Hash[Symbol, untyped]]
