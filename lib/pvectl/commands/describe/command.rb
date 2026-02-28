@@ -21,29 +21,44 @@ module Pvectl
         def self.register(cli)
           cli.desc "Show detailed information about a resource"
           cli.long_desc <<~HELP
-            Show detailed information about a specific resource. Displays
-            comprehensive diagnostics including configuration, status, hardware,
-            network, and related resources (snapshots, disks, etc.).
+            Show detailed information about a specific resource. Displays all
+            configuration details, runtime status, and related resources in
+            structured, labeled sections.
 
             Unlike 'get' which lists many resources in a table, 'describe' shows
             everything known about a single resource in a readable format.
+            Unknown or future Proxmox config keys appear in an "Additional
+            Configuration" catch-all section, so new API fields are never hidden.
 
             RESOURCE TYPES
               node NAME                 Full node diagnostics (CPU, memory, storage, services)
-              vm VMID                   VM config, disks, network, snapshots, pending changes
-              container VMID            Container details, mountpoints, network
+              vm VMID                   Comprehensive VM configuration (see VM SECTIONS below)
+              container VMID            Comprehensive container configuration (see CT SECTIONS below)
               storage NAME              Storage pool info, content types, usage
               snapshot NAME             Snapshot metadata and snapshot tree (use --vmid)
               volume TYPE ID DISK       Virtual disk details (e.g., describe volume vm 100 scsi0)
+
+            VM SECTIONS
+              System, Boot, CPU, Memory, Display, Agent, Disks, EFI/TPM,
+              Network, Cloud-Init, USB/PCI Passthrough, Serial/Audio,
+              Snapshots, Runtime Status, I/O Statistics, Startup Order,
+              Security, Hotplug, Hookscript, High Availability, Tags,
+              Pending Changes, Additional Configuration
+
+            CT SECTIONS
+              System, CPU, Memory, Swap, Root Filesystem, Mountpoints,
+              Network, DNS, Features, Console, Snapshots, Runtime Status,
+              I/O Statistics, Startup Order, Security, Hookscript,
+              High Availability, Tags, Additional Configuration
 
             EXAMPLES
               Full node diagnostics:
                 $ pvectl describe node pve1
 
-              VM details with config, disks, and snapshots:
+              VM details — all configuration sections:
                 $ pvectl describe vm 100
 
-              Container details:
+              Container details — all configuration sections:
                 $ pvectl describe container 200
 
               Storage pool information (node-specific):
@@ -70,6 +85,10 @@ module Pvectl
 
               Snapshot describe shows a visual tree of all snapshots for the
               matching VMs, highlighting the described snapshot.
+
+              VM and container describe output includes ALL configuration from
+              the Proxmox API. Any fields not recognized by the presenter are
+              grouped in the "Additional Configuration" section at the end.
 
             SEE ALSO
               pvectl help get           List resources in table format
