@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "set"
+require_relative "task_list"
 
 module Pvectl
   module Repositories
@@ -66,7 +67,8 @@ module Pvectl
           status: fetch_status(node, vmid),
           snapshots: fetch_snapshots(node, vmid),
           agent_ips: fetch_agent_ips(node, vmid),
-          pending: fetch_pending(node, vmid)
+          pending: fetch_pending(node, vmid),
+          tasks: fetch_tasks(node, vmid)
         }
 
         build_describe_model(basic_data, describe_data)
@@ -392,6 +394,19 @@ module Pvectl
       def fetch_pending(node, vmid)
         resp = connection.client["nodes/#{node}/qemu/#{vmid}/pending"].get
         normalize_response(resp)
+      rescue StandardError
+        []
+      end
+
+      # Fetches recent task history for the VM.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer] VM identifier
+      # @param limit [Integer] max entries (default 10)
+      # @return [Array<Models::TaskEntry>] recent tasks
+      def fetch_tasks(node, vmid, limit: 10)
+        task_list_repo = TaskList.new(connection)
+        task_list_repo.list(node: node, vmid: vmid, limit: limit)
       rescue StandardError
         []
       end

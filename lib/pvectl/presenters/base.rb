@@ -164,6 +164,26 @@ module Pvectl
         raise NotImplementedError, "#{self.class}#resource must be implemented"
       end
 
+      # Formats task history for describe output.
+      #
+      # @param tasks [Array<Models::TaskEntry>, nil] recent tasks
+      # @return [Array<Hash>, String] table data or "No task history"
+      def format_task_history(tasks)
+        return "No task history" if tasks.nil? || tasks.empty?
+
+        tasks.map do |task|
+          start = task.starttime ? Time.at(task.starttime).strftime("%Y-%m-%d %H:%M:%S") : "-"
+          dur = task.duration ? "#{task.duration}s" : "-"
+          {
+            "TYPE" => task.type || "-",
+            "STATUS" => task.exitstatus || task.status || "-",
+            "DATE" => start,
+            "DURATION" => dur,
+            "USER" => task.user || "-"
+          }
+        end
+      end
+
       # Formats bytes to human readable string.
       #
       # @param bytes [Integer, nil] bytes

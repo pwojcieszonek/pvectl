@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "task_list"
+
 module Pvectl
   module Repositories
     # Repository for LXC containers.
@@ -60,8 +62,9 @@ module Pvectl
         config = fetch_config(node, ctid)
         status = fetch_status(node, ctid)
         snapshots = fetch_snapshots(node, ctid)
+        tasks = fetch_tasks(node, ctid)
 
-        build_describe_model(basic_data, config, status, snapshots)
+        build_describe_model(basic_data, config, status, snapshots, tasks)
       end
 
       # Deletes a container from the cluster.
@@ -323,6 +326,19 @@ module Pvectl
         []
       end
 
+      # Fetches recent task history for the container.
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @param limit [Integer] max entries (default 10)
+      # @return [Array<Models::TaskEntry>] recent tasks
+      def fetch_tasks(node, ctid, limit: 10)
+        task_list_repo = TaskList.new(connection)
+        task_list_repo.list(node: node, vmid: ctid, limit: limit)
+      rescue StandardError
+        []
+      end
+
       # Extracts network interfaces from config.
       # Network interfaces are stored as net0, net1, etc. keys.
       #
@@ -365,7 +381,7 @@ module Pvectl
       # @param status [Hash] container status from /nodes/{node}/lxc/{ctid}/status/current
       # @param snapshots [Array<Hash>] container snapshots
       # @return [Models::Container] Container model
-      def build_describe_model(basic_data, config, status, snapshots = [])
+      def build_describe_model(basic_data, config, status, snapshots = [], tasks = [])
         network_interfaces = extract_network_interfaces(config)
 
         Models::Container.new(
@@ -408,7 +424,7 @@ module Pvectl
           network_interfaces: network_interfaces,
 
           # Raw API data for comprehensive describe
-          describe_data: { config: config, status: status, snapshots: snapshots }
+          describe_data: { config: config, status: status, snapshots: snapshots, tasks: tasks }
         )
       end
     end
