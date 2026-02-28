@@ -107,8 +107,8 @@ module Pvectl
         simple_keys = hash.select { |_, v| !v.is_a?(Hash) && !(v.is_a?(Array) && v.first.is_a?(Hash)) && !v.to_s.include?("\n") }
         max_key_length = simple_keys.keys.map { |k| k.to_s.length }.max || 0
 
-        # Track whether we've passed the flat header area (indent 0 only).
-        # Once a section (Hash/Array) appears, all subsequent entries get separators.
+        # Track whether we've passed a nested section (Hash/Array).
+        # Once a section appears, all subsequent simple entries get blank-line separators.
         prev_was_section = false
 
         hash.each do |key, value|
@@ -128,7 +128,7 @@ module Pvectl
             prev_was_section = true
           elsif value.is_a?(Array) && value.empty?
             # Empty array -> show as "-"
-            lines << "" if indent == 0 && prev_was_section
+            lines << "" if prev_was_section
             formatted_key = "#{human_key}:".ljust(max_key_length + 2)
             lines << "#{prefix}#{formatted_key}-"
           else
@@ -142,8 +142,8 @@ module Pvectl
               end
               prev_was_section = true
             else
-              # Simple key-value — add separator at top level after sections
-              lines << "" if indent == 0 && prev_was_section
+              # Simple key-value — add separator after sections at any indent level
+              lines << "" if prev_was_section
               formatted_key = "#{human_key}:".ljust(max_key_length + 2)
               lines << "#{prefix}#{formatted_key}#{formatted_value}"
             end
