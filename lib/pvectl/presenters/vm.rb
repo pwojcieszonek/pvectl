@@ -776,13 +776,16 @@ module Pvectl
 
         parts = agent.to_s.split(",")
         enabled = parts.first == "1" ? "yes" : "no"
-        type = "-"
+        opts = {}
         parts[1..].each do |part|
           key, val = part.split("=", 2)
-          type = val if key == "type"
+          opts[key] = val
         end
 
-        { "Enabled" => enabled, "Type" => type }
+        result = { "Enabled" => enabled, "Type" => opts.fetch("type", "-") }
+        result["Trim Cloned Disks"] = opts["fstrim_cloned_disks"] == "1" ? "yes" : "no" if opts.key?("fstrim_cloned_disks")
+        result["Freeze FS on Backup"] = opts["freeze-fs-on-backup"] == "1" ? "yes" : "no" if opts.key?("freeze-fs-on-backup")
+        result
       end
 
       # Registers config keys as consumed by a format method.

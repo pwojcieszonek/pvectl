@@ -853,6 +853,32 @@ class PresentersVmTest < Minitest::Test
     assert_kind_of Hash, desc["Agent"]
     assert_equal "yes", desc["Agent"]["Enabled"]
     assert_equal "virtio", desc["Agent"]["Type"]
+    refute desc["Agent"].key?("Trim Cloned Disks"), "should not show fstrim when absent"
+    refute desc["Agent"].key?("Freeze FS on Backup"), "should not show freeze-fs when absent"
+  end
+
+  def test_to_description_agent_with_fstrim_and_freeze
+    data = base_describe_data.tap do |d|
+      d[:config][:agent] = "1,fstrim_cloned_disks=1,freeze-fs-on-backup=1,type=virtio"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "yes", desc["Agent"]["Enabled"]
+    assert_equal "virtio", desc["Agent"]["Type"]
+    assert_equal "yes", desc["Agent"]["Trim Cloned Disks"]
+    assert_equal "yes", desc["Agent"]["Freeze FS on Backup"]
+  end
+
+  def test_to_description_agent_with_fstrim_disabled
+    data = base_describe_data.tap do |d|
+      d[:config][:agent] = "1,fstrim_cloned_disks=0,type=virtio"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "no", desc["Agent"]["Trim Cloned Disks"]
+    refute desc["Agent"].key?("Freeze FS on Backup")
   end
 
   def test_to_description_agent_disabled
