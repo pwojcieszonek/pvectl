@@ -903,6 +903,103 @@ class PresentersVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # USB Devices Section
+  # ---------------------------
+
+  def test_to_description_includes_usb_devices
+    data = base_describe_data.tap do |d|
+      d[:config][:usb0] = "host=1234:5678"
+      d[:config][:usb1] = "spice"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["USB Devices"]
+    assert_equal 2, desc["USB Devices"].length
+    assert_equal "usb0", desc["USB Devices"].first["NAME"]
+    assert_equal "host=1234:5678", desc["USB Devices"].first["CONFIG"]
+  end
+
+  def test_to_description_usb_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["USB Devices"]
+  end
+
+  # ---------------------------
+  # PCI Passthrough Section
+  # ---------------------------
+
+  def test_to_description_includes_pci_passthrough
+    data = base_describe_data.tap do |d|
+      d[:config][:hostpci0] = "0000:01:00.0,pcie=1,x-vga=1"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["PCI Passthrough"]
+    assert_equal 1, desc["PCI Passthrough"].length
+    assert_equal "hostpci0", desc["PCI Passthrough"].first["NAME"]
+    assert_equal "0000:01:00.0,pcie=1,x-vga=1", desc["PCI Passthrough"].first["CONFIG"]
+  end
+
+  def test_to_description_pci_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["PCI Passthrough"]
+  end
+
+  # ---------------------------
+  # Serial Ports Section
+  # ---------------------------
+
+  def test_to_description_includes_serial_ports
+    data = base_describe_data.tap do |d|
+      d[:config][:serial0] = "socket"
+      d[:config][:serial1] = "/dev/ttyS0"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_kind_of Array, desc["Serial Ports"]
+    assert_equal 2, desc["Serial Ports"].length
+    assert_equal "serial0", desc["Serial Ports"].first["NAME"]
+    assert_equal "socket", desc["Serial Ports"].first["TYPE"]
+  end
+
+  def test_to_description_serial_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Serial Ports"]
+  end
+
+  # ---------------------------
+  # Audio Section
+  # ---------------------------
+
+  def test_to_description_includes_audio
+    data = base_describe_data.tap { |d| d[:config][:audio0] = "device=ich9-intel-hda,driver=spice" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "device=ich9-intel-hda,driver=spice", desc["Audio"]
+  end
+
+  def test_to_description_audio_dash_when_none
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Audio"]
+  end
+
+  # ---------------------------
   # EFI Disk Section
   # ---------------------------
 

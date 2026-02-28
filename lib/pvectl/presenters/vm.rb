@@ -156,6 +156,10 @@ module Pvectl
           "TPM" => format_tpm(config),
           "Network" => format_network(config, data[:agent_ips]),
           "Cloud-Init" => format_cloud_init(config),
+          "USB Devices" => format_usb_devices(config),
+          "PCI Passthrough" => format_pci_passthrough(config),
+          "Serial Ports" => format_serial_ports(config),
+          "Audio" => format_audio(config),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Runtime" => format_runtime(status),
           "Network I/O" => format_network_io,
@@ -516,6 +520,57 @@ module Pvectl
         end
 
         result
+      end
+
+      # Formats USB devices section.
+      #
+      # @param config [Hash] VM config
+      # @return [Array<Hash>, String] USB devices table or "-"
+      def format_usb_devices(config)
+        usb_keys = config.keys.select { |k| k.to_s.match?(/^usb\d+$/) }
+        consume_matching(config, /^usb\d+$/)
+        return "-" if usb_keys.empty?
+
+        usb_keys.sort.map do |key|
+          { "NAME" => key.to_s, "CONFIG" => config[key].to_s }
+        end
+      end
+
+      # Formats PCI passthrough section.
+      #
+      # @param config [Hash] VM config
+      # @return [Array<Hash>, String] PCI devices table or "-"
+      def format_pci_passthrough(config)
+        pci_keys = config.keys.select { |k| k.to_s.match?(/^hostpci\d+$/) }
+        consume_matching(config, /^hostpci\d+$/)
+        return "-" if pci_keys.empty?
+
+        pci_keys.sort.map do |key|
+          { "NAME" => key.to_s, "CONFIG" => config[key].to_s }
+        end
+      end
+
+      # Formats serial ports section.
+      #
+      # @param config [Hash] VM config
+      # @return [Array<Hash>, String] serial ports table or "-"
+      def format_serial_ports(config)
+        serial_keys = config.keys.select { |k| k.to_s.match?(/^serial\d+$/) }
+        consume_matching(config, /^serial\d+$/)
+        return "-" if serial_keys.empty?
+
+        serial_keys.sort.map do |key|
+          { "NAME" => key.to_s, "TYPE" => config[key].to_s }
+        end
+      end
+
+      # Formats audio device section.
+      #
+      # @param config [Hash] VM config
+      # @return [String] audio config or "-"
+      def format_audio(config)
+        consume(:audio0)
+        config[:audio0]&.to_s || "-"
       end
 
       # Formats EFI disk section.
