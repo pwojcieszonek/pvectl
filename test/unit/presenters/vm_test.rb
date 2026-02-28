@@ -694,7 +694,75 @@ class PresentersVmTest < Minitest::Test
     assert_equal "web-frontend-1", desc["Name"]
   end
 
+  def test_to_description_includes_pool
+    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
+    desc = @presenter.to_description(vm_with_describe_data)
+
+    assert desc.key?("Pool")
+  end
+
+  def test_to_description_catch_all_shows_unknown_keys
+    data = base_describe_data.tap do |d|
+      d[:config][:some_future_key] = "future_value"
+      d[:config][:another_unknown] = "42"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert desc.key?("Additional Configuration"), "Should have Additional Configuration section"
+    additional = desc["Additional Configuration"]
+    assert_kind_of Array, additional
+    keys = additional.map { |row| row["KEY"] }
+    assert_includes keys, "some_future_key"
+    assert_includes keys, "another_unknown"
+  end
+
+  def test_to_description_catch_all_excludes_digest
+    data = base_describe_data.tap { |d| d[:config][:digest] = "abc123def456" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "digest"
+    end
+  end
+
+  def test_to_description_catch_all_dash_when_all_consumed
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Additional Configuration"]
+  end
+
+  def test_to_description_includes_additional_configuration_key
+    vm_with_describe_data = create_vm_with_describe_data(@running_vm)
+    desc = @presenter.to_description(vm_with_describe_data)
+
+    assert desc.key?("Additional Configuration")
+  end
+
   private
+
+  def base_describe_data
+    {
+      config: {
+        bios: "seabios", machine: "i440fx", ostype: "l26",
+        sockets: 1, cores: 1, cpu: "kvm64", memory: 2048
+      },
+      status: { status: "running", pid: 12345 },
+      snapshots: [],
+      agent_ips: nil
+    }
+  end
+
+  def create_vm_from_data(data)
+    Pvectl::Models::Vm.new(
+      @running_vm.instance_variable_get(:@attributes).merge(describe_data: data)
+    )
+  end
 
   # Creates VM model with describe_data for testing
   def create_vm_with_describe_data(base_vm)

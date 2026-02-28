@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 module Pvectl
   module Presenters
     # Presenter for QEMU virtual machines.
@@ -128,9 +130,13 @@ module Pvectl
       # @return [Hash] structured hash for describe formatter
       def to_description(model)
         @vm = model
+        @consumed_keys = Set.new
         data = vm.describe_data || {}
         config = data[:config] || {}
         status = data[:status] || {}
+
+        # Consume keys used at top level or without dedicated sections
+        consume(:name, :description, :tags, :pool, :template)
 
         {
           "Name" => display_name,
@@ -138,6 +144,7 @@ module Pvectl
           "Status" => vm.status,
           "Node" => vm.node,
           "Template" => vm.template? ? "yes" : "no",
+          "Pool" => vm.pool || "-",
           "System" => format_system(config),
           "CPU" => format_cpu(config, status),
           "Memory" => format_memory(config, status),
@@ -148,7 +155,8 @@ module Pvectl
           "Network I/O" => format_network_io,
           "High Availability" => format_ha(config),
           "Tags" => tags_display,
-          "Description" => config[:description] || "-"
+          "Description" => config[:description] || "-",
+          "Additional Configuration" => format_remaining(config)
         }
       end
 
@@ -248,6 +256,7 @@ module Pvectl
       # @param config [Hash] VM config
       # @return [Hash] system info
       def format_system(config)
+        consume(:bios, :machine, :ostype)
         bios = config[:bios] || "seabios"
         bios_display = bios == "ovmf" ? "UEFI (OVMF)" : "SeaBIOS"
 
@@ -285,6 +294,7 @@ module Pvectl
       # @param status [Hash] VM status
       # @return [Hash] CPU info
       def format_cpu(config, status)
+        consume(:sockets, :cores, :cpu)
         usage = vm.running? && vm.cpu ? "#{(vm.cpu * 100).round}%" : "-"
 
         {
@@ -301,6 +311,7 @@ module Pvectl
       # @param status [Hash] VM status
       # @return [Hash] memory info
       def format_memory(config, status)
+        consume(:memory, :balloon, :shares)
         total_mb = config[:memory] || (vm.maxmem ? vm.maxmem / 1024 / 1024 : nil)
         total_gib = total_mb ? "#{(total_mb.to_f / 1024).round(1)} GiB" : "-"
 
@@ -336,6 +347,7 @@ module Pvectl
       # @param config [Hash] VM config
       # @return [Array<Hash>, String] parsed disks or "-"
       def parse_disks(config)
+        consume_matching(config, /^(scsi|ide|virtio|sata)\d+$/)
         disk_keys = config.keys.select { |k| k.to_s.match?(/^(scsi|ide|virtio|sata)\d+$/) }
         return "-" if disk_keys.empty?
 
@@ -391,6 +403,7 @@ module Pvectl
       # @param agent_ips [Array<Hash>, nil] agent network interfaces
       # @return [Array<Hash>, String] parsed networks or "-"
       def format_network(config, agent_ips)
+        consume_matching(config, /^net\d+$/)
         net_keys = config.keys.select { |k| k.to_s.match?(/^net\d+$/) }
         return "-" if net_keys.empty?
 
@@ -516,10 +529,40 @@ module Pvectl
       # @param config [Hash] VM config
       # @return [Hash] HA info
       def format_ha(config)
+        consume(:ha)
         {
           "State" => vm.hastate || "-",
           "Group" => config[:ha] || "-"
         }
+      end
+
+      # Registers config keys as consumed by a format method.
+      #
+      # @param keys [Array<Symbol>] config keys to mark as consumed
+      # @return [void]
+      def consume(*keys)
+        @consumed_keys.merge(keys.map(&:to_sym))
+      end
+
+      # Consumes all config keys matching a pattern.
+      #
+      # @param config [Hash] config hash
+      # @param pattern [Regexp] pattern to match key names
+      # @return [void]
+      def consume_matching(config, pattern)
+        config.keys.select { |k| k.to_s.match?(pattern) }.each { |k| consume(k) }
+      end
+
+      # Formats remaining unconsumed config keys as catch-all table.
+      #
+      # @param config [Hash] full config hash
+      # @return [Array<Hash>, String] remaining keys table or "-"
+      def format_remaining(config)
+        excluded = %i[digest]
+        remaining = config.keys.map(&:to_sym) - @consumed_keys.to_a - excluded
+        return "-" if remaining.empty?
+
+        remaining.sort.map { |k| { "KEY" => k.to_s, "VALUE" => config[k].to_s } }
       end
     end
   end
