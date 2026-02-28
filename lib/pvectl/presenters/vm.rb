@@ -392,14 +392,19 @@ module Pvectl
                        end
 
         tablet = config[:tablet] == 0 ? "No" : "Yes"
-        hotplug = config[:hotplug] ? config[:hotplug].to_s.split(",").join(", ") : "-"
+        hotplug_raw = config[:hotplug]
+        hotplug = if hotplug_raw
+                    hotplug_raw.to_s == "0" ? "Disabled" : hotplug_raw.to_s.split(",").join(", ")
+                  else
+                    "disk, network, usb"
+                  end
         acpi = config[:acpi] == 0 ? "No" : "Yes"
         kvm = config[:kvm] == 0 ? "No" : "Yes"
         freeze_cpu = config[:freeze] == 1 ? "Yes" : "No"
         localtime = config[:localtime] == 1 ? "Yes" : "Default"
         numa = config[:numa] == 1 ? "Yes" : "No"
 
-        agent_display = format_agent_inline(config)
+        agent_display = format_agent_options(config)
         protection = config[:protection] == 1 ? "Yes" : "No"
         firewall = config[:firewall] == 1 ? "Yes" : "No"
         hookscript = config[:hookscript] || "-"
@@ -423,26 +428,36 @@ module Pvectl
         }
       end
 
-      # Formats QEMU guest agent as inline string for Options section.
+      # Formats QEMU guest agent as sub-section Hash for Options.
+      #
+      # Matches PVE Options tab layout with separate fields for
+      # enable/disable, guest-trim, and freeze-fs-on-backup.
       #
       # @param config [Hash] VM config
-      # @return [String] agent description (e.g., "Enabled, Type: virtio")
-      def format_agent_inline(config)
+      # @return [Hash] agent options sub-section
+      def format_agent_options(config)
         agent = config[:agent]
-        return "Disabled" if agent.nil?
+        unless agent
+          return {
+            "Use QEMU Guest Agent" => "No",
+            "Run guest-trim after a disk move or VM migration" => "No",
+            "Freeze/thaw guest filesystems on backup for consistency" => "No"
+          }
+        end
 
         parts = agent.to_s.split(",")
         enabled = parts.first == "1"
-        return "Disabled" unless enabled
 
         opts = {}
         parts[1..].each { |p| k, v = p.split("=", 2); opts[k] = v }
 
-        components = ["Enabled"]
-        components << "Type: #{opts['type']}" if opts["type"]
-        components << "Trim Cloned Disks: #{opts['fstrim_cloned_disks'] == '1' ? 'yes' : 'no'}" if opts.key?("fstrim_cloned_disks")
-        components << "Freeze FS on Backup: #{opts['freeze-fs-on-backup'] == '1' ? 'yes' : 'no'}" if opts.key?("freeze-fs-on-backup")
-        components.join(", ")
+        result = {
+          "Use QEMU Guest Agent" => enabled ? "Yes" : "No",
+          "Run guest-trim after a disk move or VM migration" => opts["fstrim_cloned_disks"] == "1" ? "Yes" : "No",
+          "Freeze/thaw guest filesystems on backup for consistency" => opts["freeze-fs-on-backup"] == "1" ? "Yes" : "No"
+        }
+        result["Type"] = opts["type"] if opts["type"]
+        result
       end
 
       # Formats OS type for display.
@@ -612,7 +627,7 @@ module Pvectl
       # @param config [Hash] VM config
       # @return [Hash, String] cloud-init info or "-"
       def format_cloud_init(config)
-        ci_keys = %i[citype ciuser cipassword cicustom searchdomain nameserver sshkeys]
+        ci_keys = %i[citype ciuser cipassword cicustom ciupgrade searchdomain nameserver sshkeys]
         ipconfig_keys = config.keys.select { |k| k.to_s.match?(/^ipconfig\d+$/) }
         consume(*ci_keys)
         consume_matching(config, /^ipconfig\d+$/)
@@ -624,11 +639,14 @@ module Pvectl
         return "-" unless has_ci
 
         result = {
-          "Type" => config[:citype] || "-",
           "User" => config[:ciuser] || "-",
+          "Password" => config[:cipassword] ? "set" : "-",
           "DNS Server" => config[:nameserver] || "-",
           "Search Domain" => config[:searchdomain] || "-",
-          "SSH Keys" => config[:sshkeys] ? "configured" : "-"
+          "SSH Keys" => config[:sshkeys] ? "configured" : "-",
+          "Upgrade Packages" => config[:ciupgrade] == 0 ? "No" : "Yes",
+          "CI Type" => config[:citype] || "nocloud",
+          "CI Custom" => config[:cicustom] || "-"
         }
 
         if ipconfig_keys.any?

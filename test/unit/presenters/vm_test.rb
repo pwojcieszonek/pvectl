@@ -933,11 +933,14 @@ class PresentersVmTest < Minitest::Test
     desc = @presenter.to_description(vm)
 
     assert_kind_of Hash, desc["Cloud-Init"]
-    assert_equal "nocloud", desc["Cloud-Init"]["Type"]
+    assert_equal "nocloud", desc["Cloud-Init"]["CI Type"]
     assert_equal "admin", desc["Cloud-Init"]["User"]
+    assert_equal "-", desc["Cloud-Init"]["Password"]
     assert_equal "8.8.8.8", desc["Cloud-Init"]["DNS Server"]
     assert_equal "example.com", desc["Cloud-Init"]["Search Domain"]
     assert_equal "configured", desc["Cloud-Init"]["SSH Keys"]
+    assert_equal "Yes", desc["Cloud-Init"]["Upgrade Packages"]
+    assert_equal "-", desc["Cloud-Init"]["CI Custom"]
     assert_kind_of Array, desc["Cloud-Init"]["IP Config"]
     assert_equal 2, desc["Cloud-Init"]["IP Config"].length
     assert_equal "net0", desc["Cloud-Init"]["IP Config"].first["INTERFACE"]
@@ -951,6 +954,23 @@ class PresentersVmTest < Minitest::Test
     assert_equal "-", desc["Cloud-Init"]
   end
 
+  def test_to_description_cloud_init_password_and_upgrade
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(
+        ciuser: "admin",
+        cipassword: "secret123",
+        ciupgrade: 0,
+        cicustom: "user=local:snippets/userconfig.yaml"
+      )
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "set", desc["Cloud-Init"]["Password"]
+    assert_equal "No", desc["Cloud-Init"]["Upgrade Packages"]
+    assert_equal "user=local:snippets/userconfig.yaml", desc["Cloud-Init"]["CI Custom"]
+  end
+
   def test_to_description_cloud_init_detected_by_drive
     data = base_describe_data.tap do |d|
       d[:config][:ide2] = "local-lvm:vm-100-cloudinit,media=cdrom"
@@ -960,7 +980,7 @@ class PresentersVmTest < Minitest::Test
 
     # Cloud-Init section should appear even without ciuser/sshkeys
     assert_kind_of Hash, desc["Cloud-Init"]
-    assert_equal "-", desc["Cloud-Init"]["Type"]
+    assert_equal "nocloud", desc["Cloud-Init"]["CI Type"]
     assert_equal "-", desc["Cloud-Init"]["User"]
   end
 
@@ -1002,15 +1022,20 @@ class PresentersVmTest < Minitest::Test
     assert_equal "-", desc["Options"]["Boot Order"]
   end
 
-  def test_to_description_options_agent_inline
+  def test_to_description_options_agent_enabled_with_type
     data = base_describe_data.tap { |d| d[:config][:agent] = "1,type=virtio" }
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "Enabled, Type: virtio", desc["Options"]["QEMU Guest Agent"]
+    agent = desc["Options"]["QEMU Guest Agent"]
+    assert_kind_of Hash, agent
+    assert_equal "Yes", agent["Use QEMU Guest Agent"]
+    assert_equal "virtio", agent["Type"]
+    assert_equal "No", agent["Run guest-trim after a disk move or VM migration"]
+    assert_equal "No", agent["Freeze/thaw guest filesystems on backup for consistency"]
   end
 
-  def test_to_description_options_agent_with_fstrim
+  def test_to_description_options_agent_with_fstrim_and_freeze
     data = base_describe_data.tap do |d|
       d[:config][:agent] = "1,fstrim_cloned_disks=1,freeze-fs-on-backup=1,type=virtio"
     end
@@ -1018,10 +1043,10 @@ class PresentersVmTest < Minitest::Test
     desc = @presenter.to_description(vm)
 
     agent = desc["Options"]["QEMU Guest Agent"]
-    assert_includes agent, "Enabled"
-    assert_includes agent, "Type: virtio"
-    assert_includes agent, "Trim Cloned Disks: yes"
-    assert_includes agent, "Freeze FS on Backup: yes"
+    assert_equal "Yes", agent["Use QEMU Guest Agent"]
+    assert_equal "Yes", agent["Run guest-trim after a disk move or VM migration"]
+    assert_equal "Yes", agent["Freeze/thaw guest filesystems on backup for consistency"]
+    assert_equal "virtio", agent["Type"]
   end
 
   def test_to_description_options_agent_disabled
@@ -1029,7 +1054,9 @@ class PresentersVmTest < Minitest::Test
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "Disabled", desc["Options"]["QEMU Guest Agent"]
+    agent = desc["Options"]["QEMU Guest Agent"]
+    assert_kind_of Hash, agent
+    assert_equal "No", agent["Use QEMU Guest Agent"]
   end
 
   def test_to_description_options_agent_absent
@@ -1037,7 +1064,11 @@ class PresentersVmTest < Minitest::Test
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "Disabled", desc["Options"]["QEMU Guest Agent"]
+    agent = desc["Options"]["QEMU Guest Agent"]
+    assert_kind_of Hash, agent
+    assert_equal "No", agent["Use QEMU Guest Agent"]
+    assert_equal "No", agent["Run guest-trim after a disk move or VM migration"]
+    assert_equal "No", agent["Freeze/thaw guest filesystems on backup for consistency"]
   end
 
   def test_to_description_options_startup_order
@@ -1069,12 +1100,20 @@ class PresentersVmTest < Minitest::Test
     assert_equal "disk, network, usb", desc["Options"]["Hotplug"]
   end
 
-  def test_to_description_options_hotplug_dash_when_absent
+  def test_to_description_options_hotplug_default_when_absent
     data = base_describe_data
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    assert_equal "-", desc["Options"]["Hotplug"]
+    assert_equal "disk, network, usb", desc["Options"]["Hotplug"]
+  end
+
+  def test_to_description_options_hotplug_disabled
+    data = base_describe_data.tap { |d| d[:config][:hotplug] = "0" }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "Disabled", desc["Options"]["Hotplug"]
   end
 
   def test_to_description_options_hookscript

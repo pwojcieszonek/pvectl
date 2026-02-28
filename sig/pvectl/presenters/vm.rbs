@@ -45,7 +45,7 @@ module Pvectl
 
       def format_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
-      def format_agent_inline: (Hash[Symbol, untyped] config) -> String
+      def format_agent_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
       def format_ostype: (String? ostype) -> String
 
