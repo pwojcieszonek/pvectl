@@ -6,7 +6,8 @@ module Pvectl
       module Handlers
         # Handler for listing Proxmox cluster storage pools.
         #
-        # Implements ResourceHandler interface for the "storage" resource type.
+        # Implements ResourceHandler interface for the "storages" resource type
+        # (with "storage" and "stor" as aliases).
         # Uses Repositories::Storage for data access and Presenters::Storage for formatting.
         #
         # @example Using via ResourceRegistry

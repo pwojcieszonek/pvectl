@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **parsers**: SmartText parser for converting NVMe/SAS smartctl text output into structured data
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
 
+### Changed
+- **get**: `storages` is now the primary resource name (consistent with `vms`, `nodes`, etc.); `storage` and `stor` remain as aliases
+
 ### Fixed
 - **presenters**: rename misleading "Wearout" label to "Life Remaining" in describe disk output (Proxmox reports remaining life, not wear percentage)
 - **presenters**: remove "Mounted" field from describe disk output (mount status applies to partitions, not whole disks)
