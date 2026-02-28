@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative "task_list"
+
 module Pvectl
   module Repositories
     # Repository for Proxmox cluster nodes.
@@ -282,6 +284,7 @@ module Pvectl
         result.merge!(updates_for(node_name))
         result.merge!(extended_status_for(node_name))
         result.merge!(firewall_for(node_name))
+        result.merge!(tasks_for(node_name))
 
         result
       end
@@ -456,6 +459,18 @@ module Pvectl
         {}
       end
 
+      # Fetches recent task history for the node.
+      #
+      # @param node_name [String] node name
+      # @param limit [Integer] max entries (default 10)
+      # @return [Hash] tasks data under :tasks key
+      def tasks_for(node_name, limit: 10)
+        task_list_repo = TaskList.new(connection)
+        { tasks: task_list_repo.list(node: node_name, limit: limit) }
+      rescue StandardError
+        { tasks: [] }
+      end
+
       # Builds Node model with describe-specific attributes.
       #
       # @param data [Hash] aggregated data from API
@@ -497,7 +512,8 @@ module Pvectl
           updates_available: data[:updates_available],
           updates: data[:updates],
           offline_note: data[:offline_note],
-          firewall: data[:firewall]
+          firewall: data[:firewall],
+          tasks: data[:tasks]
         )
       end
     end

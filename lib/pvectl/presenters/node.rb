@@ -192,6 +192,7 @@ module Pvectl
             "Available" => "#{node.updates_available} packages"
           },
           "Firewall" => format_firewall(node.firewall),
+          "Task History" => format_task_history(node.tasks),
           "Alerts" => alerts_display
         }
       end

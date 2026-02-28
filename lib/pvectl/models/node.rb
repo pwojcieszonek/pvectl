@@ -124,6 +124,9 @@ module Pvectl
       # @return [Hash, nil] firewall configuration data
       attr_reader :firewall
 
+      # @return [Array] recent task history entries
+      attr_reader :tasks
+
       # Creates a new Node model from attributes.
       #
       # @param attrs [Hash] Node attributes from API (string or symbol keys)
@@ -164,6 +167,7 @@ module Pvectl
         @updates = @attributes[:updates] || []
         @offline_note = @attributes[:offline_note]
         @firewall = @attributes[:firewall]
+        @tasks = @attributes[:tasks] || []
       end
 
       # Checks if the node is online.

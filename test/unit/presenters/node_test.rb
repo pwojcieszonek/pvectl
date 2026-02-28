@@ -648,6 +648,33 @@ class PresentersNodeTest < Minitest::Test
     assert_equal "PVE Web UI", rules[0]["COMMENT"]
   end
 
+  # ---------------------------
+  # Task History section
+  # ---------------------------
+
+  def test_to_description_task_history_empty
+    desc = @presenter.to_description(@online_node)
+
+    assert_equal "No task history", desc["Task History"]
+  end
+
+  def test_to_description_task_history_with_tasks
+    task = Pvectl::Models::TaskEntry.new(
+      type: "aptupdate", status: "stopped", exitstatus: "OK",
+      starttime: 1_700_000_000, endtime: 1_700_000_010, user: "root@pam", node: "pve1"
+    )
+    node_with_tasks = Pvectl::Models::Node.new(
+      @online_node.instance_variable_get(:@attributes).merge(tasks: [task])
+    )
+    desc = @presenter.to_description(node_with_tasks)
+
+    assert_kind_of Array, desc["Task History"]
+    assert_equal 1, desc["Task History"].length
+    assert_equal "aptupdate", desc["Task History"].first["TYPE"]
+    assert_equal "OK", desc["Task History"].first["STATUS"]
+    assert_equal "10s", desc["Task History"].first["DURATION"]
+  end
+
   # ===========================================================================
   # NEW TESTS FOR STORAGE-NODE-REFACTOR
   # Tests for format_storage_pools working with Array<Models::Storage>
