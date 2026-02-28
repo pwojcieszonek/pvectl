@@ -1290,6 +1290,41 @@ class PresentersVmTest < Minitest::Test
     end
   end
 
+  def test_to_description_hardware_keys_consumed
+    data = base_describe_data.tap do |d|
+      d[:config].merge!(vga: "virtio", shares: 1000, vcpus: 4, cpulimit: 2, cpuunits: 2048)
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "vga"
+      refute_includes keys, "shares"
+      refute_includes keys, "vcpus"
+      refute_includes keys, "cpulimit"
+      refute_includes keys, "cpuunits"
+    end
+  end
+
+  def test_to_description_bootdisk_size_fallback_for_cdrom
+    data = base_describe_data.tap do |d|
+      d[:config][:boot] = "order=ide2"
+      d[:config][:ide2] = "local:iso/ubuntu.iso,media=cdrom"
+    end
+    vm = Pvectl::Models::Vm.new(
+      @running_vm.instance_variable_get(:@attributes).merge(
+        maxdisk: 53_687_091_200,
+        describe_data: data
+      )
+    )
+    desc = @presenter.to_description(vm)
+
+    # Boot device is CD-ROM without size= — should fallback to maxdisk
+    assert_includes desc["Summary"]["Bootdisk Size"], "GiB"
+  end
+
   private
 
   def base_describe_data
