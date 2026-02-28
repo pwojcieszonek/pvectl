@@ -12,6 +12,9 @@ module Pvectl
     # Standard columns: NAME, CTID, STATUS, NODE, CPU, MEMORY
     # Wide columns add: UPTIME, TEMPLATE, TAGS, SWAP, DISK, NETIN, NETOUT, POOL
     #
+    # Description output is organized by Proxmox VE web UI tabs:
+    # Summary, Resources, Network, DNS, Options, Task History, Snapshots, HA.
+    #
     # @example Using with formatter
     #   presenter = Container.new
     #   formatter = Formatters::Table.new
@@ -123,8 +126,9 @@ module Pvectl
 
       # Converts Container model to description format for describe command.
       #
-      # Returns a structured Hash with sections for kubectl-style vertical output.
-      # Nested Hashes create indented subsections.
+      # Returns a structured Hash organized by Proxmox VE web UI tabs:
+      # Summary, Resources, Network, DNS, Options, Task History, Snapshots,
+      # High Availability. Nested Hashes create indented subsections.
       # Arrays of Hashes render as inline tables.
       #
       # @param model [Models::Container] Container model with describe details
@@ -135,35 +139,23 @@ module Pvectl
         data = container.describe_data || {}
         config = data[:config] || {}
 
-        consume(:hostname, :description, :tags, :pool, :template)
-        consume_misc_keys(config)
+        consume(:hostname, :description, :tags, :pool, :template, :lxc)
 
         {
           "Name" => display_name,
           "CTID" => container.vmid,
           "Status" => container.status,
           "Node" => container.node,
-          "Template" => container.template? ? "yes" : "no",
-          "Pool" => container.pool || "-",
-          "System" => format_system(config),
-          "CPU" => format_cpu(config),
-          "Memory" => format_memory,
-          "Swap" => format_swap,
-          "Root Filesystem" => format_rootfs(config),
-          "Mountpoints" => format_mountpoints(config),
-          "Network" => format_network_interfaces(config),
-          "DNS" => format_dns(config),
-          "Features" => format_features(config),
-          "Console" => format_console(config),
-          "Snapshots" => format_snapshots(data[:snapshots]),
-          "Runtime" => format_runtime,
-          "I/O Statistics" => format_io_statistics,
-          "Startup/Shutdown" => format_startup(config),
-          "Security" => format_security(config),
-          "Hookscript" => format_hookscript(config),
-          "High Availability" => format_ha,
           "Tags" => tags_display,
           "Description" => container.description || config[:description] || "-",
+          "Summary" => format_summary,
+          "Resources" => format_resources(config),
+          "Network" => format_network_interfaces(config),
+          "DNS" => format_dns(config),
+          "Options" => format_options(config),
+          "Task History" => format_task_history(data[:tasks]),
+          "Snapshots" => format_snapshots(data[:snapshots]),
+          "High Availability" => format_ha,
           "Additional Configuration" => format_remaining(config)
         }
       end
@@ -308,63 +300,84 @@ module Pvectl
       attr_reader :container
       alias resource container
 
-      # Formats system section.
+      # Formats Summary section (PVE Summary tab).
+      #
+      # Shows resource usage and (for running containers) runtime info
+      # including uptime, PID, and network I/O statistics.
+      #
+      # @return [Hash] summary info
+      def format_summary
+        cpu_usage = if container.running? && container.cpu
+                      "#{(container.cpu * 100).round(2)}% of #{container.maxcpu || '-'} core(s)"
+                    else
+                      "-"
+                    end
+
+        mem_usage = if container.running? && container.mem && container.maxmem && container.maxmem > 0
+                      pct = ((container.mem.to_f / container.maxmem) * 100).round(2)
+                      "#{pct}% (#{format_bytes(container.mem)} of #{format_bytes(container.maxmem)})"
+                    else
+                      "-"
+                    end
+
+        swap_usage = if container.running? && container.swap && container.maxswap && container.maxswap > 0
+                       "#{format_bytes(container.swap)} / #{format_bytes(container.maxswap)}"
+                     else
+                       "-"
+                     end
+
+        rootfs_usage = if container.disk && container.maxdisk && container.maxdisk > 0
+                         "#{format_bytes(container.disk)} / #{format_bytes(container.maxdisk)}"
+                       else
+                         "-"
+                       end
+
+        result = {
+          "CPU Usage" => cpu_usage,
+          "Memory Usage" => mem_usage,
+          "Swap Usage" => swap_usage,
+          "Root FS Usage" => rootfs_usage
+        }
+
+        if container.running?
+          result["Uptime"] = uptime_human
+          result["PID"] = (container.pid || "-").to_s
+          result["Network In"] = format_bytes(container.netin)
+          result["Network Out"] = format_bytes(container.netout)
+        end
+
+        result
+      end
+
+      # Formats Resources section (PVE Resources tab).
+      #
+      # Shows configured memory, swap, cores, rootfs, and mountpoints.
       #
       # @param config [Hash] raw config hash for key consumption
-      # @return [Hash] system info
-      def format_system(config = {})
-        consume(:ostype, :arch, :unprivileged)
-        {
-          "OS Type" => container.ostype || config[:ostype] || "-",
-          "Architecture" => container.arch || config[:arch] || "-",
-          "Unprivileged" => container.unprivileged? ? "yes" : "no"
-        }
-      end
+      # @return [Hash] resources info
+      def format_resources(config)
+        consume(:memory, :swap, :cores, :rootfs)
 
-      # Formats CPU section.
-      #
-      # @param config [Hash] raw config hash for key consumption
-      # @return [Hash] CPU info
-      def format_cpu(config = {})
-        consume(:cores)
-        usage = container.running? && container.cpu ? "#{(container.cpu * 100).round}%" : "-"
+        mem_mb = config[:memory]
+        memory_str = if mem_mb
+                       "#{(mem_mb.to_f / 1024).round(2)} GiB"
+                     else
+                       container.maxmem ? format_bytes(container.maxmem) : "-"
+                     end
 
-        {
-          "Cores" => container.maxcpu || "-",
-          "Usage" => usage
-        }
-      end
-
-      # Formats memory section.
-      #
-      # @return [Hash] memory info
-      def format_memory
-        total_gib = memory_total_gib ? "#{memory_total_gib} GiB" : "-"
-        used_gib = container.running? && memory_used_gib ? "#{memory_used_gib} GiB" : "-"
-
-        usage = if container.running? && container.mem && container.maxmem && container.maxmem > 0
-                  "#{((container.mem.to_f / container.maxmem) * 100).round}%"
-                else
-                  "-"
-                end
+        swap_mb = config[:swap]
+        swap_str = if swap_mb
+                     "#{swap_mb} MiB"
+                   else
+                     container.maxswap ? format_bytes(container.maxswap) : "-"
+                   end
 
         {
-          "Total" => total_gib,
-          "Used" => used_gib,
-          "Usage" => usage
-        }
-      end
-
-      # Formats swap section.
-      #
-      # @return [Hash] swap info
-      def format_swap
-        total_mib = swap_total_mib ? "#{swap_total_mib.round} MiB" : "-"
-        used_mib = container.running? && swap_used_mib ? "#{swap_used_mib.round} MiB" : "-"
-
-        {
-          "Total" => total_mib,
-          "Used" => used_mib
+          "Memory" => memory_str,
+          "Swap" => swap_str,
+          "Cores" => (config[:cores] || container.maxcpu || "-").to_s,
+          "Root Filesystem" => format_rootfs(config),
+          "Mountpoints" => format_mountpoints(config)
         }
       end
 
@@ -373,7 +386,6 @@ module Pvectl
       # @param config [Hash] raw config hash for key consumption
       # @return [Hash] rootfs info
       def format_rootfs(config = {})
-        consume(:rootfs)
         size_gib = disk_total_gib ? "#{disk_total_gib} GiB" : "-"
         used_gib = disk_used_gib ? "#{disk_used_gib} GiB" : "-"
 
@@ -418,18 +430,6 @@ module Pvectl
         end.compact.join(", ")
       end
 
-      # Formats runtime section.
-      #
-      # @return [Hash, String] runtime info or "-"
-      def format_runtime
-        return "-" unless container.running?
-
-        {
-          "Uptime" => uptime_human,
-          "PID" => container.pid || "-"
-        }
-      end
-
       # Formats mountpoints section (mp0-mp255).
       #
       # @param config [Hash] container config
@@ -470,17 +470,41 @@ module Pvectl
         { "Nameserver" => ns || "-", "Search Domain" => sd || "-" }
       end
 
-      # Formats console section.
+      # Formats Options section (PVE Options tab).
+      #
+      # Shows boot, startup, OS type, architecture, security, and
+      # other container options.
       #
       # @param config [Hash] container config
-      # @return [Hash, String] console info or "-"
-      def format_console(config)
-        consume(:cmode, :tty)
-        cmode = config[:cmode]
-        tty = config[:tty]
-        return "-" if cmode.nil? && tty.nil?
+      # @return [Hash] options info
+      def format_options(config)
+        consume(:onboot, :startup, :ostype, :arch, :unprivileged,
+                :features, :cmode, :tty, :protection, :lock, :hookscript)
 
-        { "Mode" => cmode || "tty", "TTY" => tty || 2 }
+        on_boot = config[:onboot] == 1 ? "Yes" : "No"
+        startup = config[:startup]
+        startup_display = startup ? startup.to_s : "-"
+        ostype = container.ostype || config[:ostype] || "-"
+        arch = container.arch || config[:arch] || "-"
+        unpriv = container.unprivileged? ? "Yes" : "No"
+        features = format_features(config)
+        cmode = config[:cmode] || "tty"
+        tty_count = (config[:tty] || 2).to_s
+        protection = config[:protection] == 1 ? "Yes" : "No"
+        hookscript = config[:hookscript] || "-"
+
+        {
+          "Start at Boot" => on_boot,
+          "Startup Order" => startup_display,
+          "OS Type" => ostype,
+          "Architecture" => arch,
+          "Unprivileged" => unpriv,
+          "Features" => features,
+          "Console Mode" => cmode,
+          "TTY" => tty_count,
+          "Protection" => protection,
+          "Hookscript" => hookscript
+        }
       end
 
       # Formats snapshots section.
@@ -501,49 +525,6 @@ module Pvectl
         end
       end
 
-      # Formats startup/shutdown order section.
-      #
-      # @param config [Hash] container config
-      # @return [Hash] startup info
-      def format_startup(config)
-        consume(:startup, :onboot)
-        startup = config[:startup]
-        on_boot = config[:onboot] == 1 ? "yes" : "no"
-
-        if startup.nil?
-          return { "Order" => "-", "Up Delay" => "-", "Down Delay" => "-", "On Boot" => on_boot }
-        end
-
-        parts = startup.to_s.split(",").to_h { |p| p.split("=", 2) }
-        {
-          "Order" => parts["order"] || "-",
-          "Up Delay" => parts["up"] || "-",
-          "Down Delay" => parts["down"] || "-",
-          "On Boot" => on_boot
-        }
-      end
-
-      # Formats security section.
-      #
-      # @param config [Hash] container config
-      # @return [Hash] security info
-      def format_security(config)
-        consume(:protection, :lock)
-        {
-          "Protection" => config[:protection] == 1 ? "yes" : "no",
-          "Lock" => container.lock || config[:lock] || "-"
-        }
-      end
-
-      # Formats hookscript setting.
-      #
-      # @param config [Hash] container config
-      # @return [String] hookscript path or "-"
-      def format_hookscript(config)
-        consume(:hookscript)
-        config[:hookscript] || "-"
-      end
-
       # Formats High Availability section.
       #
       # @return [Hash] HA info
@@ -555,26 +536,6 @@ module Pvectl
           "State" => ha[:managed] == 1 ? "managed" : "-",
           "Group" => ha[:group] || "-"
         }
-      end
-
-      # Formats I/O statistics section.
-      #
-      # @return [Hash, String] I/O stats or "-"
-      def format_io_statistics
-        return "-" unless container.running?
-
-        {
-          "Network In" => format_bytes(container.netin),
-          "Network Out" => format_bytes(container.netout)
-        }
-      end
-
-      # Consumes miscellaneous config keys not handled by format methods.
-      #
-      # @param config [Hash] raw config hash
-      # @return [void]
-      def consume_misc_keys(config)
-        consume(:memory, :swap, :cores, :lxc)
       end
 
       # Registers config keys as consumed by a format method.
