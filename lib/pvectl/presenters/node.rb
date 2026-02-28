@@ -191,6 +191,7 @@ module Pvectl
           "Updates" => {
             "Available" => "#{node.updates_available} packages"
           },
+          "Firewall" => format_firewall(node.firewall),
           "Alerts" => alerts_display
         }
       end

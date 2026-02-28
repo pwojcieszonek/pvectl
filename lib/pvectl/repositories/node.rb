@@ -281,6 +281,7 @@ module Pvectl
         result.merge!(qemu_machines_for(node_name))
         result.merge!(updates_for(node_name))
         result.merge!(extended_status_for(node_name))
+        result.merge!(firewall_for(node_name))
 
         result
       end
@@ -440,6 +441,24 @@ module Pvectl
         []
       end
 
+      # Fetches firewall configuration (options, rules, aliases, IP sets).
+      #
+      # @param node_name [String] node name
+      # @return [Hash] firewall data under :firewall key
+      def firewall_for(node_name)
+        base = "nodes/#{node_name}/firewall"
+        {
+          firewall: {
+            options: extract_data(connection.client["#{base}/options"].get),
+            rules: unwrap(connection.client["#{base}/rules"].get),
+            aliases: unwrap(connection.client["#{base}/aliases"].get),
+            ipset: unwrap(connection.client["#{base}/ipset"].get)
+          }
+        }
+      rescue StandardError
+        {}
+      end
+
       # Builds Node model with describe-specific attributes.
       #
       # @param data [Hash] aggregated data from API
@@ -480,7 +499,8 @@ module Pvectl
           qemu_machines: data[:qemu_machines],
           updates_available: data[:updates_available],
           updates: data[:updates],
-          offline_note: data[:offline_note]
+          offline_note: data[:offline_note],
+          firewall: data[:firewall]
         )
       end
     end

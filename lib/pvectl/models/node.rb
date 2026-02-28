@@ -121,6 +121,9 @@ module Pvectl
       # @return [String, nil] offline note message
       attr_reader :offline_note
 
+      # @return [Hash, nil] firewall configuration data
+      attr_reader :firewall
+
       # Creates a new Node model from attributes.
       #
       # @param attrs [Hash] Node attributes from API (string or symbol keys)
@@ -160,6 +163,7 @@ module Pvectl
         @updates_available = @attributes[:updates_available] || 0
         @updates = @attributes[:updates] || []
         @offline_note = @attributes[:offline_note]
+        @firewall = @attributes[:firewall]
       end
 
       # Checks if the node is online.

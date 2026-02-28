@@ -34,6 +34,7 @@ module Pvectl
       attr_reader updates_available: Integer
       attr_reader updates: Array[Hash[untyped, untyped]]
       attr_reader offline_note: String?
+      attr_reader firewall: Hash[Symbol, untyped]?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 

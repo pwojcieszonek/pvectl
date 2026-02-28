@@ -609,6 +609,45 @@ class PresentersNodeTest < Minitest::Test
     assert_equal "Node is offline. Detailed metrics unavailable.", desc["Note"]
   end
 
+  # ---------------------------
+  # Firewall section
+  # ---------------------------
+
+  def test_to_description_firewall_dash_when_absent
+    desc = @presenter.to_description(@online_node)
+
+    assert_equal "-", desc["Firewall"]
+  end
+
+  def test_to_description_firewall_with_options_and_rules
+    node_with_fw = Pvectl::Models::Node.new(
+      @online_node.instance_variable_get(:@attributes).merge(
+        firewall: {
+          options: { enable: 1, policy_in: "DROP", policy_out: "ACCEPT" },
+          rules: [
+            { pos: 0, enable: 1, type: "in", action: "ACCEPT", proto: "tcp", dport: "8006", comment: "PVE Web UI" }
+          ],
+          aliases: [],
+          ipset: []
+        }
+      )
+    )
+    desc = @presenter.to_description(node_with_fw)
+
+    fw = desc["Firewall"]
+    assert_kind_of Hash, fw
+    assert_equal "Yes", fw["Enable"]
+    assert_equal "DROP", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+
+    rules = fw["Rules"]
+    assert_kind_of Array, rules
+    assert_equal 1, rules.length
+    assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "8006", rules[0]["D.PORT"]
+    assert_equal "PVE Web UI", rules[0]["COMMENT"]
+  end
+
   # ===========================================================================
   # NEW TESTS FOR STORAGE-NODE-REFACTOR
   # Tests for format_storage_pools working with Array<Models::Storage>

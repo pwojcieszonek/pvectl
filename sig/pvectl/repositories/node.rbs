@@ -54,6 +54,8 @@ module Pvectl
 
       def network_interfaces_for: (String node_name) -> Array[Hash[Symbol, untyped]]
 
+      def firewall_for: (String node_name) -> Hash[Symbol, untyped]
+
       def build_describe_model: (Hash[Symbol, untyped] data) -> Models::Node
 
       @storage_repository: Repositories::Storage?
