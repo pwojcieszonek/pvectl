@@ -334,12 +334,11 @@ module Pvectl
       # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
       def fetch_firewall(node, ctid)
         base = "nodes/#{node}/lxc/#{ctid}/firewall"
-        {
-          options: extract_data(connection.client["#{base}/options"].get),
-          rules: unwrap(connection.client["#{base}/rules"].get),
-          aliases: unwrap(connection.client["#{base}/aliases"].get),
-          ipset: unwrap(connection.client["#{base}/ipset"].get)
-        }
+        options = (extract_data(connection.client["#{base}/options"].get) rescue {})
+        rules = (unwrap(connection.client["#{base}/rules"].get) rescue [])
+        aliases_data = (unwrap(connection.client["#{base}/aliases"].get) rescue [])
+        ipset = (unwrap(connection.client["#{base}/ipset"].get) rescue [])
+        { options: options, rules: rules, aliases: aliases_data, ipset: ipset }
       rescue StandardError
         {}
       end

@@ -447,14 +447,11 @@ module Pvectl
       # @return [Hash] firewall data under :firewall key
       def firewall_for(node_name)
         base = "nodes/#{node_name}/firewall"
-        {
-          firewall: {
-            options: extract_data(connection.client["#{base}/options"].get),
-            rules: unwrap(connection.client["#{base}/rules"].get),
-            aliases: unwrap(connection.client["#{base}/aliases"].get),
-            ipset: unwrap(connection.client["#{base}/ipset"].get)
-          }
-        }
+        options = (extract_data(connection.client["#{base}/options"].get) rescue {})
+        rules = (unwrap(connection.client["#{base}/rules"].get) rescue [])
+        aliases_data = (unwrap(connection.client["#{base}/aliases"].get) rescue [])
+        ipset = (unwrap(connection.client["#{base}/ipset"].get) rescue [])
+        { firewall: { options: options, rules: rules, aliases: aliases_data, ipset: ipset } }
       rescue StandardError
         {}
       end

@@ -406,12 +406,11 @@ module Pvectl
       # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
       def fetch_firewall(node, vmid)
         base = "nodes/#{node}/qemu/#{vmid}/firewall"
-        {
-          options: normalize_hash_response(connection.client["#{base}/options"].get),
-          rules: normalize_response(connection.client["#{base}/rules"].get),
-          aliases: normalize_response(connection.client["#{base}/aliases"].get),
-          ipset: normalize_response(connection.client["#{base}/ipset"].get)
-        }
+        options = (normalize_hash_response(connection.client["#{base}/options"].get) rescue {})
+        rules = (normalize_response(connection.client["#{base}/rules"].get) rescue [])
+        aliases_data = (normalize_response(connection.client["#{base}/aliases"].get) rescue [])
+        ipset = (normalize_response(connection.client["#{base}/ipset"].get) rescue [])
+        { options: options, rules: rules, aliases: aliases_data, ipset: ipset }
       rescue StandardError
         {}
       end
