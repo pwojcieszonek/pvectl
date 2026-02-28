@@ -297,6 +297,77 @@ class FormattersTableTest < Minitest::Test
     assert_match(/Services:.*-/m, output)
   end
 
+  # ---------------------------
+  # humanize_key
+  # ---------------------------
+
+  def test_humanize_key_preserves_hyphenated_formatted_keys
+    model = MockNodeDescribe.new("pve1", "online")
+    presenter = HyphenatedKeyPresenter.new
+
+    output = @formatter.format(model, presenter, color_enabled: false, describe: true)
+
+    # "Cloud-Init" should be preserved, not converted to "Cloud Init"
+    assert_includes output, "Cloud-Init:"
+    refute_includes output, "Cloud Init:"
+  end
+
+  def test_humanize_key_still_converts_snake_case
+    model = MockNodeDescribe.new("pve1", "online")
+    presenter = SnakeCaseKeyPresenter.new
+
+    output = @formatter.format(model, presenter, color_enabled: false, describe: true)
+
+    # "some_key" should become "Some Key"
+    assert_includes output, "Some Key:"
+  end
+
+  # ---------------------------
+  # Section Spacing
+  # ---------------------------
+
+  def test_describe_blank_line_before_simple_value_after_section
+    model = MockNodeDescribe.new("pve1", "online")
+    presenter = SectionSpacingPresenter.new
+
+    output = @formatter.format(model, presenter, color_enabled: false, describe: true)
+
+    lines = output.split("\n")
+    # Find "Simple After:" line — should have a blank line before it
+    idx = lines.index { |l| l.include?("Simple After:") }
+    refute_nil idx, "Expected 'Simple After:' in output"
+    assert_equal "", lines[idx - 1], "Expected blank line before 'Simple After:' (follows a section)"
+  end
+
+  def test_describe_no_blank_line_between_header_fields
+    model = MockNodeDescribe.new("pve1", "online")
+    presenter = SectionSpacingPresenter.new
+
+    output = @formatter.format(model, presenter, color_enabled: false, describe: true)
+
+    lines = output.split("\n")
+    # "Name:" and "Status:" are both header fields — no blank line between them
+    name_idx = lines.index { |l| l.include?("Name:") }
+    status_idx = lines.index { |l| l.include?("Status:") }
+    assert_equal name_idx + 1, status_idx, "Expected no blank line between header fields"
+  end
+
+  def test_describe_consecutive_simple_values_after_section_separated
+    model = MockNodeDescribe.new("pve1", "online")
+    presenter = ConsecutiveSimplePresenter.new
+
+    output = @formatter.format(model, presenter, color_enabled: false, describe: true)
+
+    lines = output.split("\n")
+    # Both "Snapshots:" and "Pending:" should have blank lines before them
+    snap_idx = lines.index { |l| l.include?("Snapshots:") }
+    pend_idx = lines.index { |l| l.include?("Pending:") }
+    refute_nil snap_idx
+    refute_nil pend_idx
+    assert_equal "", lines[snap_idx - 1], "Expected blank line before Snapshots"
+    assert_equal "", lines[pend_idx - 1], "Expected blank line before Pending"
+  end
+
   private
 
   # Mock VM model for testing
@@ -475,6 +546,60 @@ class FormattersTableTest < Minitest::Test
       {
         "Name" => model.name,
         "Services" => []
+      }
+    end
+  end
+
+  # Presenter with hyphenated key (e.g., "Cloud-Init")
+  class HyphenatedKeyPresenter
+    def columns = ["NAME"]
+    def to_row(model, **_) = [model.name]
+    def to_hash(model) = { "name" => model.name }
+
+    def to_description(_model)
+      { "Name" => "test", "Cloud-Init" => "-" }
+    end
+  end
+
+  # Presenter with snake_case keys
+  class SnakeCaseKeyPresenter
+    def columns = ["NAME"]
+    def to_row(model, **_) = [model.name]
+    def to_hash(model) = { "name" => model.name }
+
+    def to_description(_model)
+      { "some_key" => "value" }
+    end
+  end
+
+  # Presenter simulating section spacing: header fields, then section, then simple value
+  class SectionSpacingPresenter
+    def columns = ["NAME"]
+    def to_row(model, **_) = [model.name]
+    def to_hash(model) = { "name" => model.name }
+
+    def to_description(_model)
+      {
+        "Name" => "test",
+        "Status" => "running",
+        "Details" => { "Version" => "1.0" },
+        "Simple After" => "some value"
+      }
+    end
+  end
+
+  # Presenter simulating consecutive simple values after a section
+  class ConsecutiveSimplePresenter
+    def columns = ["NAME"]
+    def to_row(model, **_) = [model.name]
+    def to_hash(model) = { "name" => model.name }
+
+    def to_description(_model)
+      {
+        "Name" => "test",
+        "Options" => { "Boot" => "Yes" },
+        "Snapshots" => "No snapshots",
+        "Pending" => "No pending changes"
       }
     end
   end

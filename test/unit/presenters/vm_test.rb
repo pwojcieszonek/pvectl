@@ -951,6 +951,19 @@ class PresentersVmTest < Minitest::Test
     assert_equal "-", desc["Cloud-Init"]
   end
 
+  def test_to_description_cloud_init_detected_by_drive
+    data = base_describe_data.tap do |d|
+      d[:config][:ide2] = "local-lvm:vm-100-cloudinit,media=cdrom"
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    # Cloud-Init section should appear even without ciuser/sshkeys
+    assert_kind_of Hash, desc["Cloud-Init"]
+    assert_equal "-", desc["Cloud-Init"]["Type"]
+    assert_equal "-", desc["Cloud-Init"]["User"]
+  end
+
   # ---------------------------
   # Options Section
   # ---------------------------

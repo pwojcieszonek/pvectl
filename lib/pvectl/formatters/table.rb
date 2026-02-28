@@ -90,6 +90,9 @@ module Pvectl
 
       # Recursively formats a hash for describe output.
       #
+      # At indent 0 (top level), once a section (Hash/Array) has been rendered,
+      # all subsequent entries get a blank line separator for consistent spacing.
+      #
       # @param hash [Hash] hash to format
       # @param pastel [Pastel] pastel instance
       # @param indent [Integer] current indentation level
@@ -104,6 +107,10 @@ module Pvectl
         simple_keys = hash.select { |_, v| !v.is_a?(Hash) && !(v.is_a?(Array) && v.first.is_a?(Hash)) && !v.to_s.include?("\n") }
         max_key_length = simple_keys.keys.map { |k| k.to_s.length }.max || 0
 
+        # Track whether we've passed the flat header area (indent 0 only).
+        # Once a section (Hash/Array) appears, all subsequent entries get separators.
+        prev_was_section = false
+
         hash.each do |key, value|
           human_key = humanize_key(key)
 
@@ -112,13 +119,16 @@ module Pvectl
             lines << ""
             lines << "#{prefix}#{human_key}:"
             lines << format_describe_hash(value, pastel, indent: indent + 1)
+            prev_was_section = true
           elsif value.is_a?(Array) && !value.empty? && value.first.is_a?(Hash)
             # Array of hashes -> inline table
             lines << ""
             lines << "#{prefix}#{human_key}:"
             lines << format_describe_table(value, indent: indent + 1)
+            prev_was_section = true
           elsif value.is_a?(Array) && value.empty?
             # Empty array -> show as "-"
+            lines << "" if indent == 0 && prev_was_section
             formatted_key = "#{human_key}:".ljust(max_key_length + 2)
             lines << "#{prefix}#{formatted_key}-"
           else
@@ -130,8 +140,10 @@ module Pvectl
               formatted_value.each_line do |line|
                 lines << "#{prefix}  #{line.chomp}"
               end
+              prev_was_section = true
             else
-              # Simple key-value
+              # Simple key-value — add separator at top level after sections
+              lines << "" if indent == 0 && prev_was_section
               formatted_key = "#{human_key}:".ljust(max_key_length + 2)
               lines << "#{prefix}#{formatted_key}#{formatted_value}"
             end
@@ -189,14 +201,15 @@ module Pvectl
       end
 
       # Converts snake_case or kebab-case key to Title Case.
-      # Preserves already-formatted keys (e.g., "CPU", "DNS").
+      # Preserves already-formatted keys (e.g., "CPU", "DNS", "Cloud-Init").
       #
       # @param key [String, Symbol] key to humanize
       # @return [String] humanized key
       def humanize_key(key)
         str = key.to_s
-        # If the key is already formatted (contains spaces or is all caps), return as-is
-        return str if str.include?(" ") || str == str.upcase
+        # If the key is already formatted (contains spaces, is all caps,
+        # or has uppercase letters indicating intentional formatting), return as-is
+        return str if str.include?(" ") || str == str.upcase || str.match?(/[A-Z]/)
 
         str.split(/[_-]/).map(&:capitalize).join(" ")
       end

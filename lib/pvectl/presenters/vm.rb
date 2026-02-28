@@ -604,6 +604,11 @@ module Pvectl
 
       # Formats Cloud-Init section.
       #
+      # Detects cloud-init presence by checking for CI config keys (ciuser,
+      # sshkeys, etc.) OR a cloud-init drive (any disk with "cloudinit" in
+      # the volume name). This matches PVE behavior where the Cloud-Init
+      # tab appears when the drive exists, even without configuration.
+      #
       # @param config [Hash] VM config
       # @return [Hash, String] cloud-init info or "-"
       def format_cloud_init(config)
@@ -612,7 +617,10 @@ module Pvectl
         consume(*ci_keys)
         consume_matching(config, /^ipconfig\d+$/)
 
-        has_ci = ci_keys.any? { |k| config[k] } || ipconfig_keys.any?
+        ci_drive = config.keys.any? do |k|
+          k.to_s.match?(/^(scsi|ide|virtio|sata)\d+$/) && config[k].to_s.include?("cloudinit")
+        end
+        has_ci = ci_keys.any? { |k| config[k] } || ipconfig_keys.any? || ci_drive
         return "-" unless has_ci
 
         result = {
