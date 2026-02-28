@@ -46,21 +46,31 @@ module Pvectl
       attr_reader container: untyped
       alias resource container
 
-      def format_system: () -> Hash[String, String]
+      @consumed_keys: Set[Symbol]
 
-      def format_cpu: () -> Hash[String, untyped]
+      def format_system: (?Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_cpu: (?Hash[Symbol, untyped] config) -> Hash[String, untyped]
 
       def format_memory: () -> Hash[String, String]
 
       def format_swap: () -> Hash[String, String]
 
-      def format_rootfs: () -> Hash[String, String]
+      def format_rootfs: (?Hash[Symbol, untyped] config) -> Hash[String, String]
 
-      def format_network_interfaces: () -> (Array[Hash[String, String]] | String)
+      def format_network_interfaces: (?Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
 
-      def format_features: () -> String
+      def format_features: (?Hash[Symbol, untyped] config) -> String
 
       def format_runtime: () -> (Hash[String, untyped] | String)
+
+      def consume_misc_keys: (Hash[Symbol, untyped] config) -> void
+
+      def consume: (*Symbol keys) -> void
+
+      def consume_matching: (Hash[Symbol, untyped] config, Regexp pattern) -> void
+
+      def format_remaining: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
     end
   end
 end

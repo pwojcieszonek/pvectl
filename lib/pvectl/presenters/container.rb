@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "set"
+
 module Pvectl
   module Presenters
     # Presenter for LXC containers.
@@ -129,6 +131,12 @@ module Pvectl
       # @return [Hash] structured hash for describe formatter
       def to_description(model)
         @container = model
+        @consumed_keys = Set.new
+        data = container.describe_data || {}
+        config = data[:config] || {}
+
+        consume(:hostname, :description, :tags, :pool, :template)
+        consume_misc_keys(config)
 
         {
           "Name" => display_name,
@@ -136,16 +144,18 @@ module Pvectl
           "Status" => container.status,
           "Node" => container.node,
           "Template" => container.template? ? "yes" : "no",
-          "System" => format_system,
-          "CPU" => format_cpu,
+          "Pool" => container.pool || "-",
+          "System" => format_system(config),
+          "CPU" => format_cpu(config),
           "Memory" => format_memory,
           "Swap" => format_swap,
-          "Root Filesystem" => format_rootfs,
-          "Network" => format_network_interfaces,
-          "Features" => format_features,
+          "Root Filesystem" => format_rootfs(config),
+          "Network" => format_network_interfaces(config),
+          "Features" => format_features(config),
           "Runtime" => format_runtime,
           "Tags" => tags_display,
-          "Description" => container.description || "-"
+          "Description" => container.description || config[:description] || "-",
+          "Additional Configuration" => format_remaining(config)
         }
       end
 
@@ -291,19 +301,23 @@ module Pvectl
 
       # Formats system section.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Hash] system info
-      def format_system
+      def format_system(config = {})
+        consume(:ostype, :arch, :unprivileged)
         {
-          "OS Type" => container.ostype || "-",
-          "Architecture" => container.arch || "-",
+          "OS Type" => container.ostype || config[:ostype] || "-",
+          "Architecture" => container.arch || config[:arch] || "-",
           "Unprivileged" => container.unprivileged? ? "yes" : "no"
         }
       end
 
       # Formats CPU section.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Hash] CPU info
-      def format_cpu
+      def format_cpu(config = {})
+        consume(:cores)
         usage = container.running? && container.cpu ? "#{(container.cpu * 100).round}%" : "-"
 
         {
@@ -347,8 +361,10 @@ module Pvectl
 
       # Formats rootfs section.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Hash] rootfs info
-      def format_rootfs
+      def format_rootfs(config = {})
+        consume(:rootfs)
         size_gib = disk_total_gib ? "#{disk_total_gib} GiB" : "-"
         used_gib = disk_used_gib ? "#{disk_used_gib} GiB" : "-"
 
@@ -360,8 +376,10 @@ module Pvectl
 
       # Formats network interfaces for table display.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [Array<Hash>, String] network interfaces or "-"
-      def format_network_interfaces
+      def format_network_interfaces(config = {})
+        consume_matching(config, /^net\d+$/)
         interfaces = container.network_interfaces
         return "-" if interfaces.nil? || interfaces.empty?
 
@@ -377,12 +395,15 @@ module Pvectl
 
       # Formats features for display.
       #
+      # @param config [Hash] raw config hash for key consumption
       # @return [String] formatted features or "-"
-      def format_features
-        return "-" if container.features.nil? || container.features.empty?
+      def format_features(config = {})
+        consume(:features)
+        features_str = container.features || config[:features]
+        return "-" if features_str.nil? || features_str.empty?
 
         # Parse "nesting=1,keyctl=1" to "nesting, keyctl"
-        container.features.split(",").map do |f|
+        features_str.split(",").map do |f|
           key, value = f.split("=")
           value == "1" ? key : nil
         end.compact.join(", ")
@@ -398,6 +419,45 @@ module Pvectl
           "Uptime" => uptime_human,
           "PID" => container.pid || "-"
         }
+      end
+
+      # Consumes miscellaneous config keys not handled by format methods.
+      #
+      # @param config [Hash] raw config hash
+      # @return [void]
+      def consume_misc_keys(config)
+        consume(:memory, :swap, :cores, :lxc)
+        consume_matching(config, /^unused\d+$/)
+        consume_matching(config, /^mp\d+$/)
+      end
+
+      # Registers config keys as consumed by a format method.
+      #
+      # @param keys [Array<Symbol>] config keys to mark as consumed
+      # @return [void]
+      def consume(*keys)
+        @consumed_keys.merge(keys.map(&:to_sym))
+      end
+
+      # Consumes all config keys matching a pattern.
+      #
+      # @param config [Hash] config hash
+      # @param pattern [Regexp] pattern to match key names
+      # @return [void]
+      def consume_matching(config, pattern)
+        config.keys.select { |k| k.to_s.match?(pattern) }.each { |k| consume(k) }
+      end
+
+      # Formats remaining unconsumed config keys as catch-all table.
+      #
+      # @param config [Hash] full config hash
+      # @return [Array<Hash>, String] remaining keys table or "-"
+      def format_remaining(config)
+        excluded = %i[digest lxc]
+        remaining = config.keys.map(&:to_sym) - @consumed_keys.to_a - excluded
+        return "-" if remaining.empty?
+
+        remaining.sort.map { |k| { "KEY" => k.to_s, "VALUE" => config[k].to_s } }
       end
 
     end

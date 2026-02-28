@@ -593,7 +593,97 @@ class PresentersContainerTest < Minitest::Test
     assert_equal "web-container", desc["Name"]
   end
 
+  # ---------------------------
+  # to_description() — Pool field
+  # ---------------------------
+
+  def test_to_description_includes_pool
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+    assert desc.key?("Pool")
+  end
+
+  # ---------------------------
+  # to_description() — Catch-all mechanism
+  # ---------------------------
+
+  def test_to_description_catch_all_shows_unknown_keys
+    ct = create_ct_from_data(some_future_key: "future_value", another_unknown: "42")
+    desc = @presenter.to_description(ct)
+
+    assert desc.key?("Additional Configuration")
+    additional = desc["Additional Configuration"]
+    assert_kind_of Array, additional
+    keys = additional.map { |row| row["KEY"] }
+    assert_includes keys, "some_future_key"
+    assert_includes keys, "another_unknown"
+  end
+
+  def test_to_description_catch_all_excludes_digest
+    ct = create_ct_from_data(digest: "abc123def456")
+    desc = @presenter.to_description(ct)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "digest"
+    end
+  end
+
+  def test_to_description_catch_all_dash_when_all_consumed
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Additional Configuration"]
+  end
+
   private
+
+  # Returns base container config hash for describe_data tests.
+  def base_container_config
+    {
+      ostype: "debian", arch: "amd64", unprivileged: 1,
+      features: "nesting=1,keyctl=1",
+      rootfs: "local-lvm:vm-200-disk-0,size=8G",
+      hostname: "web-container.example.com",
+      cores: 2, memory: 4096, swap: 512
+    }
+  end
+
+  # Returns full attribute hash for creating a container with describe_data.
+  def create_describe_attrs
+    {
+      vmid: 200, name: "web-container", node: "pve-node1",
+      status: "running", cpu: 0.12, maxcpu: 2,
+      mem: 1_073_741_824, maxmem: 4_294_967_296,
+      swap: 52_428_800, maxswap: 536_870_912,
+      disk: 2_147_483_648, maxdisk: 8_589_934_592,
+      uptime: 86400, template: 0, tags: "prod;web",
+      pool: nil, netin: 123_456_789, netout: 987_654_321,
+      ostype: "debian", arch: "amd64", unprivileged: 1,
+      features: "nesting=1,keyctl=1",
+      rootfs: "local-lvm:vm-200-disk-0,size=8G",
+      network_interfaces: [
+        { name: "eth0", bridge: "vmbr0", ip: "192.168.1.50/24", hwaddr: "BC:24:11:AB:CD:EF" }
+      ],
+      description: "Production web container",
+      hostname: "web-container.example.com",
+      pid: 54321
+    }
+  end
+
+  # Creates a Container model with describe_data including config overrides.
+  def create_ct_from_data(config_overrides = {})
+    config = base_container_config.merge(config_overrides)
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: config,
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    Pvectl::Models::Container.new(attrs)
+  end
 
   # Creates container model with describe attributes for testing
   def create_container_with_describe_data(base_container)
