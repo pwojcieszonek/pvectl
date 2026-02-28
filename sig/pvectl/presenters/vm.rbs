@@ -47,8 +47,6 @@ module Pvectl
 
       def format_agent_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
-      def format_firewall: (Hash[Symbol, untyped]? firewall_data) -> (Hash[String, untyped] | String)
-
       def format_ostype: (String? ostype) -> String
 
       def parse_disks: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)

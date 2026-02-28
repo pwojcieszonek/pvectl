@@ -153,6 +153,7 @@ module Pvectl
           "Network" => format_network_interfaces(config),
           "DNS" => format_dns(config),
           "Options" => format_options(config),
+          "Firewall" => format_firewall(data[:firewall]),
           "Task History" => format_task_history(data[:tasks]),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "High Availability" => format_ha,

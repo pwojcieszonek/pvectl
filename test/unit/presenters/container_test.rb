@@ -953,6 +953,73 @@ class PresentersContainerTest < Minitest::Test
   end
 
   # ---------------------------
+  # to_description() — Firewall section
+  # ---------------------------
+
+  def test_to_description_firewall_dash_when_absent
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Firewall"]
+  end
+
+  def test_to_description_firewall_with_options
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        firewall: {
+          options: { enable: 1, policy_in: "DROP", policy_out: "ACCEPT", macfilter: 1 },
+          rules: [],
+          aliases: [],
+          ipset: []
+        }
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    fw = desc["Firewall"]
+    assert_kind_of Hash, fw
+    assert_equal "Yes", fw["Enable"]
+    assert_equal "DROP", fw["Input Policy"]
+    assert_equal "ACCEPT", fw["Output Policy"]
+    assert_equal "Yes", fw["MAC Filter"]
+    assert_equal "No rules configured", fw["Rules"]
+  end
+
+  def test_to_description_firewall_with_rules
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        firewall: {
+          options: { enable: 1 },
+          rules: [
+            { pos: 0, enable: 1, type: "in", action: "ACCEPT", proto: "tcp", dport: "22", comment: "SSH" }
+          ],
+          aliases: [],
+          ipset: []
+        }
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    rules = desc["Firewall"]["Rules"]
+    assert_kind_of Array, rules
+    assert_equal 1, rules.length
+    assert_equal "Yes", rules[0]["ON"]
+    assert_equal "IN", rules[0]["TYPE"]
+    assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "SSH", rules[0]["COMMENT"]
+  end
+
+  # ---------------------------
   # to_description() — Snapshots section
   # ---------------------------
 

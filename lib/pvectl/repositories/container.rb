@@ -63,8 +63,9 @@ module Pvectl
         status = fetch_status(node, ctid)
         snapshots = fetch_snapshots(node, ctid)
         tasks = fetch_tasks(node, ctid)
+        firewall = fetch_firewall(node, ctid)
 
-        build_describe_model(basic_data, config, status, snapshots, tasks)
+        build_describe_model(basic_data, config, status, snapshots, tasks, firewall)
       end
 
       # Deletes a container from the cluster.
@@ -326,6 +327,23 @@ module Pvectl
         []
       end
 
+      # Fetches firewall configuration (options, rules, aliases, IP sets).
+      #
+      # @param node [String] node name
+      # @param ctid [Integer] container identifier
+      # @return [Hash] firewall data with :options, :rules, :aliases, :ipset keys
+      def fetch_firewall(node, ctid)
+        base = "nodes/#{node}/lxc/#{ctid}/firewall"
+        {
+          options: extract_data(connection.client["#{base}/options"].get),
+          rules: unwrap(connection.client["#{base}/rules"].get),
+          aliases: unwrap(connection.client["#{base}/aliases"].get),
+          ipset: unwrap(connection.client["#{base}/ipset"].get)
+        }
+      rescue StandardError
+        {}
+      end
+
       # Fetches recent task history for the container.
       #
       # @param node [String] node name
@@ -381,7 +399,7 @@ module Pvectl
       # @param status [Hash] container status from /nodes/{node}/lxc/{ctid}/status/current
       # @param snapshots [Array<Hash>] container snapshots
       # @return [Models::Container] Container model
-      def build_describe_model(basic_data, config, status, snapshots = [], tasks = [])
+      def build_describe_model(basic_data, config, status, snapshots = [], tasks = [], firewall = {})
         network_interfaces = extract_network_interfaces(config)
 
         Models::Container.new(
@@ -424,7 +442,7 @@ module Pvectl
           network_interfaces: network_interfaces,
 
           # Raw API data for comprehensive describe
-          describe_data: { config: config, status: status, snapshots: snapshots, tasks: tasks }
+          describe_data: { config: config, status: status, snapshots: snapshots, tasks: tasks, firewall: firewall }
         )
       end
     end

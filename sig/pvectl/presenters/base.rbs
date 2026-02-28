@@ -31,6 +31,8 @@ module Pvectl
 
       def format_task_history: (Array[untyped]? tasks) -> (Array[Hash[String, String]] | String)
 
+      def format_firewall: (Hash[Symbol, untyped]? firewall_data) -> (Hash[String, untyped] | String)
+
       def format_bytes: (Integer? bytes) -> String
     end
   end
