@@ -72,6 +72,16 @@ module Pvectl
 
       def format_runtime: () -> (Hash[String, untyped] | String)
 
+      def format_startup: (Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_security: (Hash[Symbol, untyped] config) -> Hash[String, String]
+
+      def format_hookscript: (Hash[Symbol, untyped] config) -> String
+
+      def format_ha: () -> Hash[String, String]
+
+      def format_io_statistics: () -> (Hash[String, String] | String)
+
       def consume_misc_keys: (Hash[Symbol, untyped] config) -> void
 
       def consume: (*Symbol keys) -> void

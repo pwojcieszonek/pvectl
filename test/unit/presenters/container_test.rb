@@ -758,6 +758,147 @@ class PresentersContainerTest < Minitest::Test
     assert_equal "No snapshots", desc["Snapshots"]
   end
 
+  # ---------------------------
+  # to_description() — Startup/Shutdown section
+  # ---------------------------
+
+  def test_to_description_includes_startup
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(startup: "order=1,up=30,down=60", onboot: 1),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Startup/Shutdown"]
+    assert_equal "1", desc["Startup/Shutdown"]["Order"]
+    assert_equal "30", desc["Startup/Shutdown"]["Up Delay"]
+    assert_equal "60", desc["Startup/Shutdown"]["Down Delay"]
+    assert_equal "yes", desc["Startup/Shutdown"]["On Boot"]
+  end
+
+  def test_to_description_startup_defaults_when_not_configured
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Startup/Shutdown"]
+    assert_equal "-", desc["Startup/Shutdown"]["Order"]
+    assert_equal "no", desc["Startup/Shutdown"]["On Boot"]
+  end
+
+  # ---------------------------
+  # to_description() — Security section
+  # ---------------------------
+
+  def test_to_description_includes_security
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(protection: 1),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Security"]
+    assert_equal "yes", desc["Security"]["Protection"]
+  end
+
+  def test_to_description_security_defaults
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Security"]
+    assert_equal "no", desc["Security"]["Protection"]
+    assert_equal "-", desc["Security"]["Lock"]
+  end
+
+  # ---------------------------
+  # to_description() — Hookscript section
+  # ---------------------------
+
+  def test_to_description_includes_hookscript
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(hookscript: "local:snippets/hook.sh"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "local:snippets/hook.sh", desc["Hookscript"]
+  end
+
+  def test_to_description_hookscript_dash_when_not_configured
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Hookscript"]
+  end
+
+  # ---------------------------
+  # to_description() — High Availability section
+  # ---------------------------
+
+  def test_to_description_includes_ha
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: []
+      },
+      ha: { managed: 1, group: "ha-group1" }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["High Availability"]
+    assert_equal "managed", desc["High Availability"]["State"]
+    assert_equal "ha-group1", desc["High Availability"]["Group"]
+  end
+
+  def test_to_description_ha_defaults
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["High Availability"]
+    assert_equal "-", desc["High Availability"]["State"]
+  end
+
+  # ---------------------------
+  # to_description() — I/O Statistics section
+  # ---------------------------
+
+  def test_to_description_includes_io_statistics
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["I/O Statistics"]
+    assert desc["I/O Statistics"].key?("Network In")
+    assert desc["I/O Statistics"].key?("Network Out")
+  end
+
+  def test_to_description_io_statistics_dash_when_stopped
+    attrs = create_describe_attrs.merge(
+      status: "stopped",
+      describe_data: {
+        config: base_container_config,
+        status: {},
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["I/O Statistics"]
+  end
+
   private
 
   # Returns base container config hash for describe_data tests.

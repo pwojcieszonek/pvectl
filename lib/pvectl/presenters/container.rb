@@ -157,6 +157,11 @@ module Pvectl
           "Console" => format_console(config),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Runtime" => format_runtime,
+          "I/O Statistics" => format_io_statistics,
+          "Startup/Shutdown" => format_startup(config),
+          "Security" => format_security(config),
+          "Hookscript" => format_hookscript(config),
+          "High Availability" => format_ha,
           "Tags" => tags_display,
           "Description" => container.description || config[:description] || "-",
           "Additional Configuration" => format_remaining(config)
@@ -494,6 +499,74 @@ module Pvectl
             "DESCRIPTION" => snap[:description] || "-"
           }
         end
+      end
+
+      # Formats startup/shutdown order section.
+      #
+      # @param config [Hash] container config
+      # @return [Hash] startup info
+      def format_startup(config)
+        consume(:startup, :onboot)
+        startup = config[:startup]
+        on_boot = config[:onboot] == 1 ? "yes" : "no"
+
+        if startup.nil?
+          return { "Order" => "-", "Up Delay" => "-", "Down Delay" => "-", "On Boot" => on_boot }
+        end
+
+        parts = startup.to_s.split(",").to_h { |p| p.split("=", 2) }
+        {
+          "Order" => parts["order"] || "-",
+          "Up Delay" => parts["up"] || "-",
+          "Down Delay" => parts["down"] || "-",
+          "On Boot" => on_boot
+        }
+      end
+
+      # Formats security section.
+      #
+      # @param config [Hash] container config
+      # @return [Hash] security info
+      def format_security(config)
+        consume(:protection, :lock)
+        {
+          "Protection" => config[:protection] == 1 ? "yes" : "no",
+          "Lock" => container.lock || config[:lock] || "-"
+        }
+      end
+
+      # Formats hookscript setting.
+      #
+      # @param config [Hash] container config
+      # @return [String] hookscript path or "-"
+      def format_hookscript(config)
+        consume(:hookscript)
+        config[:hookscript] || "-"
+      end
+
+      # Formats High Availability section.
+      #
+      # @return [Hash] HA info
+      def format_ha
+        ha = container.ha
+        return { "State" => "-", "Group" => "-" } if ha.nil?
+
+        {
+          "State" => ha[:managed] == 1 ? "managed" : "-",
+          "Group" => ha[:group] || "-"
+        }
+      end
+
+      # Formats I/O statistics section.
+      #
+      # @return [Hash, String] I/O stats or "-"
+      def format_io_statistics
+        return "-" unless container.running?
+
+        {
+          "Network In" => format_bytes(container.netin),
+          "Network Out" => format_bytes(container.netout)
+        }
       end
 
       # Consumes miscellaneous config keys not handled by format methods.
