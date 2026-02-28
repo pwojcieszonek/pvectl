@@ -38,18 +38,34 @@ module Pvectl
               snapshot NAME             Snapshot metadata and snapshot tree (use --vmid)
               volume TYPE ID DISK       Virtual disk details (e.g., describe volume vm 100 scsi0)
 
-            VM SECTIONS
-              System, Boot, CPU, Memory, Display, Agent, Disks, EFI/TPM,
-              Network, Cloud-Init, USB/PCI Passthrough, Serial/Audio,
-              Snapshots, Runtime Status, I/O Statistics, Startup Order,
-              Security, Hotplug, Hookscript, High Availability, Tags,
-              Pending Changes, Additional Configuration
+            VM SECTIONS (matches PVE web UI tabs)
+              Summary        HA state, CPU/memory usage, bootdisk size, uptime,
+                             QEMU version, machine type, network/disk I/O
+              Hardware       Memory, balloon, processors, BIOS, machine, display,
+                             SCSI controller, EFI/TPM, disks, network, USB/PCI,
+                             serial ports, audio
+              Cloud-Init     Type, user, DNS, SSH keys, IP config
+              Options        Start at boot, startup order, OS type, boot order,
+                             tablet, hotplug, ACPI, KVM, freeze, localtime,
+                             NUMA, QEMU guest agent, protection, firewall,
+                             hookscript
+              Task History   Recent operations (type, status, date, duration, user)
+              Snapshots      Name, date, VM state, description
+              Pending        Configuration changes awaiting reboot
+              Additional     Catch-all for unrecognized config keys
 
-            CT SECTIONS
-              System, CPU, Memory, Swap, Root Filesystem, Mountpoints,
-              Network, DNS, Features, Console, Snapshots, Runtime Status,
-              I/O Statistics, Startup Order, Security, Hookscript,
-              High Availability, Tags, Additional Configuration
+            CT SECTIONS (matches PVE web UI tabs)
+              Summary        CPU/memory/swap/rootfs usage, uptime, PID, network I/O
+              Resources      Memory, swap, cores, root filesystem, mountpoints
+              Network        Interfaces with bridge, IP, MAC
+              DNS            Nameserver, search domain
+              Options        Start at boot, startup order, OS type, architecture,
+                             unprivileged, features, console mode, TTY, protection,
+                             hookscript
+              Task History   Recent operations (type, status, date, duration, user)
+              Snapshots      Name, date, description
+              High Avail.    HA state and group
+              Additional     Catch-all for unrecognized config keys
 
             EXAMPLES
               Full node diagnostics:
