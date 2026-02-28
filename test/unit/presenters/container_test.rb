@@ -637,6 +637,127 @@ class PresentersContainerTest < Minitest::Test
     assert_equal "-", desc["Additional Configuration"]
   end
 
+  # ---------------------------
+  # to_description() — Mountpoints section
+  # ---------------------------
+
+  def test_to_description_includes_mountpoints
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(
+          mp0: "local-lvm:vm-200-disk-1,mp=/mnt/data,size=50G",
+          mp1: "local-lvm:vm-200-disk-2,mp=/mnt/backup,size=100G,ro=1"
+        ),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Array, desc["Mountpoints"]
+    assert_equal 2, desc["Mountpoints"].length
+    assert_equal "/mnt/data", desc["Mountpoints"].first["PATH"]
+  end
+
+  def test_to_description_mountpoints_dash_when_none
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Mountpoints"]
+  end
+
+  # ---------------------------
+  # to_description() — DNS section
+  # ---------------------------
+
+  def test_to_description_includes_dns
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(nameserver: "8.8.8.8 1.1.1.1", searchdomain: "example.com"),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["DNS"]
+    assert_equal "8.8.8.8 1.1.1.1", desc["DNS"]["Nameserver"]
+    assert_equal "example.com", desc["DNS"]["Search Domain"]
+  end
+
+  def test_to_description_dns_dash_when_not_configured
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["DNS"]
+  end
+
+  # ---------------------------
+  # to_description() — Console section
+  # ---------------------------
+
+  def test_to_description_includes_console
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config.merge(cmode: "console", tty: 2),
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Hash, desc["Console"]
+    assert_equal "console", desc["Console"]["Mode"]
+    assert_equal 2, desc["Console"]["TTY"]
+  end
+
+  def test_to_description_console_dash_when_not_configured
+    ct = create_ct_from_data
+    desc = @presenter.to_description(ct)
+
+    assert_equal "-", desc["Console"]
+  end
+
+  # ---------------------------
+  # to_description() — Snapshots section
+  # ---------------------------
+
+  def test_to_description_includes_snapshots
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: [
+          { name: "baseline", snaptime: 1705240365, description: "Initial setup" }
+        ]
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_kind_of Array, desc["Snapshots"]
+    assert_equal "baseline", desc["Snapshots"].first["NAME"]
+    assert_includes desc["Snapshots"].first["DATE"], "2024"
+    assert_equal "Initial setup", desc["Snapshots"].first["DESCRIPTION"]
+  end
+
+  def test_to_description_snapshots_no_snapshots
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: base_container_config,
+        status: { pid: 54321 },
+        snapshots: []
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    assert_equal "No snapshots", desc["Snapshots"]
+  end
+
   private
 
   # Returns base container config hash for describe_data tests.

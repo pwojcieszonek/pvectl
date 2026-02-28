@@ -150,8 +150,12 @@ module Pvectl
           "Memory" => format_memory,
           "Swap" => format_swap,
           "Root Filesystem" => format_rootfs(config),
+          "Mountpoints" => format_mountpoints(config),
           "Network" => format_network_interfaces(config),
+          "DNS" => format_dns(config),
           "Features" => format_features(config),
+          "Console" => format_console(config),
+          "Snapshots" => format_snapshots(data[:snapshots]),
           "Runtime" => format_runtime,
           "Tags" => tags_display,
           "Description" => container.description || config[:description] || "-",
@@ -421,14 +425,83 @@ module Pvectl
         }
       end
 
+      # Formats mountpoints section (mp0-mp255).
+      #
+      # @param config [Hash] container config
+      # @return [Array<Hash>, String] mountpoints table or "-"
+      def format_mountpoints(config)
+        mp_keys = config.keys.select { |k| k.to_s.match?(/^mp\d+$/) }
+        consume_matching(config, /^mp\d+$/)
+        consume_matching(config, /^unused\d+$/)
+        return "-" if mp_keys.empty?
+
+        mp_keys.sort.map do |key|
+          parts = config[key].to_s.split(",")
+          storage_part = parts.first
+          storage = storage_part.include?(":") ? storage_part.split(":").first : storage_part
+          mp_path = nil
+          size = nil
+          parts[1..].each do |part|
+            k, v = part.split("=", 2)
+            case k
+            when "mp" then mp_path = v
+            when "size" then size = v
+            end
+          end
+          { "NAME" => key.to_s, "PATH" => mp_path || "-", "STORAGE" => storage, "SIZE" => size || "-" }
+        end
+      end
+
+      # Formats DNS section.
+      #
+      # @param config [Hash] container config
+      # @return [Hash, String] DNS info or "-"
+      def format_dns(config)
+        consume(:nameserver, :searchdomain)
+        ns = config[:nameserver]
+        sd = config[:searchdomain]
+        return "-" if ns.nil? && sd.nil?
+
+        { "Nameserver" => ns || "-", "Search Domain" => sd || "-" }
+      end
+
+      # Formats console section.
+      #
+      # @param config [Hash] container config
+      # @return [Hash, String] console info or "-"
+      def format_console(config)
+        consume(:cmode, :tty)
+        cmode = config[:cmode]
+        tty = config[:tty]
+        return "-" if cmode.nil? && tty.nil?
+
+        { "Mode" => cmode || "tty", "TTY" => tty || 2 }
+      end
+
+      # Formats snapshots section.
+      #
+      # @param snapshots [Array<Hash>, nil] snapshots from API
+      # @return [Array<Hash>, String] snapshots table or "No snapshots"
+      def format_snapshots(snapshots)
+        return "No snapshots" if snapshots.nil? || snapshots.empty?
+
+        snapshots.map do |snap|
+          snaptime = snap[:snaptime]
+          date = snaptime ? Time.at(snaptime).strftime("%Y-%m-%d %H:%M:%S") : "-"
+          {
+            "NAME" => snap[:name],
+            "DATE" => date,
+            "DESCRIPTION" => snap[:description] || "-"
+          }
+        end
+      end
+
       # Consumes miscellaneous config keys not handled by format methods.
       #
       # @param config [Hash] raw config hash
       # @return [void]
       def consume_misc_keys(config)
         consume(:memory, :swap, :cores, :lxc)
-        consume_matching(config, /^unused\d+$/)
-        consume_matching(config, /^mp\d+$/)
       end
 
       # Registers config keys as consumed by a format method.
@@ -453,7 +526,7 @@ module Pvectl
       # @param config [Hash] full config hash
       # @return [Array<Hash>, String] remaining keys table or "-"
       def format_remaining(config)
-        excluded = %i[digest lxc]
+        excluded = %i[digest]
         remaining = config.keys.map(&:to_sym) - @consumed_keys.to_a - excluded
         return "-" if remaining.empty?
 

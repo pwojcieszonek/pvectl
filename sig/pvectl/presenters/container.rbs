@@ -62,6 +62,14 @@ module Pvectl
 
       def format_features: (?Hash[Symbol, untyped] config) -> String
 
+      def format_mountpoints: (Hash[Symbol, untyped] config) -> (Array[Hash[String, String]] | String)
+
+      def format_dns: (Hash[Symbol, untyped] config) -> (Hash[String, String] | String)
+
+      def format_console: (Hash[Symbol, untyped] config) -> (Hash[String, untyped] | String)
+
+      def format_snapshots: (Array[Hash[Symbol, untyped]]? snapshots) -> (Array[Hash[String, String?]] | String)
+
       def format_runtime: () -> (Hash[String, untyped] | String)
 
       def consume_misc_keys: (Hash[Symbol, untyped] config) -> void
