@@ -631,18 +631,6 @@ module Pvectl
         }
       end
 
-      # Formats network I/O section (only for running VMs).
-      #
-      # @return [Hash, String] network I/O or "-"
-      def format_network_io
-        return "-" unless vm.running?
-
-        {
-          "Received" => format_bytes(vm.netin),
-          "Transmitted" => format_bytes(vm.netout)
-        }
-      end
-
       # Formats I/O statistics section (merged network + disk I/O).
       #
       # @param status [Hash] VM status

@@ -79,8 +79,6 @@ module Pvectl
 
       def format_runtime: (Hash[Symbol, untyped] status) -> (Hash[String, untyped] | String)
 
-      def format_network_io: () -> (Hash[String, String] | String)
-
       def format_io_statistics: (Hash[Symbol, untyped] status) -> (Hash[String, String] | String)
 
       def format_startup: (Hash[Symbol, untyped] config) -> Hash[String, String]
