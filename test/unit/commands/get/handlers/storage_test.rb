@@ -180,10 +180,19 @@ class GetHandlersStorageTest < Minitest::Test
   # Registry Integration
   # ---------------------------
 
-  def test_handler_is_registered_for_storage
+  def test_handler_is_registered_for_storages
     Pvectl::Commands::Get::ResourceRegistry.reset!
     Pvectl::Commands::Get::ResourceRegistry.register(
-      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+      "storages", Pvectl::Commands::Get::Handlers::Storage, aliases: ["storage", "stor"]
+    )
+
+    assert Pvectl::Commands::Get::ResourceRegistry.registered?("storages")
+  end
+
+  def test_handler_is_registered_with_storage_alias
+    Pvectl::Commands::Get::ResourceRegistry.reset!
+    Pvectl::Commands::Get::ResourceRegistry.register(
+      "storages", Pvectl::Commands::Get::Handlers::Storage, aliases: ["storage", "stor"]
     )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("storage")
@@ -192,7 +201,7 @@ class GetHandlersStorageTest < Minitest::Test
   def test_handler_is_registered_with_stor_alias
     Pvectl::Commands::Get::ResourceRegistry.reset!
     Pvectl::Commands::Get::ResourceRegistry.register(
-      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+      "storages", Pvectl::Commands::Get::Handlers::Storage, aliases: ["storage", "stor"]
     )
 
     assert Pvectl::Commands::Get::ResourceRegistry.registered?("stor")
@@ -201,10 +210,10 @@ class GetHandlersStorageTest < Minitest::Test
   def test_registry_returns_storage_handler_instance
     Pvectl::Commands::Get::ResourceRegistry.reset!
     Pvectl::Commands::Get::ResourceRegistry.register(
-      "storage", Pvectl::Commands::Get::Handlers::Storage, aliases: ["stor"]
+      "storages", Pvectl::Commands::Get::Handlers::Storage, aliases: ["storage", "stor"]
     )
 
-    handler = Pvectl::Commands::Get::ResourceRegistry.for("storage")
+    handler = Pvectl::Commands::Get::ResourceRegistry.for("storages")
 
     assert_instance_of Pvectl::Commands::Get::Handlers::Storage, handler
   end
