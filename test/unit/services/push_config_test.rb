@@ -118,6 +118,8 @@ class PushConfigTest < Minitest::Test
     assert_empty result[:plans]
     assert_empty result[:errors]
     assert result[:no_changes]
+    assert_equal 100, result[:vmid]
+    assert_equal :vm, result[:type]
     @vm_repo.verify
   end
 
@@ -345,6 +347,66 @@ class PushConfigTest < Minitest::Test
     assert_empty result[:errors]
     assert_equal 1, result[:skipped].length
     assert result[:skipped].first.include?("no changes")
+    @vm_repo.verify
+  end
+
+  def test_prepare_batch_returns_unchanged_with_metadata
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { cores: 4 }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    yamls = [{ filename: "vm-100.yaml", content: yaml, path: "/tmp/vm-100.yaml" }]
+
+    result = @service.prepare_batch(yamls)
+
+    assert_empty result[:plans]
+    assert_equal 1, result[:unchanged].length
+    entry = result[:unchanged].first
+    assert_equal 100, entry[:vmid]
+    assert_equal :vm, entry[:type]
+    assert_equal "/tmp/vm-100.yaml", entry[:source_path]
+    @vm_repo.verify
+  end
+
+  def test_prepare_batch_unchanged_without_path
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { cores: 4 }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    yamls = [{ filename: "stdin", content: yaml }]
+
+    result = @service.prepare_batch(yamls)
+
+    assert_equal 1, result[:unchanged].length
+    assert_nil result[:unchanged].first[:source_path]
     @vm_repo.verify
   end
 

@@ -220,6 +220,76 @@ class PushCommandTest < Minitest::Test
     end
   end
 
+  def test_refresh_unchanged_manifests_updates_file
+    Dir.mktmpdir do |dir|
+      file_path = File.join(dir, "vm-100.yaml")
+      File.write(file_path, "old content without mac")
+
+      cmd = Pvectl::Commands::Push.new([], {}, {})
+
+      refreshed_yaml = "---\napiVersion: pvectl/v1\nkind: VirtualMachine\n"
+      mock_pull = Object.new
+      mock_pull.define_singleton_method(:execute) do |type:, ids:|
+        { manifests: [{ yaml: refreshed_yaml, vmid: ids.first }], errors: [] }
+      end
+
+      unchanged = [{ vmid: 100, type: :vm, source_path: file_path }]
+
+      err_output = StringIO.new
+      $stderr = err_output
+      cmd.send(:refresh_unchanged_manifests, unchanged, mock_pull)
+      $stderr = STDERR
+
+      assert_equal refreshed_yaml, File.read(file_path)
+      assert_match(/Refreshed/, err_output.string)
+    end
+  end
+
+  def test_refresh_unchanged_manifests_skips_nil_path
+    cmd = Pvectl::Commands::Push.new([], {}, {})
+
+    mock_pull = Object.new
+    unchanged = [{ vmid: 100, type: :vm, source_path: nil }]
+
+    # Should not raise or attempt any file operation
+    cmd.send(:refresh_unchanged_manifests, unchanged, mock_pull)
+  end
+
+  def test_execute_refreshes_unchanged_manifests
+    Dir.mktmpdir do |dir|
+      file_path = File.join(dir, "vm-100.yaml")
+      File.write(file_path, "old content")
+
+      mock_service = Minitest::Mock.new
+      prepare_result = {
+        plans: [],
+        errors: [],
+        skipped: ["vm-100.yaml: no changes"],
+        unchanged: [{ vmid: 100, type: :vm, source_path: file_path }]
+      }
+      mock_service.expect :prepare_batch, prepare_result, [Array], filter_type: nil
+
+      refreshed_yaml = "---\napiVersion: pvectl/v1\nkind: VirtualMachine\nmetadata:\n  vmid: 100\n"
+      mock_pull = Object.new
+      mock_pull.define_singleton_method(:execute) do |type:, ids:|
+        { manifests: [{ yaml: refreshed_yaml, vmid: ids.first }], errors: [] }
+      end
+
+      cmd = Pvectl::Commands::Push.new([], { file: [file_path], :"dry-run" => false, yes: false }, {})
+      cmd.define_singleton_method(:load_config) { @config = {} }
+      cmd.define_singleton_method(:build_services) { |_conn| [mock_service, mock_pull] }
+
+      Pvectl::Connection.stub(:new, Object.new) do
+        result = cmd.execute
+        assert_equal Pvectl::ExitCodes::SUCCESS, result
+      end
+
+      # File should be refreshed with server state
+      assert_equal refreshed_yaml, File.read(file_path)
+      mock_service.verify
+    end
+  end
+
   def test_dry_run_with_file_flag
     yaml_content = <<~YAML
       apiVersion: pvectl/v1

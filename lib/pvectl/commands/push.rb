@@ -101,6 +101,11 @@ module Pvectl
           if result[:errors].empty?
             $stdout.puts "No changes to apply."
           end
+
+          # Refresh unchanged file-backed manifests with server-assigned values
+          # (MAC addresses, volume names, UUIDs, etc.)
+          refresh_unchanged_manifests(result[:unchanged] || [], pull_service)
+
           return result[:errors].empty? ? ExitCodes::SUCCESS : ExitCodes::GENERAL_ERROR
         end
 
@@ -138,6 +143,7 @@ module Pvectl
 
         # Refresh source manifest files with current server state
         refresh_manifests(apply_result[:results], result[:plans], pull_service)
+        refresh_unchanged_manifests(result[:unchanged] || [], pull_service)
 
         apply_result[:errors].empty? ? ExitCodes::SUCCESS : ExitCodes::GENERAL_ERROR
       rescue Pvectl::Config::ConfigNotFoundError,
@@ -266,6 +272,21 @@ module Pvectl
           next unless source_path && File.file?(source_path)
 
           refresh_manifest_file(source_path, plan[:type], plan[:vmid], pull_service)
+        end
+      end
+
+      # Refreshes file-backed manifests that had no changes to apply.
+      # Re-pulls each resource to fill in server-assigned values (MAC addresses,
+      # volume names, UUIDs, etc.) that may not be in the local manifest.
+      #
+      # @param unchanged [Array<Hash>] unchanged entries from prepare_batch
+      # @param pull_service [Services::PullConfig] pull service for re-pulling
+      # @return [void]
+      def refresh_unchanged_manifests(unchanged, pull_service)
+        unchanged.each do |entry|
+          next unless entry[:source_path] && File.file?(entry[:source_path])
+
+          refresh_manifest_file(entry[:source_path], entry[:type], entry[:vmid], pull_service)
         end
       end
 

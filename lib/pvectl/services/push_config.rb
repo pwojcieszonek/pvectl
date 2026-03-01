@@ -75,7 +75,7 @@ module Pvectl
           diff = ConfigSerializer.diff(comparable_original, comparable_manifest)
 
           if diff[:changed].empty? && diff[:added].empty? && diff[:removed].empty?
-            return { plans: [], errors: [], no_changes: true }
+            return { plans: [], errors: [], no_changes: true, vmid: vmid, type: type }
           end
 
           update_result = build_update_params(diff, current_config, type)
@@ -107,6 +107,7 @@ module Pvectl
         plans = []
         errors = []
         skipped = []
+        unchanged = []
 
         yaml_contents.each do |entry|
           filename = entry[:filename]
@@ -130,6 +131,7 @@ module Pvectl
 
           if result[:no_changes]
             skipped << "#{filename}: no changes"
+            unchanged << { vmid: result[:vmid], type: result[:type], source_path: entry[:path] }
             next
           end
 
@@ -141,7 +143,7 @@ module Pvectl
           errors.concat(result[:errors].map { |e| "#{filename}: #{e}" })
         end
 
-        { plans: plans, errors: errors, skipped: skipped }
+        { plans: plans, errors: errors, skipped: skipped, unchanged: unchanged }
       end
 
       # Applies prepared plans (executes API calls).

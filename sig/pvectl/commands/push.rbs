@@ -21,6 +21,7 @@ module Pvectl
       def collect_yaml_contents: (Array[String] paths) -> Array[Hash[Symbol, untyped]]
       def display_plans: (Array[Hash[Symbol, untyped]] plans) -> void
       def refresh_manifests: (Array[Hash[Symbol, untyped]] results, Array[Hash[Symbol, untyped]] plans, Services::PullConfig pull_service) -> void
+      def refresh_unchanged_manifests: (Array[Hash[Symbol, untyped]] unchanged, Services::PullConfig pull_service) -> void
       def refresh_manifest_file: (String path, Symbol type, Integer vmid, Services::PullConfig pull_service) -> void
       def type_label_for: (Hash[Symbol, untyped] result) -> String
       def build_services: (untyped connection) -> [Services::PushConfig, Services::PullConfig]
