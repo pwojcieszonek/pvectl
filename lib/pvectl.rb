@@ -235,6 +235,9 @@ require_relative "pvectl/services/task_listing"
 # Services - Pull Config
 require_relative "pvectl/services/pull_config"
 
+# Services - Push Config
+require_relative "pvectl/services/push_config"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"

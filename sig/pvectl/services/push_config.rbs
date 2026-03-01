@@ -1,0 +1,21 @@
+module Pvectl
+  module Services
+    class PushConfig
+      @vm_repository: untyped
+      @container_repository: untyped
+
+      def initialize: (vm_repository: untyped, container_repository: untyped) -> void
+      def prepare: (String yaml_string) -> Hash[Symbol, untyped]
+      def prepare_batch: (Array[Hash[Symbol, untyped]] yaml_contents, ?filter_type: Symbol?) -> Hash[Symbol, untyped]
+      def apply: (Array[Hash[Symbol, untyped]] plans) -> Hash[Symbol, untyped]
+
+      private
+
+      def repository_for: (Symbol type) -> untyped
+      def build_update_params: (Hash[Symbol, untyped] diff, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
+      def collect_readonly_keys: (Hash[Symbol, untyped] flat_config, Symbol type) -> Array[Symbol]
+      def each_leaf_section: (Hash[Symbol, untyped] sections) { (Hash[Symbol, untyped]) -> void } -> void
+      def type_label: (Symbol type) -> String
+    end
+  end
+end
