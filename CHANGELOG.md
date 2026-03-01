@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **push**: coerce numeric strings from YAML manifests to integers for consistent comparison with API values (e.g., `memory: '2048'` vs `2048`)
 - **push**: filter nil/empty values from create params and extract detailed error info from Proxmox API responses
 - **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
+- **push**: refresh unchanged manifest files with server-assigned values (MAC addresses, volume names, UUIDs) even when no config changes need to be applied
 - **push**: track async task completion for resize and create operations — report actual success/failure instead of fire-and-forget
 - **repositories**: use server-side `/cluster/nextid` API for VMID/CTID allocation instead of client-side scanning (fixes stale config file conflicts)
 - **pull**: rename `-o` flag to `-f`/`--file` to avoid conflict with global `-o`/`--output` format flag
