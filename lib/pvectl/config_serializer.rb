@@ -130,6 +130,33 @@ module Pvectl
     # Characters that require quoting in YAML output.
     YAML_SPECIAL_CHARS = %w[: # [ ] { } > | * & ! % @ ` , ? -].freeze
 
+    # Complex key mappings for QEMU VMs.
+    # Each entry maps a category to a regex pattern and parser/serializer method names.
+    # Used by to_nested/from_nested for bidirectional conversion of Proxmox config strings.
+    VM_COMPLEX_KEYS = {
+      net: { pattern: /\Anet\d+\z/, parser: :parse_vm_net_value, serializer: :serialize_vm_net_value },
+      disk: { pattern: /\A(?:scsi|ide|virtio|sata|efidisk|tpmstate)\d*\z/, parser: :parse_disk_value,
+              serializer: :serialize_disk_value },
+      unused: { pattern: /\Aunused\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
+      boot: { pattern: /\Aboot\z/, parser: :parse_boot_value, serializer: :serialize_boot_value },
+      agent: { pattern: /\Aagent\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      startup: { pattern: /\Astartup\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      ipconfig: { pattern: /\Aipconfig\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      smbios1: { pattern: /\Asmbios1\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      numa_dev: { pattern: /\Anuma\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value }
+    }.freeze
+
+    # Complex key mappings for LXC containers.
+    CT_COMPLEX_KEYS = {
+      net: { pattern: /\Anet\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      rootfs: { pattern: /\Arootfs\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
+      mp: { pattern: /\Amp\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
+      dev: { pattern: /\Adev\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
+      unused: { pattern: /\Aunused\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
+      startup: { pattern: /\Astartup\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      features: { pattern: /\Afeatures\z/, parser: :parse_kv_value, serializer: :serialize_kv_value }
+    }.freeze
+
     class << self
       # Converts a flat Proxmox config hash into a nested, section-grouped YAML string
       # with header comments and read-only markers.
@@ -541,6 +568,132 @@ module Pvectl
           end
         end
         result
+      end
+
+      # Returns the complex key mappings for the given resource type.
+      #
+      # @param type [Symbol] :vm or :container
+      # @return [Hash] complex key mapping hash
+      def complex_keys_for(type)
+        type == :container ? CT_COMPLEX_KEYS : VM_COMPLEX_KEYS
+      end
+
+      # Finds the complex key spec (parser/serializer) for a given config key.
+      # Returns nil if the key is a simple value (not a complex Proxmox string).
+      #
+      # @param key [Symbol] config key to look up
+      # @param type [Symbol] :vm or :container
+      # @return [Hash, nil] spec hash with :pattern, :parser, :serializer, or nil
+      def find_complex_key(key, type)
+        complex_keys_for(type).each_value do |spec|
+          return spec if spec[:pattern].match?(key.to_s)
+        end
+        nil
+      end
+
+      # Parses a VM network config string into a structured hash.
+      # Format: "model=MAC,key=value,..."  (e.g., "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1")
+      #
+      # @param string [String] Proxmox VM network config value
+      # @return [Hash{Symbol => String}] parsed network config
+      def parse_vm_net_value(string)
+        parts = string.split(",")
+        first = parts.shift.strip
+        model, mac = first.split("=", 2)
+        result = { model: model }
+        result[:mac] = mac if mac
+        parts.each do |part|
+          k, v = part.strip.split("=", 2)
+          result[k.to_sym] = v
+        end
+        result
+      end
+
+      # Serializes a VM network hash back to Proxmox config string format.
+      #
+      # @param hash [Hash{Symbol => String}] parsed network config
+      # @return [String] Proxmox VM network config string
+      def serialize_vm_net_value(hash)
+        parts = []
+        model = hash[:model] || "virtio"
+        mac = hash[:mac]
+        parts << (mac ? "#{model}=#{mac}" : model)
+        hash.except(:model, :mac).each { |k, v| parts << "#{k}=#{v}" }
+        parts.join(",")
+      end
+
+      # Parses a disk config string into a structured hash.
+      # Format: "storage:volume,key=value,..."  (e.g., "local-lvm:vm-100-disk-0,size=32G,iothread=1")
+      #
+      # @param string [String] Proxmox disk config value
+      # @return [Hash{Symbol => String}] parsed disk config
+      def parse_disk_value(string)
+        parts = string.split(",")
+        first = parts.shift.strip
+        storage, volume = first.split(":", 2)
+        result = { storage: storage }
+        result[:volume] = volume if volume
+        parts.each do |part|
+          k, v = part.strip.split("=", 2)
+          result[k.to_sym] = v
+        end
+        result
+      end
+
+      # Serializes a disk hash back to Proxmox config string format.
+      #
+      # @param hash [Hash{Symbol => String}] parsed disk config
+      # @return [String] Proxmox disk config string
+      def serialize_disk_value(hash)
+        parts = []
+        storage = hash[:storage]
+        volume = hash[:volume]
+        parts << [storage, volume].compact.join(":")
+        hash.except(:storage, :volume).each { |k, v| parts << "#{k}=#{v}" }
+        parts.join(",")
+      end
+
+      # Parses a generic key=value config string into a hash.
+      # Format: "key=value,key=value,..."  (e.g., "enabled=1,fstrim_cloned_disks=1")
+      #
+      # @param string [String] comma-separated key=value string
+      # @return [Hash{Symbol => String}] parsed key-value pairs
+      def parse_kv_value(string)
+        string.split(",").to_h do |pair|
+          k, v = pair.strip.split("=", 2)
+          [k.to_sym, v]
+        end
+      end
+
+      # Serializes a hash back to comma-separated key=value string.
+      #
+      # @param hash [Hash{Symbol => String}] key-value pairs
+      # @return [String] comma-separated key=value string
+      def serialize_kv_value(hash)
+        hash.map { |k, v| "#{k}=#{v}" }.join(",")
+      end
+
+      # Parses a boot order config string. The order value uses semicolons as separators.
+      # Format: "order=scsi0;net0"
+      #
+      # @param string [String] boot config value
+      # @return [Hash{Symbol => Object}] parsed boot config with :order as Array
+      def parse_boot_value(string)
+        kv = parse_kv_value(string)
+        kv[:order] = kv[:order].split(";") if kv[:order].is_a?(String)
+        kv
+      end
+
+      # Serializes a boot order hash back to Proxmox config string format.
+      # Joins the :order array with semicolons.
+      #
+      # @param hash [Hash{Symbol => Object}] parsed boot config
+      # @return [String] boot config string
+      def serialize_boot_value(hash)
+        result = hash.transform_values do |v|
+          v.is_a?(Array) ? v.join(";") : v
+        end
+        serialize_kv_value(result)
       end
     end
   end

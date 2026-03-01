@@ -6,6 +6,10 @@ module Pvectl
 
     YAML_SPECIAL_CHARS: Array[String]
 
+    VM_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
+
+    CT_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
+
     def self.to_yaml: (Hash[Symbol, untyped] flat_config, type: Symbol, ?resource: Hash[Symbol, untyped]) -> String
 
     def self.from_yaml: (String yaml_string, type: Symbol) -> Hash[Symbol, untyped]
@@ -49,5 +53,25 @@ module Pvectl
     def self.each_leaf_section: (Hash[Symbol, untyped] sections) -> Array[Hash[Symbol, Array[Symbol] | Array[Regexp]]]
 
     def self.flatten_sections: (Hash[String, untyped] parsed) -> Hash[Symbol, untyped]
+
+    def self.complex_keys_for: (Symbol type) -> Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
+
+    def self.find_complex_key: (Symbol key, Symbol type) -> Hash[Symbol, Regexp | Symbol]?
+
+    def self.parse_vm_net_value: (String string) -> Hash[Symbol, String]
+
+    def self.serialize_vm_net_value: (Hash[Symbol, String] hash) -> String
+
+    def self.parse_disk_value: (String string) -> Hash[Symbol, String]
+
+    def self.serialize_disk_value: (Hash[Symbol, String] hash) -> String
+
+    def self.parse_kv_value: (String string) -> Hash[Symbol, String]
+
+    def self.serialize_kv_value: (Hash[Symbol, String] hash) -> String
+
+    def self.parse_boot_value: (String string) -> Hash[Symbol, String | Array[String]]
+
+    def self.serialize_boot_value: (Hash[Symbol, String | Array[String]] hash) -> String
   end
 end
