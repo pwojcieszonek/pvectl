@@ -75,6 +75,8 @@ pvectl top nodes                  # Resource usage
 | `migrate` | Migrate resources between nodes (supports live migration) |
 | `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume) |
 | `set` | Set resource properties non-interactively with key=value pairs |
+| `pull` | Export resource configuration as kubectl-like YAML manifests |
+| `push` | Apply YAML manifests to cluster (create or update resources) |
 | `template` | Convert VM/container to template |
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |

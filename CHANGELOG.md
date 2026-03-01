@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl pull` command — export VM/container configuration as kubectl-like YAML manifests (single, multiple, `--all`, selectors)
+- **commands**: `pvectl push` command — apply YAML manifests to cluster (create or update resources) with diff preview, confirmation prompt, `--yes`, `--dry-run`
+- **manifest-serializer**: kubectl-like manifest format with `apiVersion`/`kind`/`metadata`/`spec` envelope
+- **config-serializer**: `to_nested`/`from_nested` methods for structured config with parsed complex values
+- **config-serializer**: bidirectional value parsing for complex Proxmox config strings (network, disk, boot, agent, startup, ipconfig)
 - **commands**: `pvectl set` command for non-interactive resource configuration (vm, container, volume, node) with key=value syntax
 - **commands**: `pvectl edit volume` for interactive volume property editing via YAML editor
 - **commands**: `pvectl edit node` for interactive node configuration editing via YAML editor
@@ -19,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
 
 ### Changed
+- **config-serializer**: section layout restructured to match Proxmox UI tabs (hardware/options/cloud-init for VM, resources/network/dns for CT)
+- **edit**: output format updated to reflect new section layout (hardware wrapper, options section)
 - **describe vm**: reorganize output to match PVE web UI tabs (Summary, Hardware, Cloud-Init, Options, Task History, Snapshots, Pending Changes) with previously hidden config keys (ACPI, KVM, Tablet, Freeze CPU, Local Time, NUMA) now visible in Options section
 - **describe container**: reorganize output to match PVE web UI tabs (Summary, Resources, Network, DNS, Options, Task History, Snapshots, High Availability) with all options visible
 - **describe**: add Task History section showing recent operations for VM and container resources
