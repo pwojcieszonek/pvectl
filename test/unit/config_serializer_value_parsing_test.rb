@@ -74,6 +74,42 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     assert_equal "virtio", result[:type]
   end
 
+  def test_parse_kv_value_bare_value_with_default_key
+    result = Pvectl::ConfigSerializer.send(:parse_kv_value, "1", default_key: :enabled)
+
+    assert_equal({ enabled: "1" }, result)
+  end
+
+  def test_parse_kv_value_bare_value_mixed_with_kv_pairs
+    result = Pvectl::ConfigSerializer.send(:parse_kv_value, "1,fstrim_cloned_disks=1,type=virtio",
+                                           default_key: :enabled)
+
+    assert_equal "1", result[:enabled]
+    assert_equal "1", result[:fstrim_cloned_disks]
+    assert_equal "virtio", result[:type]
+  end
+
+  def test_agent_round_trip_via_to_nested
+    flat_config = { agent: "1,fstrim_cloned_disks=1" }
+    nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
+    flat_back = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    # Round-trip produces equivalent Proxmox config
+    reparsed = Pvectl::ConfigSerializer.send(:parse_kv_value, flat_back[:agent])
+    assert_equal "1", reparsed[:enabled]
+    assert_equal "1", reparsed[:fstrim_cloned_disks]
+  end
+
+  def test_agent_bare_1_round_trip_via_to_nested
+    flat_config = { agent: "1" }
+    nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
+
+    assert_equal({ enabled: "1" }, nested[:options][:agent])
+
+    flat_back = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+    assert_equal "enabled=1", flat_back[:agent]
+  end
+
   def test_kv_round_trip
     original = "enabled=1,fstrim_cloned_disks=1"
     parsed = parse_kv(original)

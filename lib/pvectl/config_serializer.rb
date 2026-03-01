@@ -139,7 +139,8 @@ module Pvectl
               serializer: :serialize_disk_value },
       unused: { pattern: /\Aunused\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
       boot: { pattern: /\Aboot\z/, parser: :parse_boot_value, serializer: :serialize_boot_value },
-      agent: { pattern: /\Aagent\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
+      agent: { pattern: /\Aagent\z/, parser: :parse_kv_value, serializer: :serialize_kv_value,
+               default_key: :enabled },
       startup: { pattern: /\Astartup\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       ipconfig: { pattern: /\Aipconfig\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       smbios1: { pattern: /\Asmbios1\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
@@ -669,7 +670,11 @@ module Pvectl
           value = flat_config[key]
           complex = find_complex_key(key, type)
           result[key] = if complex && value.is_a?(String)
-                          send(complex[:parser], value)
+                          if complex[:default_key]
+                            send(complex[:parser], value, default_key: complex[:default_key])
+                          else
+                            send(complex[:parser], value)
+                          end
                         else
                           value
                         end
@@ -761,10 +766,17 @@ module Pvectl
       #
       # @param string [String] comma-separated key=value string
       # @return [Hash{Symbol => String}] parsed key-value pairs
-      def parse_kv_value(string)
+      def parse_kv_value(string, default_key: nil)
         string.split(",").to_h do |pair|
-          k, v = pair.strip.split("=", 2)
-          [k.to_sym, v]
+          pair = pair.strip
+          if pair.include?("=")
+            k, v = pair.split("=", 2)
+            [k.to_sym, v]
+          elsif default_key
+            [default_key, pair]
+          else
+            [pair.to_sym, nil]
+          end
         end
       end
 

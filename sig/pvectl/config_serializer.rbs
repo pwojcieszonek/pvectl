@@ -74,7 +74,7 @@ module Pvectl
 
     def self.serialize_disk_value: (Hash[Symbol, String] hash) -> String
 
-    def self.parse_kv_value: (String string) -> Hash[Symbol, String]
+    def self.parse_kv_value: (String string, ?default_key: Symbol?) -> Hash[Symbol, String?]
 
     def self.serialize_kv_value: (Hash[Symbol, String] hash) -> String
 
