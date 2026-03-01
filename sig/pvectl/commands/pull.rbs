@@ -1,0 +1,26 @@
+module Pvectl
+  module Commands
+    class Pull
+      RESOURCE_TYPES: Hash[String, Symbol]
+      FILE_PREFIXES: Hash[Symbol, String]
+
+      @args: Array[String]
+      @options: Hash[Symbol, untyped]
+      @global_options: Hash[Symbol, untyped]
+      @config: untyped
+
+      def self.register: (untyped cli) -> void
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+
+      def build_service: (untyped connection) -> Services::PullConfig
+      def build_selector: (Symbol type) -> untyped
+      def write_output: (Array[Hash[Symbol, untyped]] manifests, Symbol type, String? output) -> void
+      def directory_output?: (String path) -> bool
+      def load_config: () -> void
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

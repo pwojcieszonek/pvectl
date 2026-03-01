@@ -232,6 +232,9 @@ require_relative "pvectl/services/console"
 # Services - Task Listing
 require_relative "pvectl/services/task_listing"
 
+# Services - Pull Config
+require_relative "pvectl/services/pull_config"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -340,6 +343,9 @@ require_relative "pvectl/commands/migrate_container"
 require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"
 require_relative "pvectl/commands/console"
+
+# Commands - Pull
+require_relative "pvectl/commands/pull"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"
