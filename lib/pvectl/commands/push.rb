@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "fileutils"
-
 module Pvectl
   module Commands
     # Push command -- applies YAML manifests to the Proxmox cluster.
@@ -49,7 +47,6 @@ module Pvectl
         cli.command :push do |c|
           c.switch [:y, :yes], desc: "Auto-confirm without prompting", negatable: false
           c.switch [:"dry-run"], desc: "Show diff without applying", negatable: false
-          c.flag [:node], desc: "Override node from metadata (for create)"
 
           c.action do |global_options, options, args|
             Push.new(args, options, global_options).execute

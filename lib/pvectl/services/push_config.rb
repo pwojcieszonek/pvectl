@@ -150,18 +150,20 @@ module Pvectl
         errors = []
 
         plans.each do |plan|
-          repo = repository_for(plan[:type])
+          begin
+            repo = repository_for(plan[:type])
 
-          if plan[:action] == :update
-            repo.update(plan[:vmid], plan[:node], plan[:params])
-            results << { action: :update, vmid: plan[:vmid], success: true }
-          elsif plan[:action] == :create
-            repo.create(plan[:node], plan[:vmid], plan[:params])
-            results << { action: :create, vmid: plan[:vmid], success: true }
+            if plan[:action] == :update
+              repo.update(plan[:vmid], plan[:node], plan[:params])
+              results << { action: :update, vmid: plan[:vmid], success: true }
+            elsif plan[:action] == :create
+              repo.create(plan[:node], plan[:vmid], plan[:params])
+              results << { action: :create, vmid: plan[:vmid], success: true }
+            end
+          rescue StandardError => e
+            errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
+            results << { action: plan[:action], vmid: plan[:vmid], success: false, error: e.message }
           end
-        rescue StandardError => e
-          errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
-          results << { action: plan[:action], vmid: plan[:vmid], success: false, error: e.message }
         end
 
         { results: results, errors: errors }

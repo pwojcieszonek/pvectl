@@ -42,4 +42,51 @@ class PushCommandTest < Minitest::Test
     assert_equal :vm, result
     assert_equal ["vm-100.yaml"], args
   end
+
+  def test_dry_run_does_not_apply
+    yaml_content = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 8
+    YAML
+
+    Dir.mktmpdir do |dir|
+      file_path = File.join(dir, "vm-100.yaml")
+      File.write(file_path, yaml_content)
+
+      mock_service = Minitest::Mock.new
+      prepare_result = {
+        plans: [{ action: :update, type: :vm, vmid: 100, node: "pve1",
+                  diff: { changed: { cores: [4, 8] }, added: {}, removed: [] },
+                  params: { cores: 8 } }],
+        errors: [],
+        skipped: []
+      }
+      mock_service.expect :prepare_batch, prepare_result, [Array], filter_type: nil
+      # apply should NOT be called in dry-run mode
+
+      cmd = Pvectl::Commands::Push.new([file_path], { :"dry-run" => true, yes: false }, {})
+      cmd.define_singleton_method(:load_config) { @config = {} }
+      cmd.define_singleton_method(:build_service) { |_conn| mock_service }
+
+      Pvectl::Connection.stub(:new, Object.new) do
+        output = StringIO.new
+        $stdout = output
+        result = cmd.execute
+        $stdout = STDOUT
+
+        assert_equal Pvectl::ExitCodes::SUCCESS, result
+        assert output.string.include?("dry-run")
+      end
+
+      # verify mock — apply was never called
+      mock_service.verify
+    end
+  end
 end
