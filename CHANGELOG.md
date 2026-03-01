@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **commands**: `pvectl pull` command — export VM/container configuration as kubectl-like YAML manifests (single, multiple, `--all`, selectors)
-- **commands**: `pvectl push` command — apply YAML manifests to cluster (create or update resources) with diff preview, confirmation prompt, `--yes`, `--dry-run`
+- **commands**: `pvectl push` command — apply YAML manifests to cluster (create or update resources) with diff preview, confirmation prompt, `-f`/`--file`, `--yes`, `--dry-run`
 - **manifest-serializer**: kubectl-like manifest format with `apiVersion`/`kind`/`metadata`/`spec` envelope
 - **config-serializer**: `to_nested`/`from_nested` methods for structured config with parsed complex values
 - **config-serializer**: bidirectional value parsing for complex Proxmox config strings (network, disk, boot, agent, startup, ipconfig)

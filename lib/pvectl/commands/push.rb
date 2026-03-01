@@ -29,14 +29,17 @@ module Pvectl
             that do. Shows a diff and asks for confirmation before applying.
 
           EXAMPLES
-            $ pvectl push vm vm-100.yaml
-            $ pvectl push vm ./manifests/
-            $ pvectl push ./manifests/
-            $ pvectl push vm vm-100.yaml --dry-run
-            $ pvectl push vm vm-100.yaml --yes
+            $ pvectl push vm -f vm-100.yaml
+            $ pvectl push vm -f ./manifests/
+            $ pvectl push -f ./manifests/
+            $ pvectl push vm -f vm-100.yaml --dry-run
+            $ pvectl push vm -f vm-100.yaml --yes
+            $ pvectl push vm vm-100.yaml            # positional args also work
 
           NOTES
             Without resource type, reads kind from each file.
+            Use -f to specify YAML files or directories (repeatable).
+            Positional arguments are also accepted as file paths.
             With --yes, skips confirmation (useful for CI/CD).
             With --dry-run, shows diff without applying changes.
 
@@ -45,6 +48,7 @@ module Pvectl
         HELP
 
         cli.command :push do |c|
+          c.flag [:f, :file], desc: "YAML file or directory to push", multiple: true
           c.switch [:y, :yes], desc: "Auto-confirm without prompting", negatable: false
           c.switch [:"dry-run"], desc: "Show diff without applying", negatable: false
 
@@ -69,9 +73,9 @@ module Pvectl
       def execute
         args = @args.dup
         filter_type = parse_resource_type(args)
-        file_paths = args
+        file_paths = resolve_file_paths(args)
 
-        return usage_error("File or directory path is required") if file_paths.empty?
+        return usage_error("File or directory path is required. Use -f <path> or pass as argument.") if file_paths.empty?
 
         yaml_contents = collect_yaml_contents(file_paths)
         return usage_error("No YAML files found") if yaml_contents.empty?
@@ -135,6 +139,17 @@ module Pvectl
       end
 
       private
+
+      # Merges file paths from positional args and -f flag.
+      #
+      # @param positional_args [Array<String>] remaining positional arguments
+      # @return [Array<String>] combined file paths
+      def resolve_file_paths(positional_args)
+        file_flag = @options[:file]
+        paths = positional_args.dup
+        paths.concat(Array(file_flag)) if file_flag
+        paths
+      end
 
       # Parses and removes the optional resource type from the argument list.
       #

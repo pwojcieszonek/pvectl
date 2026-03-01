@@ -19,12 +19,54 @@ class PushCommandTest < Minitest::Test
     end
   end
 
+  def test_execute_requires_file_path_with_type_only
+    cmd = Pvectl::Commands::Push.new(["vm"], { file: nil }, {})
+    assert_output(nil, /File or directory path is required/) do
+      result = cmd.execute
+      assert_equal Pvectl::ExitCodes::USAGE_ERROR, result
+    end
+  end
+
   def test_execute_with_nonexistent_file
     cmd = Pvectl::Commands::Push.new(["/nonexistent/path.yaml"], {}, {})
     assert_output(nil, /No YAML files found|File not found/) do
       result = cmd.execute
       assert_equal Pvectl::ExitCodes::USAGE_ERROR, result
     end
+  end
+
+  def test_execute_with_file_flag
+    cmd = Pvectl::Commands::Push.new([], { file: ["/nonexistent/path.yaml"] }, {})
+    assert_output(nil, /No YAML files found|File not found/) do
+      result = cmd.execute
+      assert_equal Pvectl::ExitCodes::USAGE_ERROR, result
+    end
+  end
+
+  def test_execute_with_type_and_file_flag
+    cmd = Pvectl::Commands::Push.new(["vm"], { file: ["/nonexistent/path.yaml"] }, {})
+    assert_output(nil, /No YAML files found|File not found/) do
+      result = cmd.execute
+      assert_equal Pvectl::ExitCodes::USAGE_ERROR, result
+    end
+  end
+
+  def test_resolve_file_paths_merges_positional_and_flag
+    cmd = Pvectl::Commands::Push.new([], { file: ["/flag/path.yaml"] }, {})
+    result = cmd.send(:resolve_file_paths, ["/positional/path.yaml"])
+    assert_equal ["/positional/path.yaml", "/flag/path.yaml"], result
+  end
+
+  def test_resolve_file_paths_only_positional
+    cmd = Pvectl::Commands::Push.new([], { file: nil }, {})
+    result = cmd.send(:resolve_file_paths, ["/positional/path.yaml"])
+    assert_equal ["/positional/path.yaml"], result
+  end
+
+  def test_resolve_file_paths_only_flag
+    cmd = Pvectl::Commands::Push.new([], { file: ["a.yaml", "b.yaml"] }, {})
+    result = cmd.send(:resolve_file_paths, [])
+    assert_equal ["a.yaml", "b.yaml"], result
   end
 
   def test_parse_resource_type_returns_nil_for_file_path

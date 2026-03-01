@@ -14,6 +14,7 @@ module Pvectl
 
       private
 
+      def resolve_file_paths: (Array[String] positional_args) -> Array[String]
       def parse_resource_type: (Array[String] args) -> Symbol?
       def collect_yaml_contents: (Array[String] paths) -> Array[Hash[Symbol, untyped]]
       def display_plans: (Array[Hash[Symbol, untyped]] plans) -> void
