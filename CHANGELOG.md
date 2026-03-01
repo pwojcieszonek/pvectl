@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **get**: `storages` is now the primary resource name (consistent with `vms`, `nodes`, etc.); `storage` and `stor` remain as aliases
 
 ### Fixed
+- **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
+- **repositories**: use server-side `/cluster/nextid` API for VMID/CTID allocation instead of client-side scanning (fixes stale config file conflicts)
 - **pull**: rename `-o` flag to `-f`/`--file` to avoid conflict with global `-o`/`--output` format flag
 - **presenters**: rename misleading "Wearout" label to "Life Remaining" in describe disk output (Proxmox reports remaining life, not wear percentage)
 - **presenters**: remove "Mounted" field from describe disk output (mount status applies to partitions, not whole disks)

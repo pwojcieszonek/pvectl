@@ -684,30 +684,16 @@ class RepositoriesContainerTest < Minitest::Test
   # next_available_ctid() Method
   # ---------------------------
 
-  def test_next_available_ctid_returns_first_unused_id
-    repo = create_repo_with_mock_response(@mock_api_response)
+  def test_next_available_ctid_returns_server_allocated_id
+    repo = create_repo_with_mock_response(300)
 
-    ctid = repo.next_available_ctid
-
-    # Used IDs: 100, 101, 200 (lxc only, 1000 is qemu and filtered out by list)
-    assert_equal 102, ctid
+    assert_equal 300, repo.next_available_ctid
   end
 
-  def test_next_available_ctid_with_custom_min
-    repo = create_repo_with_mock_response(@mock_api_response)
+  def test_next_available_ctid_handles_string_response
+    repo = create_repo_with_mock_response("456")
 
-    ctid = repo.next_available_ctid(min: 200)
-
-    # 200 is used, so should return 201
-    assert_equal 201, ctid
-  end
-
-  def test_next_available_ctid_returns_min_when_no_containers_exist
-    repo = create_repo_with_mock_response([])
-
-    ctid = repo.next_available_ctid
-
-    assert_equal 100, ctid
+    assert_equal 456, repo.next_available_ctid
   end
 
   # ---------------------------

@@ -65,13 +65,16 @@ module Pvectl
             return { plans: [], errors: [], no_changes: true }
           end
 
+          update_result = build_update_params(diff, current_config, type)
+
           plan = {
             action: :update,
             type: type,
             vmid: vmid,
             node: resource.node,
             diff: diff,
-            params: build_update_params(diff, current_config)
+            params: update_result[:params],
+            resize_ops: update_result[:resize_ops]
           }
 
           { plans: [plan], errors: [] }
@@ -141,7 +144,11 @@ module Pvectl
             repo = repository_for(plan[:type])
 
             if plan[:action] == :update
-              repo.update(plan[:vmid], plan[:node], plan[:params])
+              config_params = plan[:params].reject { |k, _| k == :digest }
+              unless config_params.empty?
+                repo.update(plan[:vmid], plan[:node], plan[:params])
+              end
+              apply_resize_ops(repo, plan)
               results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: true }
             elsif plan[:action] == :create
               repo.create(plan[:node], plan[:vmid], plan[:params])
@@ -217,19 +224,88 @@ module Pvectl
       # Builds flat update params from a diff and original config.
       # Includes changed keys, added keys, and a delete list for removed keys.
       # Preserves the digest from original config for optimistic locking.
+      # Extracts disk resize operations into a separate list (Proxmox requires
+      # the dedicated /resize endpoint for actual disk size changes).
       #
       # @param diff [Hash] diff from ConfigSerializer.diff
       # @param original_config [Hash] original flat config from API
-      # @return [Hash] params ready for repository update call
-      def build_update_params(diff, original_config)
+      # @param type [Symbol] resource type (:vm or :container)
+      # @return [Hash] { params: Hash, resize_ops: Array<Hash> }
+      def build_update_params(diff, original_config, type)
         params = {}
-        diff[:changed].each { |key, (_old, new_val)| params[key] = new_val }
+        resize_ops = []
+
+        diff[:changed].each do |key, (old_val, new_val)|
+          if vm_disk_key?(key) && type == :vm
+            old_size = extract_disk_size(old_val.to_s)
+            new_size = extract_disk_size(new_val.to_s)
+
+            if old_size && new_size && old_size != new_size
+              resize_ops << { disk: key.to_s, size: new_size }
+              # Check if other disk options changed besides size
+              if disk_value_without_size(old_val.to_s) != disk_value_without_size(new_val.to_s)
+                params[key] = replace_disk_size(new_val.to_s, old_size)
+              end
+              next
+            end
+          end
+          params[key] = new_val
+        end
+
         diff[:added].each { |key, val| params[key] = val }
         unless diff[:removed].empty?
           params[:delete] = diff[:removed].map(&:to_s).join(",")
         end
         params[:digest] = original_config[:digest] if original_config[:digest]
-        params
+
+        { params: params, resize_ops: resize_ops }
+      end
+
+      # Applies disk resize operations from a plan.
+      #
+      # @param repo [Repositories::Vm, Repositories::Container] repository
+      # @param plan [Hash] update plan with optional :resize_ops
+      # @return [void]
+      def apply_resize_ops(repo, plan)
+        return unless plan[:resize_ops]&.any?
+
+        plan[:resize_ops].each do |op|
+          repo.resize(plan[:vmid], plan[:node], disk: op[:disk], size: op[:size])
+        end
+      end
+
+      # Checks if a key is a VM disk key (scsi, ide, virtio, sata, efidisk, tpmstate).
+      #
+      # @param key [Symbol, String] config key
+      # @return [Boolean]
+      def vm_disk_key?(key)
+        ConfigSerializer::VM_COMPLEX_KEYS[:disk][:pattern].match?(key.to_s)
+      end
+
+      # Extracts the size value from a Proxmox disk config string.
+      #
+      # @param disk_value [String] e.g. "local-lvm:vm-100-disk-0,size=8G,iothread=1"
+      # @return [String, nil] size value or nil if not found
+      def extract_disk_size(disk_value)
+        match = disk_value.match(/(?:^|,)size=([^,]+)/)
+        match ? match[1] : nil
+      end
+
+      # Returns a disk config string with the size= part removed.
+      #
+      # @param value [String] disk config string
+      # @return [String] string without size= component
+      def disk_value_without_size(value)
+        value.split(",").reject { |p| p.strip.start_with?("size=") }.join(",")
+      end
+
+      # Replaces the size value in a disk config string.
+      #
+      # @param value [String] disk config string
+      # @param size [String] new size value
+      # @return [String] string with replaced size
+      def replace_disk_size(value, size)
+        value.split(",").map { |p| p.strip.start_with?("size=") ? "size=#{size}" : p }.join(",")
       end
 
       # Collects read-only keys present in the given flat config.

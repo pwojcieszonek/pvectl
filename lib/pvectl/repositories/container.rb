@@ -170,18 +170,15 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/migrate"].post(params)
       end
 
-      # Finds the next available CTID starting from a minimum value.
+      # Returns the next available CTID from the Proxmox cluster.
       #
-      # Scans existing containers and returns the lowest unused CTID at or above
-      # the specified minimum.
+      # Uses the +/cluster/nextid+ API endpoint which performs server-side allocation.
+      # This is more reliable than client-side scanning because it detects stale
+      # config files that don't appear in +/cluster/resources+.
       #
-      # @param min [Integer] minimum CTID to consider (default: 100)
       # @return [Integer] next available CTID
-      def next_available_ctid(min: 100)
-        used_ids = list.map(&:vmid).to_set
-        ctid = min
-        ctid += 1 while used_ids.include?(ctid)
-        ctid
+      def next_available_ctid
+        connection.client["cluster/nextid"].get.to_i
       end
 
       # Restarts a container (reboot).

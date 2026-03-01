@@ -580,4 +580,146 @@ class PushConfigTest < Minitest::Test
     assert_equal :vm, result[:results].first[:type]
     assert_equal 1, result[:errors].length
   end
+
+  # --- disk resize detection ---
+
+  def test_prepare_detects_disk_resize
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              volume: vm-100-disk-0
+              size: 9G
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { scsi0: "local-lvm:vm-100-disk-0,size=8G" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    assert plan[:resize_ops].any? { |op| op[:disk] == "scsi0" && op[:size] == "9G" }
+    # scsi0 should not be in config params (only size changed)
+    refute plan[:params].key?(:scsi0)
+    @vm_repo.verify
+  end
+
+  def test_prepare_disk_resize_with_other_changes
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              volume: vm-100-disk-0
+              size: 9G
+              iothread: true
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { scsi0: "local-lvm:vm-100-disk-0,size=8G,iothread=0" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    # Resize should be extracted
+    assert plan[:resize_ops].any? { |op| op[:disk] == "scsi0" && op[:size] == "9G" }
+    # Config params should have scsi0 with OLD size (for other option changes)
+    assert plan[:params].key?(:scsi0)
+    assert_includes plan[:params][:scsi0], "size=8G"
+    assert_includes plan[:params][:scsi0], "iothread=1"
+    @vm_repo.verify
+  end
+
+  def test_apply_calls_resize_for_disk_changes
+    plan = {
+      action: :update,
+      type: :vm,
+      vmid: 100,
+      node: "pve1",
+      params: { digest: "abc123" },
+      resize_ops: [{ disk: "scsi0", size: "9G" }]
+    }
+
+    @vm_repo.expect :resize, nil, [100, "pve1"], disk: "scsi0", size: "9G"
+
+    result = @service.apply([plan])
+
+    assert_equal 1, result[:results].length
+    assert result[:results].first[:success]
+    @vm_repo.verify
+  end
+
+  def test_apply_update_with_config_and_resize
+    plan = {
+      action: :update,
+      type: :vm,
+      vmid: 100,
+      node: "pve1",
+      params: { cores: 8, digest: "abc123" },
+      resize_ops: [{ disk: "scsi0", size: "9G" }]
+    }
+
+    @vm_repo.expect :update, nil, [100, "pve1", { cores: 8, digest: "abc123" }]
+    @vm_repo.expect :resize, nil, [100, "pve1"], disk: "scsi0", size: "9G"
+
+    result = @service.apply([plan])
+
+    assert result[:results].first[:success]
+    @vm_repo.verify
+  end
+
+  def test_prepare_no_resize_when_disk_size_unchanged
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              volume: vm-100-disk-0
+              size: 8G
+              iothread: true
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { scsi0: "local-lvm:vm-100-disk-0,size=8G,iothread=0" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    # No resize ops — only iothread changed
+    assert_empty plan[:resize_ops]
+    # scsi0 should be in config params (non-size change)
+    assert plan[:params].key?(:scsi0)
+    @vm_repo.verify
+  end
 end

@@ -223,6 +223,11 @@ module Pvectl
           if plan[:action] == :update
             $stdout.puts "\n#{label} #{plan[:vmid]} (#{plan[:node]}) -- UPDATE:"
             $stdout.puts ConfigSerializer.format_diff(plan[:diff])
+            if plan[:resize_ops]&.any?
+              plan[:resize_ops].each do |op|
+                $stdout.puts "  (disk resize: #{op[:disk]} -> #{op[:size]})"
+              end
+            end
           elsif plan[:action] == :create
             id_note = plan[:auto_id] ? " (auto-assigned)" : ""
             $stdout.puts "\n#{label} #{plan[:vmid]}#{id_note} (#{plan[:node]}) -- CREATE:"
