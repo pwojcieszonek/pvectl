@@ -1119,6 +1119,34 @@ class PushConfigTest < Minitest::Test
     @vm_repo.verify
   end
 
+  def test_prepare_create_transforms_cloudinit_without_volume
+    # User writes manifest with storage + media=cdrom but no volume
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 2
+          disks:
+            ide0:
+              storage: local-lvm
+              media: cdrom
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    # No volume + media=cdrom on real storage → cloud-init
+    assert_equal "local-lvm:cloudinit", plan[:params][:ide0]
+    @vm_repo.verify
+  end
+
   def test_prepare_create_transforms_cloudinit_with_normalized_volume
     # Simulates manifest from pull where cloud-init volume is normalized to "cloudinit"
     yaml = <<~YAML

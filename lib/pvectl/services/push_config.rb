@@ -387,8 +387,12 @@ module Pvectl
         elsif volume
           # Has volume name but no size (e.g., efidisk, tpmstate) — use default
           gib = "1"
+        elsif parts.any? { |p| p.strip.start_with?("media=") }
+          # No volume, no size, but has media= (e.g., cloud-init on real storage)
+          # The only valid case for storage + media=cdrom without volume is cloud-init
+          return "#{storage}:cloudinit"
         else
-          # No volume, no size — can't determine create format
+          # No volume, no size, no media — can't determine create format
           return value
         end
 

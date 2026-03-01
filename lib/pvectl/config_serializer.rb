@@ -779,7 +779,7 @@ module Pvectl
         section_hash.each do |key, value|
           complex = find_complex_key(key, type)
           result[key] = if complex && value.is_a?(Hash)
-                          send(complex[:serializer], value)
+                          send(complex[:serializer], normalize_cloudinit_volume(value))
                         elsif bool_keys.include?(key) && (value.is_a?(TrueClass) || value.is_a?(FalseClass))
                           from_boolean(value)
                         else

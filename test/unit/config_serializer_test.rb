@@ -653,6 +653,20 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal "local-lvm:vm-100-disk-0,size=32G,iothread=1", result[:scsi0]
   end
 
+  def test_from_nested_normalizes_cloudinit_volume
+    nested = {
+      hardware: {
+        disks: {
+          ide0: { storage: "local-lvm", volume: "vm-100-cloudinit", media: "cdrom" }
+        }
+      }
+    }
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    # Volume should be normalized from vm-100-cloudinit → cloudinit
+    assert_equal "local-lvm:cloudinit,media=cdrom", result[:ide0]
+  end
+
   def test_from_nested_serializes_boot_back
     nested = {
       options: {
