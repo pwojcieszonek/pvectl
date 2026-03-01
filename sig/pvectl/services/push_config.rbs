@@ -21,6 +21,10 @@ module Pvectl
       def apply_resize_ops: (untyped repo, Hash[Symbol, untyped] plan) -> Array[String]
       def wait_for_task: (untyped upid) -> untyped
       def vm_disk_key?: (Symbol | String key) -> bool
+      def create_disk_key?: (Symbol | String key, Symbol type) -> bool
+      def transform_disks_for_create: (Hash[Symbol, untyped] flat_config, Symbol type) -> Hash[Symbol, untyped]
+      def disk_value_for_create: (String value) -> String
+      def size_to_gib: (String size_str) -> String
       def extract_disk_size: (String disk_value) -> String?
       def disk_value_without_size: (String value) -> String
       def replace_disk_size: (String value, String size) -> String

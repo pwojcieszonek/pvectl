@@ -847,4 +847,223 @@ class PushConfigTest < Minitest::Test
     assert result[:results].first[:success]
     @vm_repo.verify
   end
+
+  # --- disk value transformation for create ---
+
+  def test_prepare_create_transforms_disk_with_volume_name
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              volume: vm-100-disk-0
+              size: 8G
+              iothread: true
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :create, plan[:action]
+    # Disk should be in create format: storage:size_gib,options
+    assert_equal "local-lvm:8,iothread=1", plan[:params][:scsi0]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_transforms_disk_without_volume
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              iothread: true
+              size: 9G
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal "local-lvm:9,iothread=1", plan[:params][:scsi0]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_preserves_empty_cdrom
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 2
+          disks:
+            ide2:
+              storage: none
+              media: cdrom
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal "none,media=cdrom", plan[:params][:ide2]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_transforms_cloudinit_disk
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 2
+          disks:
+            ide0:
+              storage: local-lvm
+              volume: vm-100-cloudinit
+              media: cdrom
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal "local-lvm:cloudinit", plan[:params][:ide0]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_transforms_efidisk_without_size
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 2
+          disks:
+            efidisk0:
+              storage: local-lvm
+              volume: vm-100-disk-1
+              efitype: 4m
+              "pre-enrolled-keys": "1"
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    # EFI disk has no size= — should use default "1"
+    assert_equal "local-lvm:1,efitype=4m,pre-enrolled-keys=1", plan[:params][:efidisk0]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_transforms_container_rootfs
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: Container
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        resources:
+          rootfs:
+            rootfs:
+              storage: local-lvm
+              volume: subvol-100-disk-0
+              size: 4G
+    YAML
+
+    @ct_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :create, plan[:action]
+    assert_equal "local-lvm:4", plan[:params][:rootfs]
+    @ct_repo.verify
+  end
+
+  def test_prepare_create_preserves_non_disk_params
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+          memory:
+            memory: 8192
+          disks:
+            scsi0:
+              storage: local-lvm
+              size: 32G
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    # Non-disk params should be unchanged
+    assert_equal 4, plan[:params][:cores]
+    assert_equal 8192, plan[:params][:memory]
+    # Disk should be transformed
+    assert_equal "local-lvm:32", plan[:params][:scsi0]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_size_conversion_terabytes
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              size: 2T
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal "local-lvm:2048", plan[:params][:scsi0]
+    @vm_repo.verify
+  end
 end

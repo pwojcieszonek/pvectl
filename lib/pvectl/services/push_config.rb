@@ -207,12 +207,14 @@ module Pvectl
           vmid = allocate_vmid(repo, type)
         end
 
+        create_config = transform_disks_for_create(flat_config, type)
+
         plan = {
           action: :create,
           type: type,
           vmid: vmid,
           node: node,
-          params: flat_config,
+          params: create_config,
           auto_id: auto_id
         }
 
@@ -318,6 +320,96 @@ module Pvectl
       # @return [Boolean]
       def vm_disk_key?(key)
         ConfigSerializer::VM_COMPLEX_KEYS[:disk][:pattern].match?(key.to_s)
+      end
+
+      # Checks if a key is a disk key that needs create-format transformation.
+      # For VMs: scsi*, ide*, virtio*, sata*, efidisk*, tpmstate*
+      # For containers: rootfs, mp*
+      #
+      # @param key [Symbol, String] config key
+      # @param type [Symbol] :vm or :container
+      # @return [Boolean]
+      def create_disk_key?(key, type)
+        key_str = key.to_s
+        if type == :container
+          ConfigSerializer::CT_COMPLEX_KEYS[:rootfs][:pattern].match?(key_str) ||
+            ConfigSerializer::CT_COMPLEX_KEYS[:mp][:pattern].match?(key_str)
+        else
+          vm_disk_key?(key)
+        end
+      end
+
+      # Transforms disk values in flat config to Proxmox create API format.
+      # Replaces volume names with STORAGE_ID:SIZE_IN_GiB syntax.
+      #
+      # @param flat_config [Hash] flat config from manifest
+      # @param type [Symbol] :vm or :container
+      # @return [Hash] config with disk values in create format
+      def transform_disks_for_create(flat_config, type)
+        flat_config.each_with_object({}) do |(key, value), result|
+          if create_disk_key?(key, type) && value.is_a?(String)
+            result[key] = disk_value_for_create(value)
+          else
+            result[key] = value
+          end
+        end
+      end
+
+      # Converts a single disk config string to Proxmox create API format.
+      # Handles: regular disks, cloud-init, EFI/TPM, and empty CD-ROMs.
+      #
+      # @param value [String] disk config string (e.g. "local-lvm:vm-100-disk-0,size=8G,iothread=1")
+      # @return [String] create format (e.g. "local-lvm:8,iothread=1")
+      def disk_value_for_create(value)
+        parts = value.split(",")
+        first = parts.first.strip
+        storage, volume = first.split(":", 2)
+
+        # "none" storage = keep as-is (empty CD-ROM: "none,media=cdrom")
+        return value if storage == "none"
+
+        # Cloud-init disk (volume contains "cloudinit")
+        return "#{storage}:cloudinit" if volume&.include?("cloudinit")
+
+        # Already in create format (volume is a plain number)
+        return value if volume&.match?(/\A\d+(\.\d+)?\z/)
+
+        # Extract size from size= option
+        size_str = extract_disk_size(value)
+
+        if size_str
+          gib = size_to_gib(size_str)
+        elsif volume
+          # Has volume name but no size (e.g., efidisk, tpmstate) — use default
+          gib = "1"
+        else
+          # No volume, no size — can't determine create format
+          return value
+        end
+
+        # Build create format: storage:size,options (without size= key)
+        options = parts[1..].map(&:strip).reject { |p| p.start_with?("size=") }
+        create_parts = ["#{storage}:#{gib}"]
+        create_parts.concat(options) if options.any?
+        create_parts.join(",")
+      end
+
+      # Converts a Proxmox size string to GiB number for create API.
+      #
+      # @param size_str [String] e.g. "8G", "32G", "1T"
+      # @return [String] size in GiB as a string number
+      def size_to_gib(size_str)
+        if size_str.end_with?("G")
+          size_str.chomp("G")
+        elsif size_str.end_with?("T")
+          (size_str.chomp("T").to_i * 1024).to_s
+        elsif size_str.end_with?("M")
+          (size_str.chomp("M").to_f / 1024).to_s
+        elsif size_str.end_with?("K")
+          "1"
+        else
+          size_str
+        end
       end
 
       # Extracts the size value from a Proxmox disk config string.
