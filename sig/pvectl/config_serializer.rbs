@@ -6,6 +6,8 @@ module Pvectl
 
     YAML_SPECIAL_CHARS: Array[String]
 
+    AGENT_DEFAULTS: Hash[Symbol, String]
+
     VM_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
 
     CT_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
@@ -77,6 +79,10 @@ module Pvectl
     def self.parse_kv_value: (String string, ?default_key: Symbol?) -> Hash[Symbol, String?]
 
     def self.serialize_kv_value: (Hash[Symbol, String] hash) -> String
+
+    def self.parse_agent_value: (String string) -> Hash[Symbol, String]
+
+    def self.serialize_agent_value: (Hash[Symbol, String] hash) -> String
 
     def self.parse_boot_value: (String string) -> Hash[Symbol, String | Array[String]]
 

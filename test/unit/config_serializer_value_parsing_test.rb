@@ -89,24 +89,65 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     assert_equal "virtio", result[:type]
   end
 
+  # ── parse_agent_value tests ─────────────────────────────────
+
+  def test_parse_agent_value_bare_1
+    result = Pvectl::ConfigSerializer.send(:parse_agent_value, "1")
+
+    assert_equal "1", result[:enabled]
+    assert_equal "0", result[:fstrim_cloned_disks]
+    assert_equal "1", result[:"freeze-fs-on-backup"]
+    assert_equal "virtio", result[:type]
+  end
+
+  def test_parse_agent_value_with_explicit_properties
+    result = Pvectl::ConfigSerializer.send(:parse_agent_value, "enabled=1,fstrim_cloned_disks=1")
+
+    assert_equal "1", result[:enabled]
+    assert_equal "1", result[:fstrim_cloned_disks]
+    assert_equal "1", result[:"freeze-fs-on-backup"]
+    assert_equal "virtio", result[:type]
+  end
+
+  def test_serialize_agent_value_only_enabled
+    hash = { enabled: "1", fstrim_cloned_disks: "0", :"freeze-fs-on-backup" => "1", type: "virtio" }
+    result = Pvectl::ConfigSerializer.send(:serialize_agent_value, hash)
+
+    assert_equal "enabled=1", result
+  end
+
+  def test_serialize_agent_value_with_non_defaults
+    hash = { enabled: "1", fstrim_cloned_disks: "1", :"freeze-fs-on-backup" => "0", type: "virtio" }
+    result = Pvectl::ConfigSerializer.send(:serialize_agent_value, hash)
+
+    assert_includes result, "enabled=1"
+    assert_includes result, "fstrim_cloned_disks=1"
+    assert_includes result, "freeze-fs-on-backup=0"
+    refute_includes result, "type=virtio"
+  end
+
   def test_agent_round_trip_via_to_nested
     flat_config = { agent: "1,fstrim_cloned_disks=1" }
     nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
     flat_back = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
 
-    # Round-trip produces equivalent Proxmox config
-    reparsed = Pvectl::ConfigSerializer.send(:parse_kv_value, flat_back[:agent])
-    assert_equal "1", reparsed[:enabled]
-    assert_equal "1", reparsed[:fstrim_cloned_disks]
+    # Round-trip produces equivalent Proxmox config (only non-default values)
+    assert_includes flat_back[:agent], "enabled=1"
+    assert_includes flat_back[:agent], "fstrim_cloned_disks=1"
   end
 
   def test_agent_bare_1_round_trip_via_to_nested
     flat_config = { agent: "1" }
     nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
 
-    assert_equal({ enabled: "1" }, nested[:options][:agent])
+    # Full agent config with defaults filled in
+    assert_equal "1", nested[:options][:agent][:enabled]
+    assert_equal "0", nested[:options][:agent][:fstrim_cloned_disks]
+    assert_equal "1", nested[:options][:agent][:"freeze-fs-on-backup"]
+    assert_equal "virtio", nested[:options][:agent][:type]
 
     flat_back = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+    # Only non-default: enabled=1
     assert_equal "enabled=1", flat_back[:agent]
   end
 

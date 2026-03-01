@@ -130,6 +130,15 @@ module Pvectl
     # Characters that require quoting in YAML output.
     YAML_SPECIAL_CHARS = %w[: # [ ] { } > | * & ! % @ ` , ? -].freeze
 
+    # Default values for QEMU Guest Agent properties (from Proxmox API docs).
+    # Used to fill in missing sub-properties when parsing agent config strings.
+    AGENT_DEFAULTS = {
+      enabled: "0",
+      fstrim_cloned_disks: "0",
+      :"freeze-fs-on-backup" => "1",
+      type: "virtio"
+    }.freeze
+
     # Complex key mappings for QEMU VMs.
     # Each entry maps a category to a regex pattern and parser/serializer method names.
     # Used by to_nested/from_nested for bidirectional conversion of Proxmox config strings.
@@ -139,8 +148,7 @@ module Pvectl
               serializer: :serialize_disk_value },
       unused: { pattern: /\Aunused\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
       boot: { pattern: /\Aboot\z/, parser: :parse_boot_value, serializer: :serialize_boot_value },
-      agent: { pattern: /\Aagent\z/, parser: :parse_kv_value, serializer: :serialize_kv_value,
-               default_key: :enabled },
+      agent: { pattern: /\Aagent\z/, parser: :parse_agent_value, serializer: :serialize_agent_value },
       startup: { pattern: /\Astartup\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       ipconfig: { pattern: /\Aipconfig\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       smbios1: { pattern: /\Asmbios1\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
@@ -786,6 +794,36 @@ module Pvectl
       # @return [String] comma-separated key=value string
       def serialize_kv_value(hash)
         hash.map { |k, v| "#{k}=#{v}" }.join(",")
+      end
+
+      # Parses a QEMU Guest Agent config string and fills in default values.
+      # Proxmox returns bare "1" for enabled-only, but the full format includes
+      # fstrim_cloned_disks, freeze-fs-on-backup, and type.
+      #
+      # @param string [String] agent config value (e.g., "1" or "enabled=1,fstrim_cloned_disks=1")
+      # @return [Hash{Symbol => String}] parsed agent config with all properties
+      def parse_agent_value(string)
+        parsed = parse_kv_value(string, default_key: :enabled)
+        AGENT_DEFAULTS.merge(parsed)
+      end
+
+      # Serializes an agent config hash back to Proxmox string, omitting default values.
+      # Only includes properties that differ from AGENT_DEFAULTS for a clean config string.
+      #
+      # @param hash [Hash{Symbol => String}] agent config hash
+      # @return [String] agent config string
+      def serialize_agent_value(hash)
+        non_defaults = hash.reject { |k, v| AGENT_DEFAULTS[k] == v.to_s }
+        return "0" if non_defaults.empty?
+
+        # Ensure enabled is always first
+        parts = []
+        parts << "enabled=#{hash[:enabled]}" if non_defaults.key?(:enabled)
+        non_defaults.each do |k, v|
+          next if k == :enabled
+          parts << "#{k}=#{v}"
+        end
+        parts.join(",")
       end
 
       # Parses a boot order config string. The order value uses semicolons as separators.
