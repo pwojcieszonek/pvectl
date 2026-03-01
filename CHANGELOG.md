@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **commands**: `pvectl pull` command — export VM/container configuration as kubectl-like YAML manifests (single, multiple, `--all`, selectors)
+- **commands**: `pvectl pull` command — export VM/container configuration as kubectl-like YAML manifests (single, multiple, `--all`, selectors) with diff preview, `--yes`, `--dry-run` for file output
 - **commands**: `pvectl push` command — apply YAML manifests to cluster (create or update resources) with diff preview, `-f`/`--file`, stdin pipe support, auto-VMID allocation, `--yes`, `--dry-run`, post-apply manifest refresh
 - **manifest-serializer**: kubectl-like manifest format with `apiVersion`/`kind`/`metadata`/`spec` envelope
 - **config-serializer**: `to_nested`/`from_nested` methods for structured config with parsed complex values
