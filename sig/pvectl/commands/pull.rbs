@@ -24,6 +24,7 @@ module Pvectl
       def display_pull_plan: (Array[Hash[Symbol, untyped]] operations, Symbol type) -> void
       def diff_has_changes?: (Hash[Symbol, untyped] diff) -> bool
       def apply_file_operations: (Array[Hash[Symbol, untyped]] operations) -> void
+      def infer_ids_from_directory: (String directory, Symbol type) -> Array[Integer]
       def directory_output?: (String path) -> bool
       def load_config: () -> void
       def usage_error: (String message) -> Integer

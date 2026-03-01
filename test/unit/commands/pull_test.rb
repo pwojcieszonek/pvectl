@@ -315,6 +315,89 @@ class PullCommandTest < Minitest::Test
     end
   end
 
+  # --- infer_ids_from_directory ---
+
+  def test_infer_ids_from_directory_extracts_vm_ids
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "vm-100.yaml"), "")
+      File.write(File.join(dir, "vm-200.yaml"), "")
+      File.write(File.join(dir, "vm-300.yaml"), "")
+
+      cmd = Pvectl::Commands::Pull.new([], {}, {})
+      ids = cmd.send(:infer_ids_from_directory, dir, :vm)
+
+      assert_equal [100, 200, 300], ids
+    end
+  end
+
+  def test_infer_ids_from_directory_extracts_ct_ids
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "ct-500.yaml"), "")
+      File.write(File.join(dir, "ct-600.yaml"), "")
+
+      cmd = Pvectl::Commands::Pull.new([], {}, {})
+      ids = cmd.send(:infer_ids_from_directory, dir, :container)
+
+      assert_equal [500, 600], ids
+    end
+  end
+
+  def test_infer_ids_from_directory_ignores_non_matching_files
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "vm-100.yaml"), "")
+      File.write(File.join(dir, "ct-200.yaml"), "")
+      File.write(File.join(dir, "notes.txt"), "")
+      File.write(File.join(dir, "vm-backup.yaml"), "")
+
+      cmd = Pvectl::Commands::Pull.new([], {}, {})
+      ids = cmd.send(:infer_ids_from_directory, dir, :vm)
+
+      assert_equal [100], ids
+    end
+  end
+
+  def test_infer_ids_from_directory_returns_empty_for_nonexistent
+    cmd = Pvectl::Commands::Pull.new([], {}, {})
+    ids = cmd.send(:infer_ids_from_directory, "/nonexistent/path", :vm)
+
+    assert_equal [], ids
+  end
+
+  def test_infer_ids_from_directory_returns_empty_for_no_manifests
+    Dir.mktmpdir do |dir|
+      cmd = Pvectl::Commands::Pull.new([], {}, {})
+      ids = cmd.send(:infer_ids_from_directory, dir, :vm)
+
+      assert_equal [], ids
+    end
+  end
+
+  def test_execute_infers_ids_from_directory_when_no_ids_or_all
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, "vm-100.yaml"), "")
+      File.write(File.join(dir, "vm-200.yaml"), "")
+
+      cmd = Pvectl::Commands::Pull.new(["vm"], { all: false, selector: nil, file: dir, node: nil }, {})
+
+      # Should NOT return usage error because IDs are inferred from directory
+      # It will fail later at load_config, which proves it got past the ID check
+      assert_output(nil, /Error/) do
+        cmd.execute
+      end
+    end
+  end
+
+  def test_execute_still_errors_when_directory_empty
+    Dir.mktmpdir do |dir|
+      cmd = Pvectl::Commands::Pull.new(["vm"], { all: false, selector: nil, file: dir, node: nil }, {})
+
+      assert_output(nil, /Provide resource IDs/) do
+        result = cmd.execute
+        assert_equal Pvectl::ExitCodes::USAGE_ERROR, result
+      end
+    end
+  end
+
   # --- display_pull_plan ---
 
   def test_display_pull_plan_shows_metadata_only

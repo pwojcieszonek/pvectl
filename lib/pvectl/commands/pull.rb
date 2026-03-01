@@ -45,6 +45,7 @@ module Pvectl
             $ pvectl pull vm 100 -f vm-100.yaml --dry-run
             $ pvectl pull vm 100 101 102 -f ./manifests/
             $ pvectl pull vm --all -f ./manifests/ --yes
+            $ pvectl pull vm -f ./manifests/
             $ pvectl pull vm -l tags=prod -f ./manifests/
             $ pvectl pull container 200
 
@@ -52,6 +53,8 @@ module Pvectl
             Without -f, YAML is printed to stdout (pipe-friendly).
             With -f, shows diff against existing files and asks to confirm.
             With --all or -l, -f must point to a directory.
+            When -f points to a directory with existing manifests and no IDs
+            are given, IDs are inferred from file names (vm-{vmid}.yaml).
             File naming convention: vm-{vmid}.yaml or ct-{vmid}.yaml.
 
           SEE ALSO
@@ -95,6 +98,11 @@ module Pvectl
         all = @options[:all]
         node = @options[:node]
         output = @options[:file]
+
+        # Auto-infer IDs from existing manifest files in directory
+        if ids.empty? && !all && @options[:selector].nil? && output && directory_output?(output)
+          ids = infer_ids_from_directory(output, type)
+        end
 
         if ids.empty? && !all && @options[:selector].nil?
           return usage_error("Provide resource IDs, --all, or -l selector")
@@ -293,6 +301,24 @@ module Pvectl
           written += 1
         end
         $stderr.puts "Written #{written} manifest(s)"
+      end
+
+      # Infers resource IDs from existing manifest files in a directory.
+      # Scans for files matching {prefix}-{vmid}.yaml pattern.
+      #
+      # @param directory [String] path to directory
+      # @param type [Symbol] :vm or :container
+      # @return [Array<Integer>] extracted VMIDs
+      def infer_ids_from_directory(directory, type)
+        return [] unless File.directory?(directory)
+
+        prefix = FILE_PREFIXES[type]
+        pattern = File.join(directory, "#{prefix}-*.yaml")
+        Dir.glob(pattern).filter_map do |path|
+          basename = File.basename(path, ".yaml")
+          match = basename.match(/\A#{Regexp.escape(prefix)}-(\d+)\z/)
+          match[1].to_i if match
+        end.sort
       end
 
       def directory_output?(path)
