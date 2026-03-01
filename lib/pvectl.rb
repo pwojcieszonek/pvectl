@@ -3,6 +3,7 @@
 require_relative "pvectl/version"
 require_relative "pvectl/exit_codes"
 require_relative "pvectl/config_serializer"
+require_relative "pvectl/manifest_serializer"
 require_relative "pvectl/editor_session"
 
 # Main module for the pvectl application - CLI tool for managing Proxmox clusters.
