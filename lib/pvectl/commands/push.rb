@@ -89,7 +89,7 @@ module Pvectl
 
         load_config
         connection = Pvectl::Connection.new(@config)
-        service = build_service(connection)
+        service, pull_service = build_services(connection)
 
         result = service.prepare_batch(yaml_contents, filter_type: filter_type)
 
@@ -131,11 +131,13 @@ module Pvectl
         apply_result[:results].each do |r|
           if r[:success]
             $stdout.puts "#{r[:action].capitalize}d #{type_label_for(r)} #{r[:vmid]} successfully."
-            update_manifest_vmid(r) if r[:auto_id] && r[:success]
           else
             $stderr.puts "Error: Failed to #{r[:action]} #{r[:vmid]}: #{r[:error]}"
           end
         end
+
+        # Refresh source manifest files with current server state
+        refresh_manifests(apply_result[:results], result[:plans], pull_service)
 
         apply_result[:errors].empty? ? ExitCodes::SUCCESS : ExitCodes::GENERAL_ERROR
       rescue Pvectl::Config::ConfigNotFoundError,
@@ -246,38 +248,65 @@ module Pvectl
         result[:type] == :container ? "Container" : "VM"
       end
 
-      # Updates the source YAML file with the auto-allocated VMID.
-      # Only applies to file-based manifests (not stdin).
+      # Refreshes source manifest files with the current server state after
+      # successful apply. Re-pulls each resource and overwrites the source file,
+      # ensuring local manifests include server-assigned values (volume names,
+      # MAC addresses, etc.).
       #
-      # @param result [Hash] apply result with :vmid, :source_path
+      # @param results [Array<Hash>] apply results
+      # @param plans [Array<Hash>] original plans (same order as results)
+      # @param pull_service [Services::PullConfig] pull service for re-pulling
       # @return [void]
-      def update_manifest_vmid(result)
-        path = result[:source_path]
-        return unless path && File.file?(path)
+      def refresh_manifests(results, plans, pull_service)
+        results.each_with_index do |r, idx|
+          next unless r[:success]
 
-        content = File.read(path)
-        parsed = YAML.safe_load(content)
-        parsed["metadata"] ||= {}
-        parsed["metadata"]["vmid"] = result[:vmid]
-        File.write(path, YAML.dump(parsed))
-        $stderr.puts "Updated #{path} with vmid: #{result[:vmid]}"
-      rescue StandardError => e
-        $stderr.puts "Warning: Could not update #{path} with vmid: #{e.message}"
+          plan = plans[idx]
+          source_path = plan[:source_path]
+          next unless source_path && File.file?(source_path)
+
+          refresh_manifest_file(source_path, plan[:type], plan[:vmid], pull_service)
+        end
       end
 
-      # Builds the PushConfig service with repositories.
+      # Re-pulls a single resource and writes the updated YAML to the source file.
+      #
+      # @param path [String] source manifest file path
+      # @param type [Symbol] :vm or :container
+      # @param vmid [Integer] resource ID
+      # @param pull_service [Services::PullConfig] pull service
+      # @return [void]
+      def refresh_manifest_file(path, type, vmid, pull_service)
+        pull_result = pull_service.execute(type: type, ids: [vmid])
+        return if pull_result[:manifests].empty?
+
+        File.write(path, pull_result[:manifests].first[:yaml])
+        $stderr.puts "Refreshed #{path}"
+      rescue StandardError => e
+        $stderr.puts "Warning: Could not refresh #{path}: #{e.message}"
+      end
+
+      # Builds the PushConfig and PullConfig services with shared repositories.
       #
       # @param connection [Connection] API connection
-      # @return [Services::PushConfig]
-      def build_service(connection)
+      # @return [Array(Services::PushConfig, Services::PullConfig)]
+      def build_services(connection)
         vm_repo = Pvectl::Repositories::Vm.new(connection)
         ct_repo = Pvectl::Repositories::Container.new(connection)
         task_repo = Pvectl::Repositories::Task.new(connection)
-        Pvectl::Services::PushConfig.new(
+
+        push_service = Pvectl::Services::PushConfig.new(
           vm_repository: vm_repo,
           container_repository: ct_repo,
           task_repository: task_repo
         )
+
+        pull_service = Pvectl::Services::PullConfig.new(
+          vm_repository: vm_repo,
+          container_repository: ct_repo
+        )
+
+        [push_service, pull_service]
       end
 
       # Loads configuration from file/env.
