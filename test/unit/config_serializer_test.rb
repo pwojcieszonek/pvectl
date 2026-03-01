@@ -521,6 +521,158 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal "8.8.8.8", result[:nameserver]
   end
 
+  # ── to_nested tests ───────────────────────────────────────────
+
+  def test_to_nested_creates_hardware_wrapper
+    config = { cores: 4, memory: 8192 }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    assert_equal 4, result.dig(:hardware, :cpu, :cores)
+    assert_equal 8192, result.dig(:hardware, :memory, :memory)
+  end
+
+  def test_to_nested_parses_network_values
+    config = { net0: "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    net = result.dig(:hardware, :network, :net0)
+    assert_equal "virtio", net[:model]
+    assert_equal "AA:BB:CC:DD:EE:FF", net[:mac]
+    assert_equal "vmbr0", net[:bridge]
+    assert_equal "1", net[:firewall]
+  end
+
+  def test_to_nested_parses_disk_values
+    config = { scsi0: "local-lvm:vm-100-disk-0,size=32G,iothread=1" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    disk = result.dig(:hardware, :disks, :scsi0)
+    assert_equal "local-lvm", disk[:storage]
+    assert_equal "vm-100-disk-0", disk[:volume]
+    assert_equal "32G", disk[:size]
+    assert_equal "1", disk[:iothread]
+  end
+
+  def test_to_nested_parses_agent_value
+    config = { agent: "enabled=1,fstrim_cloned_disks=1" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    agent = result.dig(:options, :agent)
+    assert_equal "1", agent[:enabled]
+    assert_equal "1", agent[:fstrim_cloned_disks]
+  end
+
+  def test_to_nested_parses_boot_order
+    config = { boot: "order=scsi0;net0" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    boot = result.dig(:options, :boot)
+    assert_equal %w[scsi0 net0], boot[:order]
+  end
+
+  def test_to_nested_keeps_simple_values
+    config = { onboot: 1, kvm: 1, ostype: "l26" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    assert_equal 1, result.dig(:options, :onboot)
+    assert_equal 1, result.dig(:options, :kvm)
+    assert_equal "l26", result.dig(:options, :ostype)
+  end
+
+  def test_to_nested_container_resources
+    config = { cores: 2, memory: 512, rootfs: "local-lvm:vm-200-disk-0,size=8G" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :container)
+
+    assert_equal 2, result.dig(:resources, :cpu, :cores)
+    assert_equal 512, result.dig(:resources, :memory, :memory)
+
+    rootfs = result.dig(:resources, :disks, :rootfs)
+    assert_equal "local-lvm", rootfs[:storage]
+    assert_equal "vm-200-disk-0", rootfs[:volume]
+    assert_equal "8G", rootfs[:size]
+  end
+
+  def test_to_nested_omits_empty_sections
+    config = { cores: 4 }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    assert result.key?(:hardware)
+    assert result[:hardware].key?(:cpu)
+    refute result[:hardware].key?(:memory)
+    refute result[:hardware].key?(:network)
+    refute result.key?(:general)
+    refute result.key?(:options)
+  end
+
+  # ── from_nested tests ───────────────────────────────────────
+
+  def test_from_nested_serializes_network_back
+    nested = {
+      hardware: {
+        network: {
+          net0: { model: "virtio", mac: "AA:BB:CC:DD:EE:FF", bridge: "vmbr0", firewall: "1" }
+        }
+      }
+    }
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    assert_equal "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1", result[:net0]
+  end
+
+  def test_from_nested_serializes_disk_back
+    nested = {
+      hardware: {
+        disks: {
+          scsi0: { storage: "local-lvm", volume: "vm-100-disk-0", size: "32G", iothread: "1" }
+        }
+      }
+    }
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    assert_equal "local-lvm:vm-100-disk-0,size=32G,iothread=1", result[:scsi0]
+  end
+
+  def test_from_nested_serializes_boot_back
+    nested = {
+      options: {
+        boot: { order: %w[scsi0 net0] }
+      }
+    }
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    assert_equal "order=scsi0;net0", result[:boot]
+  end
+
+  def test_from_nested_round_trip_vm
+    original = {
+      vmid: 100, name: "web", cores: 4, memory: 8192,
+      scsi0: "local-lvm:vm-100-disk-0,size=32G",
+      net0: "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1",
+      boot: "order=scsi0;net0",
+      agent: "enabled=1,fstrim_cloned_disks=1",
+      onboot: 1, ostype: "l26"
+    }
+
+    nested = Pvectl::ConfigSerializer.to_nested(original, type: :vm)
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
+
+    assert_equal original, result
+  end
+
+  def test_from_nested_round_trip_container
+    original = {
+      vmid: 200, hostname: "ct-web", cores: 2, memory: 512, swap: 256,
+      rootfs: "local-lvm:vm-200-disk-0,size=8G",
+      net0: "name=eth0,bridge=vmbr0,firewall=1,hwaddr=AA:BB:CC:DD:EE:FF,ip=dhcp",
+      onboot: 1, features: "nesting=1,keyctl=1"
+    }
+
+    nested = Pvectl::ConfigSerializer.to_nested(original, type: :container)
+    result = Pvectl::ConfigSerializer.from_nested(nested, type: :container)
+
+    assert_equal original, result
+  end
+
   private
 
   # Strips comment lines from YAML string for safe parsing.

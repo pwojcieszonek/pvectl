@@ -22,6 +22,10 @@ module Pvectl
 
     def self.format_diff: (Hash[Symbol, untyped] diff_hash) -> String
 
+    def self.to_nested: (Hash[Symbol, untyped] flat_config, type: Symbol) -> Hash[Symbol, Hash[Symbol, untyped]]
+
+    def self.from_nested: (Hash[Symbol, untyped] nested, type: Symbol) -> Hash[Symbol, untyped]
+
     private
 
     def self.sections_for: (Symbol type) -> Hash[Symbol, untyped]
@@ -57,6 +61,10 @@ module Pvectl
     def self.complex_keys_for: (Symbol type) -> Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
 
     def self.find_complex_key: (Symbol key, Symbol type) -> Hash[Symbol, Regexp | Symbol]?
+
+    def self.build_nested_section: (Hash[Symbol, untyped] flat_config, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def, Symbol type) -> Hash[Symbol, untyped]
+
+    def self.flatten_nested_section: (Hash[Symbol, untyped] section_hash, Symbol type, Hash[Symbol, untyped] result) -> void
 
     def self.parse_vm_net_value: (String string) -> Hash[Symbol, String]
 

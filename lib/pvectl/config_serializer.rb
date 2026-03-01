@@ -331,6 +331,72 @@ module Pvectl
         lines.join("\n")
       end
 
+      # Converts a flat Proxmox config hash into a nested Hash with parsed complex values.
+      # Used by ManifestSerializer to build the spec section of YAML manifests.
+      #
+      # @param flat_config [Hash{Symbol => Object}] flat config hash with symbol keys
+      # @param type [Symbol] resource type (:vm or :container)
+      # @return [Hash{Symbol => Hash}] nested hash matching section structure
+      #
+      # @example
+      #   ConfigSerializer.to_nested({ cores: 4, net0: "virtio=AA:BB,bridge=vmbr0" }, type: :vm)
+      #   #=> { hardware: { cpu: { cores: 4 }, network: { net0: { model: "virtio", mac: "AA:BB", bridge: "vmbr0" } } } }
+      def to_nested(flat_config, type:)
+        sections = sections_for(type)
+        result = {}
+
+        sections.each do |section_name, section_def|
+          if wrapper_section?(section_def)
+            wrapper = {}
+            section_def.each do |sub_name, sub_def|
+              sub_hash = build_nested_section(flat_config, sub_def, type)
+              wrapper[sub_name] = sub_hash unless sub_hash.empty?
+            end
+            result[section_name] = wrapper unless wrapper.empty?
+          else
+            section_hash = build_nested_section(flat_config, section_def, type)
+            result[section_name] = section_hash unless section_hash.empty?
+          end
+        end
+
+        result
+      end
+
+      # Converts a nested Hash (from manifest spec) back into a flat Proxmox config hash.
+      # Serializes parsed complex values back to Proxmox string format.
+      #
+      # @param nested [Hash{Symbol => Hash}] nested hash from to_nested
+      # @param type [Symbol] resource type (:vm or :container)
+      # @return [Hash{Symbol => Object}] flat config hash
+      #
+      # @example
+      #   nested = { hardware: { cpu: { cores: 4 } } }
+      #   ConfigSerializer.from_nested(nested, type: :vm)
+      #   #=> { cores: 4 }
+      def from_nested(nested, type:)
+        sections = sections_for(type)
+        result = {}
+
+        nested.each do |section_name, section_value|
+          next unless section_value.is_a?(Hash)
+
+          section_def = sections[section_name]
+          next unless section_def
+
+          if wrapper_section?(section_def)
+            section_value.each do |_sub_name, sub_values|
+              next unless sub_values.is_a?(Hash)
+
+              flatten_nested_section(sub_values, type, result)
+            end
+          else
+            flatten_nested_section(section_value, type, result)
+          end
+        end
+
+        result
+      end
+
       private
 
       # Returns the section mappings for the given resource type.
@@ -589,6 +655,43 @@ module Pvectl
           return spec if spec[:pattern].match?(key.to_s)
         end
         nil
+      end
+
+      # Builds a nested section hash from flat config, parsing complex values.
+      #
+      # @param flat_config [Hash] flat config hash
+      # @param section_def [Hash] section definition with :static and :dynamic
+      # @param type [Symbol] :vm or :container
+      # @return [Hash{Symbol => Object}] section hash with parsed complex values
+      def build_nested_section(flat_config, section_def, type)
+        result = {}
+        keys_for_section(flat_config, section_def).each do |key|
+          value = flat_config[key]
+          complex = find_complex_key(key, type)
+          result[key] = if complex && value.is_a?(String)
+                          send(complex[:parser], value)
+                        else
+                          value
+                        end
+        end
+        result
+      end
+
+      # Flattens a nested section hash back to flat config, serializing complex values.
+      #
+      # @param section_hash [Hash] nested section with potentially parsed complex values
+      # @param type [Symbol] :vm or :container
+      # @param result [Hash] accumulator for flat config
+      # @return [void]
+      def flatten_nested_section(section_hash, type, result)
+        section_hash.each do |key, value|
+          complex = find_complex_key(key, type)
+          result[key] = if complex && value.is_a?(Hash)
+                          send(complex[:serializer], value)
+                        else
+                          value
+                        end
+        end
       end
 
       # Parses a VM network config string into a structured hash.
