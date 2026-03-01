@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **get**: `storages` is now the primary resource name (consistent with `vms`, `nodes`, etc.); `storage` and `stor` remain as aliases
 
 ### Fixed
+- **push**: transform disk values to Proxmox create API format (`STORAGE_ID:SIZE_IN_GiB`) — strip volume names, handle cloud-init, EFI/TPM, and empty CD-ROM
 - **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
 - **push**: track async task completion for resize and create operations — report actual success/failure instead of fire-and-forget
 - **repositories**: use server-side `/cluster/nextid` API for VMID/CTID allocation instead of client-side scanning (fixes stale config file conflicts)
