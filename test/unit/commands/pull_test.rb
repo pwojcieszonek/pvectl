@@ -41,7 +41,7 @@ class PullCommandTest < Minitest::Test
   end
 
   def test_all_requires_directory_output
-    cmd = Pvectl::Commands::Pull.new(["vm"], { all: true, selector: nil, output: "file.yaml", node: nil }, {})
+    cmd = Pvectl::Commands::Pull.new(["vm"], { all: true, selector: nil, file: "file.yaml", node: nil }, {})
     assert_output(nil, /directory/) do
       result = cmd.execute
       assert_equal Pvectl::ExitCodes::USAGE_ERROR, result

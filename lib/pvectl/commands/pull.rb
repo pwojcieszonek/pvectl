@@ -37,15 +37,15 @@ module Pvectl
 
           EXAMPLES
             $ pvectl pull vm 100
-            $ pvectl pull vm 100 -o vm-100.yaml
-            $ pvectl pull vm 100 101 102 -o ./manifests/
-            $ pvectl pull vm --all -o ./manifests/
-            $ pvectl pull vm -l tags=prod -o ./manifests/
+            $ pvectl pull vm 100 -f vm-100.yaml
+            $ pvectl pull vm 100 101 102 -f ./manifests/
+            $ pvectl pull vm --all -f ./manifests/
+            $ pvectl pull vm -l tags=prod -f ./manifests/
             $ pvectl pull container 200
 
           NOTES
-            Without -o, YAML is printed to stdout (pipe-friendly).
-            With --all or -l, -o must point to a directory.
+            Without -f, YAML is printed to stdout (pipe-friendly).
+            With --all or -l, -f must point to a directory.
             File naming convention: vm-{vmid}.yaml or ct-{vmid}.yaml.
 
           SEE ALSO
@@ -53,7 +53,7 @@ module Pvectl
         HELP
 
         cli.command :pull do |c|
-          c.flag [:o, :output], desc: "Output file or directory"
+          c.flag [:f, :file], desc: "Output file or directory"
           c.flag [:l, :selector], desc: "Filter by selector (e.g. tags=prod,status=running)", multiple: true
           c.switch [:all], desc: "Pull all resources of given type", negatable: false
           c.flag [:node], desc: "Limit to specific node"
@@ -86,14 +86,14 @@ module Pvectl
         ids = @args.map(&:to_i)
         all = @options[:all]
         node = @options[:node]
-        output = @options[:output]
+        output = @options[:file]
 
         if ids.empty? && !all && @options[:selector].nil?
           return usage_error("Provide resource IDs, --all, or -l selector")
         end
 
         if (all || @options[:selector]) && output && !directory_output?(output)
-          return usage_error("--all and -l require -o to be a directory (end with /)")
+          return usage_error("--all and -l require -f to be a directory (end with /)")
         end
 
         selector = build_selector(type)
