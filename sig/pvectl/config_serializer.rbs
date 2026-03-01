@@ -94,6 +94,8 @@ module Pvectl
 
     def self.serialize_vm_net_value: (Hash[Symbol, untyped] hash) -> String
 
+    def self.normalize_cloudinit_volume: (untyped parsed) -> untyped
+
     def self.parse_disk_value: (String string) -> Hash[Symbol, untyped]
 
     def self.serialize_disk_value: (Hash[Symbol, untyped] hash) -> String

@@ -1066,4 +1066,107 @@ class PushConfigTest < Minitest::Test
     assert_equal "local-lvm:2048", plan[:params][:scsi0]
     @vm_repo.verify
   end
+
+  def test_prepare_create_filters_nil_values
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+        options:
+          smbios1:
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :create, plan[:action]
+    # nil smbios1 should be filtered out
+    refute plan[:params].key?(:smbios1), "nil values should be filtered from create params"
+    assert_equal 4, plan[:params][:cores]
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_filters_empty_string_values
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+        options:
+          smbios1: {}
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    # Empty smbios1 (serialized to empty string) should be filtered
+    refute plan[:params].key?(:smbios1), "empty string values should be filtered from create params"
+    @vm_repo.verify
+  end
+
+  def test_prepare_create_transforms_cloudinit_with_normalized_volume
+    # Simulates manifest from pull where cloud-init volume is normalized to "cloudinit"
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 999
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 2
+          disks:
+            ide0:
+              storage: local-lvm
+              volume: cloudinit
+              media: cdrom
+    YAML
+
+    @vm_repo.expect :get, nil, [999]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal "local-lvm:cloudinit", plan[:params][:ide0]
+    @vm_repo.verify
+  end
+
+  def test_apply_reports_detailed_api_error
+    # Simulate ProxmoxAPI::ApiException with JSON error body
+    api_response = Minitest::Mock.new
+    api_response.expect :body, '{"errors":{"ide0":"value does not look like a valid disk volume"}}'
+    api_exception = ProxmoxAPI::ApiException.new(api_response, "Proxmox API request failed")
+
+    @vm_repo.expect(:create, nil) { raise api_exception }
+
+    plan = {
+      action: :create,
+      type: :vm,
+      vmid: 999,
+      node: "pve1",
+      params: { cores: 4 }
+    }
+
+    result = @service.apply([plan])
+
+    refute result[:results].first[:success]
+    assert result[:errors].first.include?("ide0"), "should include field-level error detail"
+    assert result[:errors].first.include?("valid disk volume"), "should include Proxmox error message"
+  end
 end

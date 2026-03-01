@@ -31,6 +31,7 @@ module Pvectl
       def collect_readonly_keys: (Hash[Symbol, untyped] flat_config, Symbol type) -> Array[Symbol]
       def each_leaf_section: (Hash[Symbol, untyped] sections) { (Hash[Symbol, untyped]) -> void } -> void
       def type_label: (Symbol type) -> String
+      def extract_api_error: (untyped exception) -> String
     end
   end
 end

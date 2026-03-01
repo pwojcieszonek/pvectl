@@ -176,6 +176,10 @@ module Pvectl
                 }
               end
             end
+          rescue ProxmoxAPI::ApiException => e
+            detail = extract_api_error(e)
+            errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{detail}"
+            results << { action: plan[:action], vmid: plan[:vmid], type: plan[:type], success: false, error: detail }
           rescue StandardError => e
             errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
             results << { action: plan[:action], vmid: plan[:vmid], type: plan[:type], success: false, error: e.message }
@@ -208,6 +212,7 @@ module Pvectl
         end
 
         create_config = transform_disks_for_create(flat_config, type)
+        create_config = create_config.reject { |_, v| v.nil? || (v.is_a?(String) && v.empty?) }
 
         plan = {
           action: :create,
@@ -482,6 +487,22 @@ module Pvectl
       # @return [String] "VM" or "Container"
       def type_label(type)
         type == :container ? "Container" : "VM"
+      end
+
+      # Extracts detailed error info from a Proxmox API exception.
+      # Parses the JSON response body to find field-level error messages.
+      #
+      # @param exception [ProxmoxAPI::ApiException] API exception with response
+      # @return [String] human-readable error detail
+      def extract_api_error(exception)
+        body = JSON.parse(exception.response.body)
+        if body["errors"]
+          body["errors"].map { |k, v| "#{k}: #{v}" }.join("; ")
+        else
+          exception.message
+        end
+      rescue StandardError
+        exception.message
       end
     end
   end

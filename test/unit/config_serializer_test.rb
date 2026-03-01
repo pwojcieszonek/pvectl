@@ -607,6 +607,24 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal expected_hotplug, result[:options][:hotplug]
   end
 
+  def test_to_nested_normalizes_cloudinit_volume
+    config = { ide0: "local-lvm:vm-100-cloudinit,media=cdrom" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    disk = result.dig(:hardware, :disks, :ide0)
+    assert_equal "local-lvm", disk[:storage]
+    assert_equal "cloudinit", disk[:volume]
+    assert_equal "cdrom", disk[:media]
+  end
+
+  def test_to_nested_preserves_regular_disk_volume
+    config = { scsi0: "local-lvm:vm-100-disk-0,size=8G" }
+    result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
+
+    disk = result.dig(:hardware, :disks, :scsi0)
+    assert_equal "vm-100-disk-0", disk[:volume]
+  end
+
   # ── from_nested tests ───────────────────────────────────────
 
   def test_from_nested_serializes_network_back

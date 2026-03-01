@@ -752,11 +752,12 @@ module Pvectl
           value = flat_config[key]
           complex = find_complex_key(key, type)
           result[key] = if complex && value.is_a?(String)
-                          if complex[:default_key]
-                            send(complex[:parser], value, default_key: complex[:default_key])
-                          else
-                            send(complex[:parser], value)
-                          end
+                          parsed = if complex[:default_key]
+                                     send(complex[:parser], value, default_key: complex[:default_key])
+                                   else
+                                     send(complex[:parser], value)
+                                   end
+                          normalize_cloudinit_volume(parsed)
                         elsif bool_keys.include?(key)
                           to_boolean(value)
                         else
@@ -822,6 +823,19 @@ module Pvectl
           parts << "#{k}=#{v}"
         end
         parts.join(",")
+      end
+
+      # Normalizes cloud-init volume names for manifest portability.
+      # Strips the VM-specific prefix (e.g., "vm-100-cloudinit" → "cloudinit")
+      # so that pulled manifests can be reused for creating new VMs.
+      #
+      # @param parsed [Hash, Object] parsed value from a complex key parser
+      # @return [Hash, Object] value with normalized cloud-init volume (if applicable)
+      def normalize_cloudinit_volume(parsed)
+        if parsed.is_a?(Hash) && parsed[:volume]&.include?("cloudinit")
+          parsed[:volume] = "cloudinit"
+        end
+        parsed
       end
 
       # Parses a disk config string into a structured hash.
