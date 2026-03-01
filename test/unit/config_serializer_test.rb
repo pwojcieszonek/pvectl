@@ -13,9 +13,9 @@ class ConfigSerializerTest < Minitest::Test
 
     assert_equal 100, parsed.dig("general", "vmid")
     assert_equal "web", parsed.dig("general", "name")
-    assert_equal 4, parsed.dig("cpu", "cores")
-    assert_equal 8192, parsed.dig("memory", "memory")
-    assert_equal "virtio=AA:BB,bridge=vmbr0", parsed.dig("network", "net0")
+    assert_equal 4, parsed.dig("hardware", "cpu", "cores")
+    assert_equal 8192, parsed.dig("hardware", "memory", "memory")
+    assert_equal "virtio=AA:BB,bridge=vmbr0", parsed.dig("hardware", "network", "net0")
   end
 
   def test_to_yaml_includes_header_comment
@@ -50,10 +50,10 @@ class ConfigSerializerTest < Minitest::Test
 
     parsed = YAML.safe_load(yaml_without_comments(yaml))
 
-    assert parsed.dig("disks", "scsi0")
-    assert parsed.dig("disks", "scsi1")
-    assert parsed.dig("network", "net0")
-    assert parsed.dig("network", "net1")
+    assert parsed.dig("hardware", "disks", "scsi0")
+    assert parsed.dig("hardware", "disks", "scsi1")
+    assert parsed.dig("hardware", "network", "net0")
+    assert parsed.dig("hardware", "network", "net1")
   end
 
   def test_to_yaml_omits_empty_sections
@@ -63,10 +63,11 @@ class ConfigSerializerTest < Minitest::Test
     parsed = YAML.safe_load(yaml_without_comments(yaml))
 
     assert parsed.key?("general")
-    assert parsed.key?("cpu")
-    refute parsed.key?("memory")
-    refute parsed.key?("network")
-    refute parsed.key?("disks")
+    assert parsed.key?("hardware")
+    assert parsed.dig("hardware", "cpu")
+    refute parsed.dig("hardware", "memory")
+    refute parsed.dig("hardware", "network")
+    refute parsed.dig("hardware", "disks")
   end
 
   def test_to_yaml_groups_container_config_into_sections
@@ -79,10 +80,10 @@ class ConfigSerializerTest < Minitest::Test
 
     assert_equal 200, parsed.dig("general", "vmid")
     assert_equal "ct-web", parsed.dig("general", "hostname")
-    assert_equal 2, parsed.dig("cpu", "cores")
-    assert_equal 512, parsed.dig("memory", "memory")
-    assert_equal 256, parsed.dig("memory", "swap")
-    assert parsed.dig("disks", "rootfs")
+    assert_equal 2, parsed.dig("resources", "cpu", "cores")
+    assert_equal 512, parsed.dig("resources", "memory", "memory")
+    assert_equal 256, parsed.dig("resources", "memory", "swap")
+    assert parsed.dig("resources", "disks", "rootfs")
     assert parsed.dig("network", "net0")
   end
 
@@ -96,6 +97,52 @@ class ConfigSerializerTest < Minitest::Test
     refute_match(/hostname: ["']?ct-web["']?\s+# read-only/, yaml)
   end
 
+  # ── to_yaml wrapper section tests ───────────────────────────────
+
+  def test_to_yaml_wrapper_section_renders_three_level_nesting
+    config = { vmid: 100, cores: 4, memory: 8192, net0: "virtio=AA:BB,bridge=vmbr0" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :vm, resource: { vmid: 100, node: "pve1", status: "running" })
+
+    # Verify 3-level indentation structure
+    assert_match(/^hardware:\n  cpu:\n    cores: 4\n  memory:\n    memory: 8192\n  network:\n    net0:/, yaml)
+  end
+
+  def test_to_yaml_wrapper_section_omits_empty_subsections
+    config = { vmid: 100, cores: 4 }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :vm, resource: { vmid: 100, node: "pve1", status: "running" })
+
+    refute_match(/memory:/, yaml)
+    refute_match(/disks:/, yaml)
+    refute_match(/network:/, yaml)
+    assert_match(/hardware:\n  cpu:\n    cores: 4/, yaml)
+  end
+
+  def test_to_yaml_wrapper_section_omitted_when_all_subsections_empty
+    config = { vmid: 100, name: "web" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :vm, resource: { vmid: 100, node: "pve1", status: "running" })
+
+    refute_match(/hardware:/, yaml)
+  end
+
+  def test_to_yaml_readonly_in_wrapper_subsection
+    config = { vmid: 100, unused0: "local-lvm:vm-100-disk-2,size=10G" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :vm, resource: { vmid: 100, node: "pve1", status: "running" })
+
+    assert_match(/unused0:.*# read-only/, yaml)
+  end
+
+  def test_to_yaml_container_resources_wrapper
+    config = { vmid: 200, cores: 2, memory: 512, rootfs: "local-lvm:vm-200-disk-0,size=8G" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :container,
+                                            resource: { vmid: 200, node: "pve1", status: "running" })
+
+    parsed = YAML.safe_load(yaml_without_comments(yaml))
+
+    assert_equal 2, parsed.dig("resources", "cpu", "cores")
+    assert_equal 512, parsed.dig("resources", "memory", "memory")
+    assert parsed.dig("resources", "disks", "rootfs")
+  end
+
   # ── from_yaml tests ────────────────────────────────────────────
 
   def test_from_yaml_flattens_nested_structure
@@ -103,10 +150,11 @@ class ConfigSerializerTest < Minitest::Test
       general:
         vmid: 100
         name: web
-      cpu:
-        cores: 4
-      memory:
-        memory: 8192
+      hardware:
+        cpu:
+          cores: 4
+        memory:
+          memory: 8192
     YAML
 
     result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :vm)
@@ -138,14 +186,80 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal({}, result)
   end
 
+  def test_from_yaml_flattens_three_level_wrapper_nesting
+    yaml = <<~YAML
+      hardware:
+        cpu:
+          cores: 4
+          sockets: 2
+        memory:
+          memory: 8192
+          balloon: 4096
+        disks:
+          scsi0: "local-lvm:vm-100-disk-0,size=32G"
+        network:
+          net0: "virtio=AA:BB,bridge=vmbr0"
+    YAML
+
+    result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :vm)
+
+    assert_equal 4, result[:cores]
+    assert_equal 2, result[:sockets]
+    assert_equal 8192, result[:memory]
+    assert_equal 4096, result[:balloon]
+    assert_equal "local-lvm:vm-100-disk-0,size=32G", result[:scsi0]
+    assert_equal "virtio=AA:BB,bridge=vmbr0", result[:net0]
+  end
+
+  def test_from_yaml_flattens_container_resources_wrapper
+    yaml = <<~YAML
+      resources:
+        cpu:
+          cores: 2
+        memory:
+          memory: 512
+          swap: 256
+        disks:
+          rootfs: "local-lvm:vm-200-disk-0,size=8G"
+    YAML
+
+    result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :container)
+
+    assert_equal 2, result[:cores]
+    assert_equal 512, result[:memory]
+    assert_equal 256, result[:swap]
+    assert_equal "local-lvm:vm-200-disk-0,size=8G", result[:rootfs]
+  end
+
+  def test_from_yaml_mixed_leaf_and_wrapper_sections
+    yaml = <<~YAML
+      general:
+        vmid: 100
+        name: web
+      hardware:
+        cpu:
+          cores: 4
+      options:
+        onboot: true
+    YAML
+
+    result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :vm)
+
+    assert_equal 100, result[:vmid]
+    assert_equal "web", result[:name]
+    assert_equal 4, result[:cores]
+    assert_equal true, result[:onboot]
+  end
+
   # ── validate tests ─────────────────────────────────────────────
 
   def test_validate_returns_empty_for_valid_yaml
     yaml = <<~YAML
       general:
         name: web
-      cpu:
-        cores: 4
+      hardware:
+        cpu:
+          cores: 4
     YAML
 
     errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
@@ -168,13 +282,14 @@ class ConfigSerializerTest < Minitest::Test
 
   def test_validate_catches_unknown_key
     yaml = <<~YAML
-      cpu:
-        turbo: true
+      hardware:
+        cpu:
+          turbo: true
     YAML
 
     errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
 
-    assert errors.any? { |e| e.include?("Unknown key 'turbo'") && e.include?("cpu") }
+    assert errors.any? { |e| e.include?("Unknown key 'turbo'") && e.include?("hardware/cpu") }
   end
 
   def test_validate_catches_syntax_error
@@ -187,16 +302,79 @@ class ConfigSerializerTest < Minitest::Test
 
   def test_validate_accepts_dynamic_keys
     yaml = <<~YAML
-      disks:
-        scsi0: "local-lvm:vm-100-disk-0,size=32G"
-        scsi1: "local-lvm:vm-100-disk-1,size=64G"
-      network:
-        net0: "virtio=AA:BB,bridge=vmbr0"
+      hardware:
+        disks:
+          scsi0: "local-lvm:vm-100-disk-0,size=32G"
+          scsi1: "local-lvm:vm-100-disk-1,size=64G"
+        network:
+          net0: "virtio=AA:BB,bridge=vmbr0"
     YAML
 
     errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
 
     assert_empty errors
+  end
+
+  def test_validate_catches_unknown_subsection_in_wrapper
+    yaml = <<~YAML
+      hardware:
+        gpu:
+          model: nvidia
+    YAML
+
+    errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
+
+    assert errors.any? { |e| e.include?("Unknown subsection 'gpu'") && e.include?("hardware") }
+  end
+
+  def test_validate_catches_unknown_key_in_wrapper_subsection
+    yaml = <<~YAML
+      hardware:
+        cpu:
+          turbo_boost: true
+    YAML
+
+    errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
+
+    assert errors.any? { |e| e.include?("Unknown key 'turbo_boost'") && e.include?("hardware/cpu") }
+  end
+
+  def test_validate_valid_leaf_section
+    yaml = <<~YAML
+      options:
+        onboot: true
+        ostype: l26
+    YAML
+
+    errors = Pvectl::ConfigSerializer.validate(yaml, type: :vm)
+
+    assert_empty errors
+  end
+
+  def test_validate_container_resources_wrapper
+    yaml = <<~YAML
+      resources:
+        cpu:
+          cores: 2
+        memory:
+          memory: 512
+    YAML
+
+    errors = Pvectl::ConfigSerializer.validate(yaml, type: :container)
+
+    assert_empty errors
+  end
+
+  def test_validate_container_unknown_subsection_in_resources
+    yaml = <<~YAML
+      resources:
+        gpu:
+          model: nvidia
+    YAML
+
+    errors = Pvectl::ConfigSerializer.validate(yaml, type: :container)
+
+    assert errors.any? { |e| e.include?("Unknown subsection 'gpu'") && e.include?("resources") }
   end
 
   # ── readonly_violations tests ──────────────────────────────────
@@ -235,6 +413,15 @@ class ConfigSerializerTest < Minitest::Test
     violations = Pvectl::ConfigSerializer.readonly_violations(original, edited, type: :container)
 
     assert_includes violations, "arch"
+  end
+
+  def test_readonly_violations_detects_unused_disk_change_in_wrapper
+    original = { vmid: 100, unused0: "local-lvm:vm-100-disk-2,size=10G" }
+    edited = { vmid: 100, unused0: "changed" }
+
+    violations = Pvectl::ConfigSerializer.readonly_violations(original, edited, type: :vm)
+
+    assert_includes violations, "unused0"
   end
 
   # ── diff tests ─────────────────────────────────────────────────
@@ -292,6 +479,46 @@ class ConfigSerializerTest < Minitest::Test
     assert_includes stripped, "~ cores: 4 -> 8"
     assert_includes stripped, "+ balloon: 2048"
     assert_includes stripped, "- description"
+  end
+
+  # ── round-trip tests ───────────────────────────────────────────
+
+  def test_round_trip_vm_config_with_wrapper_sections
+    config = { vmid: 100, name: "web", cores: 4, memory: 8192,
+               scsi0: "local-lvm:vm-100-disk-0,size=32G",
+               net0: "virtio=AA:BB,bridge=vmbr0",
+               onboot: true, ostype: "l26" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :vm, resource: { vmid: 100, node: "pve1", status: "running" })
+    result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :vm)
+
+    assert_equal 100, result[:vmid]
+    assert_equal "web", result[:name]
+    assert_equal 4, result[:cores]
+    assert_equal 8192, result[:memory]
+    assert_equal "local-lvm:vm-100-disk-0,size=32G", result[:scsi0]
+    assert_equal "virtio=AA:BB,bridge=vmbr0", result[:net0]
+    assert_equal true, result[:onboot]
+    assert_equal "l26", result[:ostype]
+  end
+
+  def test_round_trip_container_config_with_wrapper_sections
+    config = { vmid: 200, hostname: "ct-web", cores: 2, memory: 512, swap: 256,
+               rootfs: "local-lvm:vm-200-disk-0,size=8G",
+               net0: "name=eth0,bridge=vmbr0",
+               onboot: true, nameserver: "8.8.8.8" }
+    yaml = Pvectl::ConfigSerializer.to_yaml(config, type: :container,
+                                            resource: { vmid: 200, node: "pve1", status: "running" })
+    result = Pvectl::ConfigSerializer.from_yaml(yaml, type: :container)
+
+    assert_equal 200, result[:vmid]
+    assert_equal "ct-web", result[:hostname]
+    assert_equal 2, result[:cores]
+    assert_equal 512, result[:memory]
+    assert_equal 256, result[:swap]
+    assert_equal "local-lvm:vm-200-disk-0,size=8G", result[:rootfs]
+    assert_equal "name=eth0,bridge=vmbr0", result[:net0]
+    assert_equal true, result[:onboot]
+    assert_equal "8.8.8.8", result[:nameserver]
   end
 
   private

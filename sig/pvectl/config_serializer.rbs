@@ -1,8 +1,8 @@
 module Pvectl
   module ConfigSerializer
-    VM_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+    VM_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp] | Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]]]
 
-    CONTAINER_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+    CONTAINER_SECTIONS: Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp] | Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]]]
 
     YAML_SPECIAL_CHARS: Array[String]
 
@@ -20,7 +20,7 @@ module Pvectl
 
     private
 
-    def self.sections_for: (Symbol type) -> Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]]
+    def self.sections_for: (Symbol type) -> Hash[Symbol, untyped]
 
     def self.header_comment: (Symbol type, Hash[Symbol, untyped] resource) -> String
 
@@ -30,13 +30,23 @@ module Pvectl
 
     def self.readonly_key?: (Symbol key, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def) -> bool
 
-    def self.collect_readonly_keys: (Array[Symbol] keys, Hash[Symbol, Hash[Symbol, Array[Symbol] | Array[Regexp]]] sections) -> Array[Symbol]
+    def self.collect_readonly_keys: (Array[Symbol] keys, Hash[Symbol, untyped] sections) -> Array[Symbol]
 
     def self.format_yaml_value: (untyped value) -> String
 
     def self.needs_quoting?: (String value) -> bool
 
     def self.strip_comments: (String yaml_string) -> String
+
+    def self.wrapper_section?: (Hash[Symbol, untyped] section_def) -> bool
+
+    def self.render_leaf_section: (Array[String] lines, Symbol section_name, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def, Hash[Symbol, untyped] flat_config) -> void
+
+    def self.render_wrapper_section: (Array[String] lines, Symbol wrapper_name, Hash[Symbol, untyped] wrapper_def, Hash[Symbol, untyped] flat_config) -> void
+
+    def self.validate_wrapper_section: (Array[String] errors, String wrapper_name, Hash[Symbol, untyped] wrapper_def, Hash[String, untyped] wrapper_values) -> void
+
+    def self.each_leaf_section: (Hash[Symbol, untyped] sections) -> Array[Hash[Symbol, Array[Symbol] | Array[Regexp]]]
 
     def self.flatten_sections: (Hash[String, untyped] parsed) -> Hash[Symbol, untyped]
   end

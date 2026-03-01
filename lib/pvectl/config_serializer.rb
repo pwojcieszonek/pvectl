@@ -17,54 +17,53 @@ module Pvectl
     # Section mappings for QEMU VMs.
     # Each section maps to an array of static keys and an array of dynamic key patterns.
     # Keys marked as read-only are listed separately.
+    # Sections without a :static key are "wrapper" sections containing named subsections.
     VM_SECTIONS = {
       general: {
         static: %i[vmid name description tags template lock digest],
         dynamic: [],
         readonly: %i[vmid template lock digest]
       },
-      cpu: {
-        static: %i[cores sockets cpu cpulimit cpuunits numa affinity],
-        dynamic: [/\Anuma\d+\z/],
-        readonly: []
-      },
-      memory: {
-        static: %i[memory balloon shares hugepages keephugepages],
-        dynamic: [],
-        readonly: []
-      },
-      disks: {
-        static: %i[efidisk0 tpmstate0],
-        dynamic: [/\Ascsi\d+\z/, /\Aide\d+\z/, /\Avirtio\d+\z/, /\Asata\d+\z/, /\Aunused\d+\z/],
-        readonly: [/\Aunused\d+\z/]
-      },
-      network: {
-        static: [],
-        dynamic: [/\Anet\d+\z/],
-        readonly: []
-      },
-      boot: {
-        static: %i[boot bootdisk bios machine arch startup onboot],
-        dynamic: [],
-        readonly: []
+      hardware: {
+        cpu: {
+          static: %i[cores sockets cpu cpulimit cpuunits numa affinity],
+          dynamic: [/\Anuma\d+\z/],
+          readonly: []
+        },
+        memory: {
+          static: %i[memory balloon shares hugepages keephugepages],
+          dynamic: [],
+          readonly: []
+        },
+        disks: {
+          static: %i[efidisk0 tpmstate0],
+          dynamic: [/\Ascsi\d+\z/, /\Aide\d+\z/, /\Avirtio\d+\z/, /\Asata\d+\z/, /\Aunused\d+\z/],
+          readonly: [/\Aunused\d+\z/]
+        },
+        network: {
+          static: [],
+          dynamic: [/\Anet\d+\z/],
+          readonly: []
+        },
+        display: {
+          static: %i[vga spice_enhancements keyboard],
+          dynamic: [],
+          readonly: []
+        },
+        devices: {
+          static: %i[audio0 rng0 ivshmem],
+          dynamic: [/\Aserial\d+\z/, /\Aparallel\d+\z/, /\Ausb\d+\z/, /\Ahostpci\d+\z/],
+          readonly: []
+        }
       },
       cloud_init: {
         static: %i[citype cicustom ciuser cipassword ciupgrade nameserver searchdomain sshkeys],
         dynamic: [/\Aipconfig\d+\z/],
         readonly: []
       },
-      display: {
-        static: %i[vga spice_enhancements keyboard],
-        dynamic: [],
-        readonly: []
-      },
-      devices: {
-        static: %i[audio0 tablet rng0 ivshmem],
-        dynamic: [/\Aserial\d+\z/, /\Aparallel\d+\z/, /\Ausb\d+\z/, /\Ahostpci\d+\z/],
-        readonly: []
-      },
-      system: {
-        static: %i[ostype scsihw kvm agent hotplug args hookscript smbios1 localtime reboot freeze protection],
+      options: {
+        static: %i[onboot startup boot bootdisk bios machine arch ostype scsihw kvm agent hotplug
+                   tablet args hookscript smbios1 localtime reboot freeze protection],
         dynamic: [],
         readonly: []
       },
@@ -81,46 +80,50 @@ module Pvectl
     }.freeze
 
     # Section mappings for LXC containers.
+    # Sections without a :static key are "wrapper" sections containing named subsections.
     CONTAINER_SECTIONS = {
       general: {
         static: %i[vmid hostname description tags template lock digest],
         dynamic: [],
         readonly: %i[vmid template lock digest]
       },
-      cpu: {
-        static: %i[cores cpulimit cpuunits],
-        dynamic: [],
-        readonly: []
-      },
-      memory: {
-        static: %i[memory swap],
-        dynamic: [],
-        readonly: []
-      },
-      disks: {
-        static: %i[rootfs],
-        dynamic: [/\Amp\d+\z/, /\Adev\d+\z/, /\Aunused\d+\z/],
-        readonly: [/\Aunused\d+\z/]
+      resources: {
+        cpu: {
+          static: %i[cores cpulimit cpuunits],
+          dynamic: [],
+          readonly: []
+        },
+        memory: {
+          static: %i[memory swap],
+          dynamic: [],
+          readonly: []
+        },
+        disks: {
+          static: %i[rootfs],
+          dynamic: [/\Amp\d+\z/, /\Adev\d+\z/, /\Aunused\d+\z/],
+          readonly: [/\Aunused\d+\z/]
+        }
       },
       network: {
-        static: %i[nameserver searchdomain],
+        static: [],
         dynamic: [/\Anet\d+\z/],
         readonly: []
       },
-      boot: {
-        static: %i[startup onboot],
+      dns: {
+        static: %i[nameserver searchdomain],
         dynamic: [],
         readonly: []
+      },
+      options: {
+        static: %i[onboot startup ostype arch unprivileged features hookscript protection
+                   debug timezone entrypoint env],
+        dynamic: [],
+        readonly: %i[arch]
       },
       console: {
         static: %i[console cmode tty],
         dynamic: [],
         readonly: []
-      },
-      system: {
-        static: %i[ostype arch unprivileged features hookscript protection debug timezone entrypoint env],
-        dynamic: [],
-        readonly: %i[arch]
       }
     }.freeze
 
@@ -147,17 +150,11 @@ module Pvectl
         lines << ""
 
         sections.each do |section_name, section_def|
-          section_keys = keys_for_section(flat_config, section_def)
-          next if section_keys.empty?
-
-          lines << "#{section_name}:"
-          section_keys.each do |key|
-            value = flat_config[key]
-            formatted_value = format_yaml_value(value)
-            readonly = readonly_key?(key, section_def) ? "  # read-only" : ""
-            lines << "  #{key}: #{formatted_value}#{readonly}"
+          if wrapper_section?(section_def)
+            render_wrapper_section(lines, section_name, section_def, flat_config)
+          else
+            render_leaf_section(lines, section_name, section_def, flat_config)
           end
-          lines << ""
         end
 
         lines.join("\n")
@@ -219,9 +216,14 @@ module Pvectl
           next unless section_values.is_a?(Hash)
 
           section_def = sections[section_name.to_sym]
-          section_values.each_key do |key|
-            unless key_in_section?(key.to_sym, section_def)
-              errors << "Unknown key '#{key}' in section '#{section_name}'"
+
+          if wrapper_section?(section_def)
+            validate_wrapper_section(errors, section_name, section_def, section_values)
+          else
+            section_values.each_key do |key|
+              unless key_in_section?(key.to_sym, section_def)
+                errors << "Unknown key '#{key}' in section '#{section_name}'"
+              end
             end
           end
         end
@@ -365,13 +367,15 @@ module Pvectl
       end
 
       # Collects all read-only keys from the given key set.
+      # Recurses into wrapper sections to check subsection definitions.
       #
       # @param keys [Array<Symbol>] all keys to check
       # @param sections [Hash] section mapping
       # @return [Array<Symbol>] read-only keys
       def collect_readonly_keys(keys, sections)
+        leaf_defs = each_leaf_section(sections)
         keys.select do |key|
-          sections.any? do |_name, section_def|
+          leaf_defs.any? do |section_def|
             key_in_section?(key, section_def) && readonly_key?(key, section_def)
           end
         end
@@ -413,7 +417,110 @@ module Pvectl
         yaml_string.lines.reject { |line| line.strip.start_with?("#") }.join
       end
 
+      # Checks if a section definition is a wrapper (contains named subsections)
+      # rather than a leaf section (contains :static/:dynamic/:readonly arrays).
+      #
+      # @param section_def [Hash] section definition
+      # @return [Boolean] true if wrapper section
+      def wrapper_section?(section_def)
+        !section_def.key?(:static)
+      end
+
+      # Renders a leaf section (non-wrapper) into YAML output lines.
+      #
+      # @param lines [Array<String>] accumulator for output lines
+      # @param section_name [Symbol] section name
+      # @param section_def [Hash] leaf section definition
+      # @param flat_config [Hash] flat config hash
+      # @return [void]
+      def render_leaf_section(lines, section_name, section_def, flat_config)
+        section_keys = keys_for_section(flat_config, section_def)
+        return if section_keys.empty?
+
+        lines << "#{section_name}:"
+        section_keys.each do |key|
+          value = flat_config[key]
+          formatted_value = format_yaml_value(value)
+          readonly = readonly_key?(key, section_def) ? "  # read-only" : ""
+          lines << "  #{key}: #{formatted_value}#{readonly}"
+        end
+        lines << ""
+      end
+
+      # Renders a wrapper section with subsections into YAML output lines.
+      # Produces 3-level indentation: wrapper -> subsection -> key: value.
+      #
+      # @param lines [Array<String>] accumulator for output lines
+      # @param wrapper_name [Symbol] wrapper section name
+      # @param wrapper_def [Hash] wrapper definition containing subsection definitions
+      # @param flat_config [Hash] flat config hash
+      # @return [void]
+      def render_wrapper_section(lines, wrapper_name, wrapper_def, flat_config)
+        has_any_keys = wrapper_def.any? do |_sub_name, sub_def|
+          keys_for_section(flat_config, sub_def).any?
+        end
+        return unless has_any_keys
+
+        lines << "#{wrapper_name}:"
+        wrapper_def.each do |sub_name, sub_def|
+          sub_keys = keys_for_section(flat_config, sub_def)
+          next if sub_keys.empty?
+
+          lines << "  #{sub_name}:"
+          sub_keys.each do |key|
+            value = flat_config[key]
+            formatted_value = format_yaml_value(value)
+            readonly = readonly_key?(key, sub_def) ? "  # read-only" : ""
+            lines << "    #{key}: #{formatted_value}#{readonly}"
+          end
+        end
+        lines << ""
+      end
+
+      # Validates keys within a wrapper section's subsections.
+      #
+      # @param errors [Array<String>] accumulator for error messages
+      # @param wrapper_name [String] wrapper section name
+      # @param wrapper_def [Hash] wrapper definition with subsection definitions
+      # @param wrapper_values [Hash] parsed YAML values for this wrapper
+      # @return [void]
+      def validate_wrapper_section(errors, wrapper_name, wrapper_def, wrapper_values)
+        wrapper_values.each do |sub_name, sub_values|
+          unless wrapper_def.key?(sub_name.to_sym)
+            errors << "Unknown subsection '#{sub_name}' in section '#{wrapper_name}'"
+            next
+          end
+
+          next unless sub_values.is_a?(Hash)
+
+          sub_def = wrapper_def[sub_name.to_sym]
+          sub_values.each_key do |key|
+            unless key_in_section?(key.to_sym, sub_def)
+              errors << "Unknown key '#{key}' in section '#{wrapper_name}/#{sub_name}'"
+            end
+          end
+        end
+      end
+
+      # Yields all leaf section definitions from the sections hash,
+      # recursing into wrapper sections.
+      #
+      # @param sections [Hash] section mapping (may contain wrappers)
+      # @return [Array<Hash>] array of leaf section definitions
+      def each_leaf_section(sections)
+        result = []
+        sections.each_value do |section_def|
+          if wrapper_section?(section_def)
+            section_def.each_value { |sub_def| result << sub_def }
+          else
+            result << section_def
+          end
+        end
+        result
+      end
+
       # Flattens a nested section hash to a flat symbol-keyed hash.
+      # Handles both 2-level (section -> keys) and 3-level (wrapper -> subsection -> keys) nesting.
       #
       # @param parsed [Hash] nested hash from YAML.safe_load
       # @return [Hash{Symbol => Object}] flat hash
@@ -423,7 +530,14 @@ module Pvectl
           next unless section_values.is_a?(Hash)
 
           section_values.each do |key, value|
-            result[key.to_sym] = value
+            if value.is_a?(Hash)
+              # 3-level nesting: wrapper -> subsection -> key/value pairs
+              value.each do |inner_key, inner_value|
+                result[inner_key.to_sym] = inner_value
+              end
+            else
+              result[key.to_sym] = value
+            end
           end
         end
         result
