@@ -407,6 +407,71 @@ class PushConfigTest < Minitest::Test
     @ct_repo.verify
   end
 
+  def test_prepare_update_strips_readonly_from_both_sides
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 8
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "stopped")
+    # API returns digest — a readonly key that changes with every modification
+    current_config = { cores: 4, digest: "abc123" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    # digest should NOT appear anywhere in the diff
+    refute plan[:diff][:changed].key?(:digest), "digest should not appear in changed"
+    refute plan[:diff][:added].key?(:digest), "digest should not appear in added"
+    refute plan[:diff][:removed].include?(:digest), "digest should not appear in removed"
+    # Real change (cores) should still be detected
+    assert plan[:diff][:changed].key?(:cores)
+    @vm_repo.verify
+  end
+
+  def test_prepare_update_strips_digest_from_manifest
+    # Simulates manifest from pull that includes digest in general section
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        general:
+          digest: stale_digest_from_pull
+        hardware:
+          cpu:
+            cores: 8
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "stopped")
+    current_config = { cores: 4, digest: "current_api_digest" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    refute plan[:diff][:changed].key?(:digest), "stale digest from manifest should be stripped"
+    refute plan[:diff][:added].key?(:digest), "stale digest should not appear as added"
+    assert plan[:diff][:changed].key?(:cores)
+    @vm_repo.verify
+  end
+
   # --- auto-VMID allocation ---
 
   def test_prepare_auto_allocates_vmid_when_missing

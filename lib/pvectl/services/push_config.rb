@@ -51,22 +51,15 @@ module Pvectl
             ConfigSerializer.to_nested(current_config, type: type), type: type
           )
 
-          # Check readonly violations — only for keys the manifest actually sets.
-          # Keys absent from the manifest are not violations (user simply omitted them).
-          shared_keys = original_flat.keys & flat_from_manifest.keys
-          original_for_check = original_flat.slice(*shared_keys)
-          manifest_for_check = flat_from_manifest.slice(*shared_keys)
-          violations = ConfigSerializer.readonly_violations(original_for_check, manifest_for_check, type: type)
-          unless violations.empty?
-            return { plans: [], errors: ["Read-only fields cannot be changed: #{violations.join(', ')}"] }
-          end
-
-          # Strip read-only keys from original before diff — manifests never include them,
-          # so they would always appear as "removed" and generate false diffs.
-          readonly_keys = collect_readonly_keys(original_flat, type)
+          # Collect all readonly keys from both sides and strip them.
+          # Pull output may include readonly keys (digest, vmid, template, etc.)
+          # which should be silently ignored by push. The API enforces readonly.
+          all_flat = original_flat.merge(flat_from_manifest)
+          readonly_keys = collect_readonly_keys(all_flat, type)
           comparable_original = original_flat.reject { |k, _| readonly_keys.include?(k) }
+          comparable_manifest = flat_from_manifest.reject { |k, _| readonly_keys.include?(k) }
 
-          diff = ConfigSerializer.diff(comparable_original, flat_from_manifest)
+          diff = ConfigSerializer.diff(comparable_original, comparable_manifest)
 
           if diff[:changed].empty? && diff[:added].empty? && diff[:removed].empty?
             return { plans: [], errors: [], no_changes: true }
