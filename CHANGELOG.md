@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **push**: transform disk values to Proxmox create API format (`STORAGE_ID:SIZE_IN_GiB`) — strip volume names, handle cloud-init, EFI/TPM, and empty CD-ROM
 - **push**: normalize cloud-init volume names symmetrically in both directions (API→manifest and manifest→flat), preventing false diffs and invalid create params
+- **push**: complete manifest values from API before update diff — fill missing sub-properties (volume names, MAC addresses, cloudinit size) and restrict diff to manifest-only keys, preventing false diffs for default/omitted values
+- **push**: coerce numeric strings from YAML manifests to integers for consistent comparison with API values (e.g., `memory: '2048'` vs `2048`)
 - **push**: filter nil/empty values from create params and extract detailed error info from Proxmox API responses
 - **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
 - **push**: track async task completion for resize and create operations — report actual success/failure instead of fire-and-forget
