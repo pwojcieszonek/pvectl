@@ -34,12 +34,14 @@ module Pvectl
             $ pvectl push -f ./manifests/
             $ pvectl push vm -f vm-100.yaml --dry-run
             $ pvectl push vm -f vm-100.yaml --yes
-            $ pvectl push vm vm-100.yaml            # positional args also work
+            $ pvectl pull vm 100 | pvectl push --yes
+            $ cat vm-100.yaml | pvectl push vm --dry-run
 
           NOTES
-            Without resource type, reads kind from each file.
-            Use -f to specify YAML files or directories (repeatable).
-            Positional arguments are also accepted as file paths.
+            Without -f, reads YAML from stdin (pipe-friendly).
+            With -f, reads from file or directory (repeatable).
+            Without resource type, reads kind from each manifest.
+            Stdin mode requires --yes or --dry-run (no interactive prompt).
             With --yes, skips confirmation (useful for CI/CD).
             With --dry-run, shows diff without applying changes.
 
@@ -65,6 +67,7 @@ module Pvectl
         @args = args
         @options = options
         @global_options = global_options
+        @stdin_mode = false
       end
 
       # Executes the push command.
@@ -73,12 +76,13 @@ module Pvectl
       def execute
         args = @args.dup
         filter_type = parse_resource_type(args)
-        file_paths = resolve_file_paths(args)
 
-        return usage_error("File or directory path is required. Use -f <path> or pass as argument.") if file_paths.empty?
+        unless args.empty?
+          return usage_error("Unexpected arguments: #{args.join(', ')}. Use -f to specify files.")
+        end
 
-        yaml_contents = collect_yaml_contents(file_paths)
-        return usage_error("No YAML files found") if yaml_contents.empty?
+        yaml_contents = read_input
+        return usage_error("No YAML content provided. Use -f <path> or pipe YAML to stdin.") if yaml_contents.empty?
 
         load_config
         connection = Pvectl::Connection.new(@config)
@@ -107,6 +111,9 @@ module Pvectl
 
         # Confirm unless --yes
         unless @options[:yes]
+          if @stdin_mode
+            return usage_error("Stdin mode requires --yes or --dry-run (no interactive prompt available)")
+          end
           $stdout.print "\nApply #{result[:plans].length} change(s)? [y/N] "
           answer = $stdin.gets&.strip&.downcase
           unless answer == "y" || answer == "yes"
@@ -140,15 +147,32 @@ module Pvectl
 
       private
 
-      # Merges file paths from positional args and -f flag.
+      # Reads YAML input from -f flag (files/directories) or stdin.
       #
-      # @param positional_args [Array<String>] remaining positional arguments
-      # @return [Array<String>] combined file paths
-      def resolve_file_paths(positional_args)
+      # @return [Array<Hash>] array of { filename: String, content: String }
+      def read_input
         file_flag = @options[:file]
-        paths = positional_args.dup
-        paths.concat(Array(file_flag)) if file_flag
-        paths
+        if file_flag && !file_flag.empty?
+          @stdin_mode = false
+          collect_yaml_contents(Array(file_flag))
+        else
+          @stdin_mode = true
+          read_stdin
+        end
+      end
+
+      # Reads YAML content from stdin.
+      #
+      # @return [Array<Hash>] array of { filename: String, content: String }
+      def read_stdin
+        if $stdin.tty?
+          $stderr.puts "Error: No input. Use -f <path> or pipe YAML to stdin."
+          return []
+        end
+        content = $stdin.read
+        return [] if content.nil? || content.strip.empty?
+
+        [{ filename: "stdin", content: content }]
       end
 
       # Parses and removes the optional resource type from the argument list.
