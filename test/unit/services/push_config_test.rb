@@ -407,6 +407,96 @@ class PushConfigTest < Minitest::Test
     @ct_repo.verify
   end
 
+  # --- auto-VMID allocation ---
+
+  def test_prepare_auto_allocates_vmid_when_missing
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+    YAML
+
+    @vm_repo.expect :next_available_vmid, 500
+
+    result = @service.prepare(yaml)
+
+    assert_equal 1, result[:plans].length
+    plan = result[:plans].first
+    assert_equal :create, plan[:action]
+    assert_equal 500, plan[:vmid]
+    assert_equal "pve1", plan[:node]
+    assert plan[:auto_id]
+    @vm_repo.verify
+  end
+
+  def test_prepare_auto_allocates_ctid_for_container
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: Container
+      metadata:
+        node: pve1
+      spec:
+        resources:
+          cpu:
+            cores: 2
+    YAML
+
+    @ct_repo.expect :next_available_ctid, 300
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :create, plan[:action]
+    assert_equal 300, plan[:vmid]
+    assert plan[:auto_id]
+    @ct_repo.verify
+  end
+
+  def test_prepare_auto_vmid_requires_node
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        name: web
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+    YAML
+
+    result = @service.prepare(yaml)
+
+    assert_empty result[:plans]
+    assert result[:errors].any? { |e| e.include?("Node is required") }
+  end
+
+  def test_apply_create_returns_auto_id_flag
+    plan = {
+      action: :create,
+      type: :vm,
+      vmid: 500,
+      node: "pve1",
+      params: { cores: 4 },
+      auto_id: true,
+      source_path: "/tmp/vm-new.yaml"
+    }
+
+    @vm_repo.expect :create, nil, ["pve1", 500, { cores: 4 }]
+
+    result = @service.apply([plan])
+
+    r = result[:results].first
+    assert r[:success]
+    assert r[:auto_id]
+    assert_equal "/tmp/vm-new.yaml", r[:source_path]
+    @vm_repo.verify
+  end
+
   def test_apply_handles_api_error
     plan = {
       action: :update,

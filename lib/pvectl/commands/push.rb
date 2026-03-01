@@ -34,6 +34,7 @@ module Pvectl
             $ pvectl push -f ./manifests/
             $ pvectl push vm -f vm-100.yaml --dry-run
             $ pvectl push vm -f vm-100.yaml --yes
+            $ pvectl push vm -f vm-new.yaml            # no vmid → auto-assign
             $ pvectl pull vm 100 | pvectl push --yes
             $ cat vm-100.yaml | pvectl push vm --dry-run
 
@@ -41,6 +42,8 @@ module Pvectl
             Without -f, reads YAML from stdin (pipe-friendly).
             With -f, reads from file or directory (repeatable).
             Without resource type, reads kind from each manifest.
+            If metadata.vmid is omitted, a new VMID is auto-assigned
+            and the source YAML file is updated with the assigned ID.
             Stdin mode requires --yes or --dry-run (no interactive prompt).
             With --yes, skips confirmation (useful for CI/CD).
             With --dry-run, shows diff without applying changes.
@@ -128,6 +131,7 @@ module Pvectl
         apply_result[:results].each do |r|
           if r[:success]
             $stdout.puts "#{r[:action].capitalize}d #{type_label_for(r)} #{r[:vmid]} successfully."
+            update_manifest_vmid(r) if r[:auto_id] && r[:success]
           else
             $stderr.puts "Error: Failed to #{r[:action]} #{r[:vmid]}: #{r[:error]}"
           end
@@ -192,16 +196,16 @@ module Pvectl
       # Collects YAML file contents from given paths (files or directories).
       #
       # @param paths [Array<String>] file or directory paths
-      # @return [Array<Hash>] array of { filename: String, content: String }
+      # @return [Array<Hash>] array of { filename: String, content: String, path: String? }
       def collect_yaml_contents(paths)
         contents = []
         paths.each do |path|
           if File.directory?(path)
             Dir.glob(File.join(path, "*.{yaml,yml}")).sort.each do |file|
-              contents << { filename: File.basename(file), content: File.read(file) }
+              contents << { filename: File.basename(file), content: File.read(file), path: File.expand_path(file) }
             end
           elsif File.file?(path)
-            contents << { filename: File.basename(path), content: File.read(path) }
+            contents << { filename: File.basename(path), content: File.read(path), path: File.expand_path(path) }
           else
             $stderr.puts "Error: File not found: #{path}"
           end
@@ -220,7 +224,8 @@ module Pvectl
             $stdout.puts "\n#{label} #{plan[:vmid]} (#{plan[:node]}) -- UPDATE:"
             $stdout.puts ConfigSerializer.format_diff(plan[:diff])
           elsif plan[:action] == :create
-            $stdout.puts "\n#{label} #{plan[:vmid]} (#{plan[:node]}) -- CREATE:"
+            id_note = plan[:auto_id] ? " (auto-assigned)" : ""
+            $stdout.puts "\n#{label} #{plan[:vmid]}#{id_note} (#{plan[:node]}) -- CREATE:"
             plan[:params].each do |key, val|
               $stdout.puts "  + #{key}: #{val}"
             end
@@ -234,6 +239,25 @@ module Pvectl
       # @return [String] "VM" or "Container"
       def type_label_for(result)
         result[:type] == :container ? "Container" : "VM"
+      end
+
+      # Updates the source YAML file with the auto-allocated VMID.
+      # Only applies to file-based manifests (not stdin).
+      #
+      # @param result [Hash] apply result with :vmid, :source_path
+      # @return [void]
+      def update_manifest_vmid(result)
+        path = result[:source_path]
+        return unless path && File.file?(path)
+
+        content = File.read(path)
+        parsed = YAML.safe_load(content)
+        parsed["metadata"] ||= {}
+        parsed["metadata"]["vmid"] = result[:vmid]
+        File.write(path, YAML.dump(parsed))
+        $stderr.puts "Updated #{path} with vmid: #{result[:vmid]}"
+      rescue StandardError => e
+        $stderr.puts "Warning: Could not update #{path} with vmid: #{e.message}"
       end
 
       # Builds the PushConfig service with repositories.

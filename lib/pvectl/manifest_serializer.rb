@@ -83,8 +83,6 @@ module Pvectl
         metadata = parsed["metadata"]
         if metadata.nil? || !metadata.is_a?(Hash)
           errors << "Missing required field 'metadata'"
-        elsif !metadata.key?("vmid")
-          errors << "Missing required field 'metadata.vmid'"
         end
 
         errors

@@ -20,6 +20,7 @@ module Pvectl
       def parse_resource_type: (Array[String] args) -> Symbol?
       def collect_yaml_contents: (Array[String] paths) -> Array[Hash[Symbol, untyped]]
       def display_plans: (Array[Hash[Symbol, untyped]] plans) -> void
+      def update_manifest_vmid: (Hash[Symbol, untyped] result) -> void
       def type_label_for: (Hash[Symbol, untyped] result) -> String
       def build_service: (untyped connection) -> Services::PushConfig
       def load_config: () -> void

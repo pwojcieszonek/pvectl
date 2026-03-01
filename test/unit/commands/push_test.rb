@@ -164,6 +164,44 @@ class PushCommandTest < Minitest::Test
     assert_equal ["unknown"], args
   end
 
+  def test_update_manifest_vmid_writes_file
+    Dir.mktmpdir do |dir|
+      yaml_content = <<~YAML
+        apiVersion: pvectl/v1
+        kind: VirtualMachine
+        metadata:
+          name: web
+          node: pve1
+        spec:
+          hardware:
+            cpu:
+              cores: 4
+      YAML
+
+      file_path = File.join(dir, "vm-new.yaml")
+      File.write(file_path, yaml_content)
+
+      cmd = Pvectl::Commands::Push.new([], {}, {})
+      result = { vmid: 500, source_path: file_path, auto_id: true, success: true }
+
+      err_output = StringIO.new
+      $stderr = err_output
+      cmd.send(:update_manifest_vmid, result)
+      $stderr = STDERR
+
+      updated = YAML.safe_load(File.read(file_path))
+      assert_equal 500, updated.dig("metadata", "vmid")
+      assert_match(/Updated.*vmid: 500/, err_output.string)
+    end
+  end
+
+  def test_update_manifest_vmid_skips_stdin
+    cmd = Pvectl::Commands::Push.new([], {}, {})
+    result = { vmid: 500, source_path: nil, auto_id: true, success: true }
+    # Should not raise or attempt file write
+    cmd.send(:update_manifest_vmid, result)
+  end
+
   def test_dry_run_with_file_flag
     yaml_content = <<~YAML
       apiVersion: pvectl/v1

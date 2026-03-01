@@ -11,6 +11,8 @@ module Pvectl
 
       private
 
+      def prepare_create: (Symbol type, Hash[Symbol, untyped] metadata, Hash[Symbol, untyped] flat_config, untyped repo, ?vmid: Integer?, ?auto_id: bool) -> Hash[Symbol, untyped]
+      def allocate_vmid: (untyped repo, Symbol type) -> Integer
       def repository_for: (Symbol type) -> untyped
       def build_update_params: (Hash[Symbol, untyped] diff, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
       def collect_readonly_keys: (Hash[Symbol, untyped] flat_config, Symbol type) -> Array[Symbol]

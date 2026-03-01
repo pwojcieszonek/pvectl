@@ -153,17 +153,18 @@ class ManifestSerializerTest < Minitest::Test
     assert errors.any? { |e| e.include?("kind") }
   end
 
-  def test_validate_rejects_missing_vmid
+  def test_validate_accepts_missing_vmid
     yaml = <<~YAML
       apiVersion: pvectl/v1
       kind: VirtualMachine
       metadata:
         name: web
+        node: pve1
       spec: {}
     YAML
 
     errors = Pvectl::ManifestSerializer.validate(yaml)
 
-    assert errors.any? { |e| e.include?("vmid") }
+    assert_empty errors
   end
 end

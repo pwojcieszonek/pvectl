@@ -36,6 +36,11 @@ module Pvectl
         # Convert nested spec to flat config
         flat_from_manifest = ConfigSerializer.from_nested(spec, type: type)
 
+        # No VMID → always create with auto-allocated ID
+        unless vmid
+          return prepare_create(type, metadata, flat_from_manifest, repo, auto_id: true)
+        end
+
         # Check if resource exists (update) or not (create)
         resource = repo.get(vmid)
 
@@ -78,21 +83,7 @@ module Pvectl
 
           { plans: [plan], errors: [] }
         else
-          # CREATE path
-          node = metadata[:node]
-          unless node
-            return { plans: [], errors: ["Node is required for creating new resource (VMID #{vmid})"] }
-          end
-
-          plan = {
-            action: :create,
-            type: type,
-            vmid: vmid,
-            node: node,
-            params: flat_from_manifest
-          }
-
-          { plans: [plan], errors: [] }
+          prepare_create(type, metadata, flat_from_manifest, repo, vmid: vmid)
         end
       rescue StandardError => e
         { plans: [], errors: [e.message] }
@@ -133,7 +124,10 @@ module Pvectl
             next
           end
 
-          result[:plans].each { |p| p[:filename] = filename }
+          result[:plans].each do |p|
+            p[:filename] = filename
+            p[:source_path] = entry[:path]
+          end
           plans.concat(result[:plans])
           errors.concat(result[:errors].map { |e| "#{filename}: #{e}" })
         end
@@ -158,7 +152,10 @@ module Pvectl
               results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: true }
             elsif plan[:action] == :create
               repo.create(plan[:node], plan[:vmid], plan[:params])
-              results << { action: :create, vmid: plan[:vmid], type: plan[:type], success: true }
+              results << {
+                action: :create, vmid: plan[:vmid], type: plan[:type], success: true,
+                auto_id: plan[:auto_id], source_path: plan[:source_path]
+              }
             end
           rescue StandardError => e
             errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
@@ -170,6 +167,51 @@ module Pvectl
       end
 
       private
+
+      # Prepares a create plan, optionally allocating a VMID.
+      #
+      # @param type [Symbol] :vm or :container
+      # @param metadata [Hash] manifest metadata
+      # @param flat_config [Hash] flat config from manifest spec
+      # @param repo [Repositories::Vm, Repositories::Container] repository
+      # @param vmid [Integer, nil] explicit VMID (nil when auto_id)
+      # @param auto_id [Boolean] whether to auto-allocate a VMID
+      # @return [Hash] { plans: Array<Hash>, errors: Array<String> }
+      def prepare_create(type, metadata, flat_config, repo, vmid: nil, auto_id: false)
+        node = metadata[:node]
+        unless node
+          label = vmid ? "VMID #{vmid}" : "new resource"
+          return { plans: [], errors: ["Node is required for creating #{label}"] }
+        end
+
+        if auto_id
+          vmid = allocate_vmid(repo, type)
+        end
+
+        plan = {
+          action: :create,
+          type: type,
+          vmid: vmid,
+          node: node,
+          params: flat_config,
+          auto_id: auto_id
+        }
+
+        { plans: [plan], errors: [] }
+      end
+
+      # Allocates the next available VMID from the repository.
+      #
+      # @param repo [Repositories::Vm, Repositories::Container] repository
+      # @param type [Symbol] :vm or :container
+      # @return [Integer] next available VMID
+      def allocate_vmid(repo, type)
+        if type == :container
+          repo.next_available_ctid
+        else
+          repo.next_available_vmid
+        end
+      end
 
       # Returns the appropriate repository for the given resource type.
       #
