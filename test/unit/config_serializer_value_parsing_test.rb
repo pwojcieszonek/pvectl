@@ -11,11 +11,11 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     assert_equal "virtio", result[:model]
     assert_equal "AA:BB:CC:DD:EE:FF", result[:mac]
     assert_equal "vmbr0", result[:bridge]
-    assert_equal "1", result[:firewall]
+    assert_equal true, result[:firewall]
   end
 
   def test_serialize_vm_net_value
-    hash = { model: "virtio", mac: "AA:BB:CC:DD:EE:FF", bridge: "vmbr0", firewall: "1" }
+    hash = { model: "virtio", mac: "AA:BB:CC:DD:EE:FF", bridge: "vmbr0", firewall: true }
     result = serialize_vm_net(hash)
 
     assert_equal "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1", result
@@ -45,7 +45,7 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     assert_equal "local-lvm", result[:storage]
     assert_equal "vm-100-disk-0", result[:volume]
     assert_equal "32G", result[:size]
-    assert_equal "1", result[:iothread]
+    assert_equal true, result[:iothread]
   end
 
   def test_disk_round_trip
@@ -94,30 +94,30 @@ class ConfigSerializerValueParsingTest < Minitest::Test
   def test_parse_agent_value_bare_1
     result = Pvectl::ConfigSerializer.send(:parse_agent_value, "1")
 
-    assert_equal "1", result[:enabled]
-    assert_equal "0", result[:fstrim_cloned_disks]
-    assert_equal "1", result[:"freeze-fs-on-backup"]
+    assert_equal true, result[:enabled]
+    assert_equal false, result[:fstrim_cloned_disks]
+    assert_equal true, result[:"freeze-fs-on-backup"]
     assert_equal "virtio", result[:type]
   end
 
   def test_parse_agent_value_with_explicit_properties
     result = Pvectl::ConfigSerializer.send(:parse_agent_value, "enabled=1,fstrim_cloned_disks=1")
 
-    assert_equal "1", result[:enabled]
-    assert_equal "1", result[:fstrim_cloned_disks]
-    assert_equal "1", result[:"freeze-fs-on-backup"]
+    assert_equal true, result[:enabled]
+    assert_equal true, result[:fstrim_cloned_disks]
+    assert_equal true, result[:"freeze-fs-on-backup"]
     assert_equal "virtio", result[:type]
   end
 
   def test_serialize_agent_value_only_enabled
-    hash = { enabled: "1", fstrim_cloned_disks: "0", :"freeze-fs-on-backup" => "1", type: "virtio" }
+    hash = { enabled: true, fstrim_cloned_disks: false, :"freeze-fs-on-backup" => true, type: "virtio" }
     result = Pvectl::ConfigSerializer.send(:serialize_agent_value, hash)
 
     assert_equal "enabled=1", result
   end
 
   def test_serialize_agent_value_with_non_defaults
-    hash = { enabled: "1", fstrim_cloned_disks: "1", :"freeze-fs-on-backup" => "0", type: "virtio" }
+    hash = { enabled: true, fstrim_cloned_disks: true, :"freeze-fs-on-backup" => false, type: "virtio" }
     result = Pvectl::ConfigSerializer.send(:serialize_agent_value, hash)
 
     assert_includes result, "enabled=1"
@@ -140,10 +140,10 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     flat_config = { agent: "1" }
     nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
 
-    # Full agent config with defaults filled in
-    assert_equal "1", nested[:options][:agent][:enabled]
-    assert_equal "0", nested[:options][:agent][:fstrim_cloned_disks]
-    assert_equal "1", nested[:options][:agent][:"freeze-fs-on-backup"]
+    # Full agent config with defaults filled in, booleans as true/false
+    assert_equal true, nested[:options][:agent][:enabled]
+    assert_equal false, nested[:options][:agent][:fstrim_cloned_disks]
+    assert_equal true, nested[:options][:agent][:"freeze-fs-on-backup"]
     assert_equal "virtio", nested[:options][:agent][:type]
 
     flat_back = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
@@ -157,14 +157,16 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     flat_config = { cores: 4 }
     nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
 
-    assert_equal "network,disk,usb", nested[:options][:hotplug]
+    expected = { network: true, disk: true, usb: true, cpu: false, memory: false, cloudinit: false }
+    assert_equal expected, nested[:options][:hotplug]
   end
 
   def test_to_nested_preserves_explicit_hotplug
     flat_config = { cores: 4, hotplug: "0" }
     nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
 
-    assert_equal "0", nested[:options][:hotplug]
+    expected = { network: false, disk: false, usb: false, cpu: false, memory: false, cloudinit: false }
+    assert_equal expected, nested[:options][:hotplug]
   end
 
   def test_hotplug_default_round_trip_no_false_diff

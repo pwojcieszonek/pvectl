@@ -146,6 +146,24 @@ module Pvectl
       hotplug: "network,disk,usb"
     }.freeze
 
+    # Top-level VM config keys that are boolean (0/1 in Proxmox API).
+    VM_BOOLEAN_KEYS = %i[onboot kvm tablet reboot freeze localtime protection numa keephugepages].freeze
+
+    # Top-level container config keys that are boolean (0/1 in Proxmox API).
+    CT_BOOLEAN_KEYS = %i[onboot unprivileged protection debug console].freeze
+
+    # All possible hotplug capabilities for QEMU VMs.
+    HOTPLUG_CAPABILITIES = %i[network disk usb cpu memory cloudinit].freeze
+
+    # Sub-keys within agent config that are boolean (0/1 strings).
+    AGENT_BOOLEAN_SUBKEYS = [:enabled, :fstrim_cloned_disks, :"freeze-fs-on-backup"].freeze
+
+    # Sub-keys within VM network config that are boolean (0/1 strings).
+    NET_BOOLEAN_SUBKEYS = %i[firewall link_down].freeze
+
+    # Sub-keys within disk config that are boolean (0/1 strings).
+    DISK_BOOLEAN_SUBKEYS = %i[iothread backup replicate ssd ro].freeze
+
     # Complex key mappings for QEMU VMs.
     # Each entry maps a category to a regex pattern and parser/serializer method names.
     # Used by to_nested/from_nested for bidirectional conversion of Proxmox config strings.
@@ -156,6 +174,7 @@ module Pvectl
       unused: { pattern: /\Aunused\d+\z/, parser: :parse_disk_value, serializer: :serialize_disk_value },
       boot: { pattern: /\Aboot\z/, parser: :parse_boot_value, serializer: :serialize_boot_value },
       agent: { pattern: /\Aagent\z/, parser: :parse_agent_value, serializer: :serialize_agent_value },
+      hotplug: { pattern: /\Ahotplug\z/, parser: :parse_hotplug_value, serializer: :serialize_hotplug_value },
       startup: { pattern: /\Astartup\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       ipconfig: { pattern: /\Aipconfig\d+\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
       smbios1: { pattern: /\Asmbios1\z/, parser: :parse_kv_value, serializer: :serialize_kv_value },
@@ -549,6 +568,38 @@ module Pvectl
         defaults.merge(flat_config)
       end
 
+      # Converts a Proxmox 0/1 value to a Ruby boolean.
+      #
+      # @param value [Object] value to convert
+      # @return [Boolean, Object] true/false for 0/1 values, original otherwise
+      def to_boolean(value)
+        case value
+        when true, 1, "1" then true
+        when false, 0, "0" then false
+        else value
+        end
+      end
+
+      # Converts a Ruby boolean back to a Proxmox integer (0/1).
+      #
+      # @param value [Object] value to convert
+      # @return [Integer, Object] 0/1 for booleans, original otherwise
+      def from_boolean(value)
+        case value
+        when true then 1
+        when false then 0
+        else value
+        end
+      end
+
+      # Returns the set of boolean keys for the given resource type.
+      #
+      # @param type [Symbol] :vm or :container
+      # @return [Array<Symbol>] boolean key names
+      def boolean_keys_for(type)
+        type == :container ? CT_BOOLEAN_KEYS : VM_BOOLEAN_KEYS
+      end
+
       # Renders a leaf section (non-wrapper) into YAML output lines.
       #
       # @param lines [Array<String>] accumulator for output lines
@@ -687,13 +738,15 @@ module Pvectl
         nil
       end
 
-      # Builds a nested section hash from flat config, parsing complex values.
+      # Builds a nested section hash from flat config, parsing complex values
+      # and converting known boolean keys to Ruby booleans.
       #
       # @param flat_config [Hash] flat config hash
       # @param section_def [Hash] section definition with :static and :dynamic
       # @param type [Symbol] :vm or :container
       # @return [Hash{Symbol => Object}] section hash with parsed complex values
       def build_nested_section(flat_config, section_def, type)
+        bool_keys = boolean_keys_for(type)
         result = {}
         keys_for_section(flat_config, section_def).each do |key|
           value = flat_config[key]
@@ -704,6 +757,8 @@ module Pvectl
                           else
                             send(complex[:parser], value)
                           end
+                        elsif bool_keys.include?(key)
+                          to_boolean(value)
                         else
                           value
                         end
@@ -711,17 +766,21 @@ module Pvectl
         result
       end
 
-      # Flattens a nested section hash back to flat config, serializing complex values.
+      # Flattens a nested section hash back to flat config, serializing complex values
+      # and converting Ruby booleans back to Proxmox integers (0/1).
       #
       # @param section_hash [Hash] nested section with potentially parsed complex values
       # @param type [Symbol] :vm or :container
       # @param result [Hash] accumulator for flat config
       # @return [void]
       def flatten_nested_section(section_hash, type, result)
+        bool_keys = boolean_keys_for(type)
         section_hash.each do |key, value|
           complex = find_complex_key(key, type)
           result[key] = if complex && value.is_a?(Hash)
                           send(complex[:serializer], value)
+                        elsif bool_keys.include?(key) && (value.is_a?(TrueClass) || value.is_a?(FalseClass))
+                          from_boolean(value)
                         else
                           value
                         end
@@ -730,9 +789,10 @@ module Pvectl
 
       # Parses a VM network config string into a structured hash.
       # Format: "model=MAC,key=value,..."  (e.g., "virtio=AA:BB:CC:DD:EE:FF,bridge=vmbr0,firewall=1")
+      # Boolean sub-keys (firewall, link_down) are converted to Ruby booleans.
       #
       # @param string [String] Proxmox VM network config value
-      # @return [Hash{Symbol => String}] parsed network config
+      # @return [Hash{Symbol => Object}] parsed network config
       def parse_vm_net_value(string)
         parts = string.split(",")
         first = parts.shift.strip
@@ -741,29 +801,35 @@ module Pvectl
         result[:mac] = mac if mac
         parts.each do |part|
           k, v = part.strip.split("=", 2)
-          result[k.to_sym] = v
+          sym = k.to_sym
+          result[sym] = NET_BOOLEAN_SUBKEYS.include?(sym) ? to_boolean(v) : v
         end
         result
       end
 
       # Serializes a VM network hash back to Proxmox config string format.
+      # Converts Ruby booleans back to 0/1 strings.
       #
-      # @param hash [Hash{Symbol => String}] parsed network config
+      # @param hash [Hash{Symbol => Object}] parsed network config
       # @return [String] Proxmox VM network config string
       def serialize_vm_net_value(hash)
         parts = []
         model = hash[:model] || "virtio"
         mac = hash[:mac]
         parts << (mac ? "#{model}=#{mac}" : model)
-        hash.except(:model, :mac).each { |k, v| parts << "#{k}=#{v}" }
+        hash.except(:model, :mac).each do |k, v|
+          v = from_boolean(v) if NET_BOOLEAN_SUBKEYS.include?(k)
+          parts << "#{k}=#{v}"
+        end
         parts.join(",")
       end
 
       # Parses a disk config string into a structured hash.
       # Format: "storage:volume,key=value,..."  (e.g., "local-lvm:vm-100-disk-0,size=32G,iothread=1")
+      # Boolean sub-keys (iothread, backup, replicate, ssd, ro) are converted to Ruby booleans.
       #
       # @param string [String] Proxmox disk config value
-      # @return [Hash{Symbol => String}] parsed disk config
+      # @return [Hash{Symbol => Object}] parsed disk config
       def parse_disk_value(string)
         parts = string.split(",")
         first = parts.shift.strip
@@ -772,21 +838,26 @@ module Pvectl
         result[:volume] = volume if volume
         parts.each do |part|
           k, v = part.strip.split("=", 2)
-          result[k.to_sym] = v
+          sym = k.to_sym
+          result[sym] = DISK_BOOLEAN_SUBKEYS.include?(sym) ? to_boolean(v) : v
         end
         result
       end
 
       # Serializes a disk hash back to Proxmox config string format.
+      # Converts Ruby booleans back to 0/1 strings.
       #
-      # @param hash [Hash{Symbol => String}] parsed disk config
+      # @param hash [Hash{Symbol => Object}] parsed disk config
       # @return [String] Proxmox disk config string
       def serialize_disk_value(hash)
         parts = []
         storage = hash[:storage]
         volume = hash[:volume]
         parts << [storage, volume].compact.join(":")
-        hash.except(:storage, :volume).each { |k, v| parts << "#{k}=#{v}" }
+        hash.except(:storage, :volume).each do |k, v|
+          v = from_boolean(v) if DISK_BOOLEAN_SUBKEYS.include?(k)
+          parts << "#{k}=#{v}"
+        end
         parts.join(",")
       end
 
@@ -820,26 +891,39 @@ module Pvectl
       # Parses a QEMU Guest Agent config string and fills in default values.
       # Proxmox returns bare "1" for enabled-only, but the full format includes
       # fstrim_cloned_disks, freeze-fs-on-backup, and type.
+      # Boolean sub-keys are converted to Ruby booleans.
       #
       # @param string [String] agent config value (e.g., "1" or "enabled=1,fstrim_cloned_disks=1")
-      # @return [Hash{Symbol => String}] parsed agent config with all properties
+      # @return [Hash{Symbol => Object}] parsed agent config with all properties
       def parse_agent_value(string)
         parsed = parse_kv_value(string, default_key: :enabled)
-        AGENT_DEFAULTS.merge(parsed)
+        merged = AGENT_DEFAULTS.merge(parsed)
+        merged.each_with_object({}) do |(k, v), h|
+          h[k] = AGENT_BOOLEAN_SUBKEYS.include?(k) ? to_boolean(v) : v
+        end
       end
 
       # Serializes an agent config hash back to Proxmox string, omitting default values.
       # Only includes properties that differ from AGENT_DEFAULTS for a clean config string.
+      # Handles both boolean and string input values.
       #
-      # @param hash [Hash{Symbol => String}] agent config hash
+      # @param hash [Hash{Symbol => Object}] agent config hash
       # @return [String] agent config string
       def serialize_agent_value(hash)
-        non_defaults = hash.reject { |k, v| AGENT_DEFAULTS[k] == v.to_s }
+        # Normalize booleans back to "0"/"1" strings for comparison with AGENT_DEFAULTS
+        string_hash = hash.each_with_object({}) do |(k, v), h|
+          h[k] = case v
+                 when true then "1"
+                 when false then "0"
+                 else v.to_s
+                 end
+        end
+        non_defaults = string_hash.reject { |k, v| AGENT_DEFAULTS[k] == v }
         return "0" if non_defaults.empty?
 
         # Ensure enabled is always first
         parts = []
-        parts << "enabled=#{hash[:enabled]}" if non_defaults.key?(:enabled)
+        parts << "enabled=#{string_hash[:enabled]}" if non_defaults.key?(:enabled)
         non_defaults.each do |k, v|
           next if k == :enabled
           parts << "#{k}=#{v}"
@@ -868,6 +952,35 @@ module Pvectl
           v.is_a?(Array) ? v.join(";") : v
         end
         serialize_kv_value(result)
+      end
+
+      # Parses a hotplug config string into a capability map with boolean values.
+      # Proxmox hotplug is a CSV of enabled capabilities (e.g., "network,disk,usb").
+      # Special values: "0" = all disabled, "1" = default (network,disk,usb).
+      #
+      # @param string [String] hotplug config value
+      # @return [Hash{Symbol => Boolean}] map of all capabilities with true/false
+      def parse_hotplug_value(string)
+        if string == "0"
+          HOTPLUG_CAPABILITIES.to_h { |cap| [cap, false] }
+        elsif string == "1"
+          parse_hotplug_value("network,disk,usb")
+        else
+          enabled = string.split(",").map { |s| s.strip.to_sym }
+          HOTPLUG_CAPABILITIES.to_h { |cap| [cap, enabled.include?(cap)] }
+        end
+      end
+
+      # Serializes a hotplug capability map back to Proxmox CSV format.
+      # Only enabled capabilities are included. Returns "0" if all disabled.
+      #
+      # @param hash [Hash{Symbol => Boolean}] capability map
+      # @return [String] hotplug config string
+      def serialize_hotplug_value(hash)
+        enabled = HOTPLUG_CAPABILITIES.select { |cap| hash[cap] == true }
+        return "0" if enabled.empty?
+
+        enabled.map(&:to_s).join(",")
       end
     end
   end

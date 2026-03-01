@@ -10,6 +10,18 @@ module Pvectl
 
     VM_DEFAULTS: Hash[Symbol, String]
 
+    VM_BOOLEAN_KEYS: Array[Symbol]
+
+    CT_BOOLEAN_KEYS: Array[Symbol]
+
+    HOTPLUG_CAPABILITIES: Array[Symbol]
+
+    AGENT_BOOLEAN_SUBKEYS: Array[Symbol]
+
+    NET_BOOLEAN_SUBKEYS: Array[Symbol]
+
+    DISK_BOOLEAN_SUBKEYS: Array[Symbol]
+
     VM_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
 
     CT_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
@@ -54,6 +66,12 @@ module Pvectl
 
     def self.inject_defaults: (Hash[Symbol, untyped] flat_config, Symbol type) -> Hash[Symbol, untyped]
 
+    def self.to_boolean: (untyped value) -> (bool | untyped)
+
+    def self.from_boolean: (untyped value) -> (Integer | untyped)
+
+    def self.boolean_keys_for: (Symbol type) -> Array[Symbol]
+
     def self.render_leaf_section: (Array[String] lines, Symbol section_name, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def, Hash[Symbol, untyped] flat_config) -> void
 
     def self.render_wrapper_section: (Array[String] lines, Symbol wrapper_name, Hash[Symbol, untyped] wrapper_def, Hash[Symbol, untyped] flat_config) -> void
@@ -72,24 +90,28 @@ module Pvectl
 
     def self.flatten_nested_section: (Hash[Symbol, untyped] section_hash, Symbol type, Hash[Symbol, untyped] result) -> void
 
-    def self.parse_vm_net_value: (String string) -> Hash[Symbol, String]
+    def self.parse_vm_net_value: (String string) -> Hash[Symbol, untyped]
 
-    def self.serialize_vm_net_value: (Hash[Symbol, String] hash) -> String
+    def self.serialize_vm_net_value: (Hash[Symbol, untyped] hash) -> String
 
-    def self.parse_disk_value: (String string) -> Hash[Symbol, String]
+    def self.parse_disk_value: (String string) -> Hash[Symbol, untyped]
 
-    def self.serialize_disk_value: (Hash[Symbol, String] hash) -> String
+    def self.serialize_disk_value: (Hash[Symbol, untyped] hash) -> String
 
     def self.parse_kv_value: (String string, ?default_key: Symbol?) -> Hash[Symbol, String?]
 
     def self.serialize_kv_value: (Hash[Symbol, String] hash) -> String
 
-    def self.parse_agent_value: (String string) -> Hash[Symbol, String]
+    def self.parse_agent_value: (String string) -> Hash[Symbol, untyped]
 
-    def self.serialize_agent_value: (Hash[Symbol, String] hash) -> String
+    def self.serialize_agent_value: (Hash[Symbol, untyped] hash) -> String
 
     def self.parse_boot_value: (String string) -> Hash[Symbol, String | Array[String]]
 
     def self.serialize_boot_value: (Hash[Symbol, String | Array[String]] hash) -> String
+
+    def self.parse_hotplug_value: (String string) -> Hash[Symbol, bool]
+
+    def self.serialize_hotplug_value: (Hash[Symbol, bool] hash) -> String
   end
 end

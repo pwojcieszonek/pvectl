@@ -539,7 +539,7 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal "virtio", net[:model]
     assert_equal "AA:BB:CC:DD:EE:FF", net[:mac]
     assert_equal "vmbr0", net[:bridge]
-    assert_equal "1", net[:firewall]
+    assert_equal true, net[:firewall]
   end
 
   def test_to_nested_parses_disk_values
@@ -550,7 +550,7 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal "local-lvm", disk[:storage]
     assert_equal "vm-100-disk-0", disk[:volume]
     assert_equal "32G", disk[:size]
-    assert_equal "1", disk[:iothread]
+    assert_equal true, disk[:iothread]
   end
 
   def test_to_nested_parses_agent_value
@@ -558,8 +558,8 @@ class ConfigSerializerTest < Minitest::Test
     result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
 
     agent = result.dig(:options, :agent)
-    assert_equal "1", agent[:enabled]
-    assert_equal "1", agent[:fstrim_cloned_disks]
+    assert_equal true, agent[:enabled]
+    assert_equal true, agent[:fstrim_cloned_disks]
   end
 
   def test_to_nested_parses_boot_order
@@ -570,12 +570,12 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal %w[scsi0 net0], boot[:order]
   end
 
-  def test_to_nested_keeps_simple_values
+  def test_to_nested_converts_boolean_values
     config = { onboot: 1, kvm: 1, ostype: "l26" }
     result = Pvectl::ConfigSerializer.to_nested(config, type: :vm)
 
-    assert_equal 1, result.dig(:options, :onboot)
-    assert_equal 1, result.dig(:options, :kvm)
+    assert_equal true, result.dig(:options, :onboot)
+    assert_equal true, result.dig(:options, :kvm)
     assert_equal "l26", result.dig(:options, :ostype)
   end
 
@@ -601,9 +601,10 @@ class ConfigSerializerTest < Minitest::Test
     refute result[:hardware].key?(:memory)
     refute result[:hardware].key?(:network)
     refute result.key?(:general)
-    # options is present because VM_DEFAULTS injects hotplug
+    # options is present because VM_DEFAULTS injects hotplug (parsed into capability map)
     assert result.key?(:options)
-    assert_equal "network,disk,usb", result[:options][:hotplug]
+    expected_hotplug = { network: true, disk: true, usb: true, cpu: false, memory: false, cloudinit: false }
+    assert_equal expected_hotplug, result[:options][:hotplug]
   end
 
   # ── from_nested tests ───────────────────────────────────────
