@@ -365,6 +365,7 @@ class PushConfigTest < Minitest::Test
 
     assert_equal 1, result[:results].length
     assert result[:results].first[:success]
+    assert_equal :vm, result[:results].first[:type]
     assert_empty result[:errors]
     @vm_repo.verify
   end
@@ -384,8 +385,26 @@ class PushConfigTest < Minitest::Test
 
     assert_equal 1, result[:results].length
     assert result[:results].first[:success]
+    assert_equal :vm, result[:results].first[:type]
     assert_empty result[:errors]
     @vm_repo.verify
+  end
+
+  def test_apply_returns_correct_type_for_container
+    plan = {
+      action: :update,
+      type: :container,
+      vmid: 200,
+      node: "pve1",
+      params: { hostname: "web" }
+    }
+
+    @ct_repo.expect :update, nil, [200, "pve1", { hostname: "web" }]
+
+    result = @service.apply([plan])
+
+    assert_equal :container, result[:results].first[:type]
+    @ct_repo.verify
   end
 
   def test_apply_handles_api_error
@@ -403,6 +422,7 @@ class PushConfigTest < Minitest::Test
 
     assert_equal 1, result[:results].length
     refute result[:results].first[:success]
+    assert_equal :vm, result[:results].first[:type]
     assert_equal 1, result[:errors].length
   end
 end

@@ -66,7 +66,14 @@ module Pvectl
           return ["Invalid manifest: expected a YAML mapping"]
         end
 
-        errors << "Missing required field 'apiVersion'" unless parsed["apiVersion"]
+        unless parsed["apiVersion"]
+          errors << "Missing required field 'apiVersion'"
+        end
+
+        if parsed["apiVersion"] && parsed["apiVersion"] != API_VERSION
+          errors << "Unsupported apiVersion '#{parsed["apiVersion"]}'. Expected: #{API_VERSION}"
+        end
+
         errors << "Missing required field 'kind'" unless parsed["kind"]
 
         if parsed["kind"] && !KINDS_REVERSE.key?(parsed["kind"])

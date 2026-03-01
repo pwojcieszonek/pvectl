@@ -155,14 +155,14 @@ module Pvectl
 
             if plan[:action] == :update
               repo.update(plan[:vmid], plan[:node], plan[:params])
-              results << { action: :update, vmid: plan[:vmid], success: true }
+              results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: true }
             elsif plan[:action] == :create
               repo.create(plan[:node], plan[:vmid], plan[:params])
-              results << { action: :create, vmid: plan[:vmid], success: true }
+              results << { action: :create, vmid: plan[:vmid], type: plan[:type], success: true }
             end
           rescue StandardError => e
             errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
-            results << { action: plan[:action], vmid: plan[:vmid], success: false, error: e.message }
+            results << { action: plan[:action], vmid: plan[:vmid], type: plan[:type], success: false, error: e.message }
           end
         end
 

@@ -125,6 +125,20 @@ class ManifestSerializerTest < Minitest::Test
     assert errors.any? { |e| e.include?("apiVersion") }
   end
 
+  def test_validate_rejects_wrong_api_version
+    yaml = <<~YAML
+      apiVersion: pvectl/v2
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+      spec: {}
+    YAML
+
+    errors = Pvectl::ManifestSerializer.validate(yaml)
+
+    assert errors.any? { |e| e.include?("Unsupported apiVersion") }
+  end
+
   def test_validate_rejects_unknown_kind
     yaml = <<~YAML
       apiVersion: pvectl/v1
