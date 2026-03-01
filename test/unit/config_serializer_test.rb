@@ -678,6 +678,89 @@ class ConfigSerializerTest < Minitest::Test
     assert_equal "order=scsi0;net0", result[:boot]
   end
 
+  # ── complete_from_api tests ────────────────────────────────────
+
+  def test_complete_from_api_fills_missing_disk_volume
+    manifest = { scsi0: "local-lvm,iothread=1,size=9G" }
+    api      = { scsi0: "local-lvm:vm-100-disk-0,iothread=1,size=9G" }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    assert_equal "local-lvm:vm-100-disk-0,iothread=1,size=9G", result[:scsi0]
+  end
+
+  def test_complete_from_api_fills_missing_net_mac
+    manifest = { net0: "virtio,bridge=vmbr0,firewall=1" }
+    api      = { net0: "virtio=BC:24:11:16:54:F1,bridge=vmbr0,firewall=1" }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    assert_equal "virtio=BC:24:11:16:54:F1,bridge=vmbr0,firewall=1", result[:net0]
+  end
+
+  def test_complete_from_api_fills_missing_cloudinit_size
+    manifest = { ide0: "local-lvm:cloudinit,media=cdrom" }
+    api      = { ide0: "local-lvm:cloudinit,media=cdrom,size=4M" }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    assert_equal "local-lvm:cloudinit,media=cdrom,size=4M", result[:ide0]
+  end
+
+  def test_complete_from_api_preserves_manifest_overrides
+    manifest = { net0: "virtio,bridge=vmbr1,firewall=1" }
+    api      = { net0: "virtio=BC:24:11:16:54:F1,bridge=vmbr0,firewall=1" }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    # MAC filled from API, bridge overridden by manifest
+    assert_includes result[:net0], "BC:24:11:16:54:F1"
+    assert_includes result[:net0], "bridge=vmbr1"
+    refute_includes result[:net0], "bridge=vmbr0"
+  end
+
+  def test_complete_from_api_skips_non_complex_keys
+    manifest = { cores: 8, memory: 4096 }
+    api      = { cores: 4, memory: 2048 }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    # Non-complex keys are kept from manifest, not merged
+    assert_equal 8, result[:cores]
+    assert_equal 4096, result[:memory]
+  end
+
+  def test_complete_from_api_passes_through_new_keys
+    manifest = { scsi1: "local-lvm,size=16G" }
+    api      = {} # scsi1 doesn't exist in API
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    # Key not in API — kept as-is from manifest
+    assert_equal "local-lvm,size=16G", result[:scsi1]
+  end
+
+  def test_complete_from_api_coerces_numeric_strings_to_integers
+    manifest = { memory: "2048", cores: "4" }
+    api      = { memory: 2048, cores: 4 }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    assert_equal 2048, result[:memory]
+    assert_equal 4, result[:cores]
+    assert result[:memory].is_a?(Integer)
+  end
+
+  def test_complete_from_api_fills_missing_kv_subproperties
+    manifest = { smbios1: "uuid=custom-uuid" }
+    api      = { smbios1: "uuid=e682a07a-0924-4b15-a1b1-4f83e3e41448" }
+
+    result = Pvectl::ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+
+    # Manifest overrides uuid
+    assert_equal "uuid=custom-uuid", result[:smbios1]
+  end
+
   def test_from_nested_round_trip_vm
     original = {
       vmid: 100, name: "web", cores: 4, memory: 8192,

@@ -433,6 +433,39 @@ module Pvectl
         inject_defaults(result, type)
       end
 
+      # Completes a manifest's flat config with sub-properties from the API config.
+      # When a manifest omits sub-properties of complex keys (e.g., disk without volume,
+      # net without MAC address), fills them from the current API config to prevent
+      # false diffs during update comparison.
+      #
+      # @param manifest_flat [Hash{Symbol => Object}] flat config from manifest
+      # @param api_flat [Hash{Symbol => Object}] flat config from API (round-tripped)
+      # @param type [Symbol] resource type (:vm or :container)
+      # @return [Hash{Symbol => Object}] manifest config with completed complex values
+      #
+      # @example
+      #   manifest = { scsi0: "local-lvm,iothread=1,size=9G" }
+      #   api      = { scsi0: "local-lvm:vm-100-disk-0,iothread=1,size=9G" }
+      #   ConfigSerializer.complete_from_api(manifest, api, type: :vm)
+      #   #=> { scsi0: "local-lvm:vm-100-disk-0,iothread=1,size=9G" }
+      def complete_from_api(manifest_flat, api_flat, type:)
+        manifest_flat.each_with_object({}) do |(key, value), result|
+          api_value = api_flat[key]
+          complex = find_complex_key(key, type)
+
+          if complex && value.is_a?(String) && api_value.is_a?(String)
+            parsed_api = send(complex[:parser], api_value)
+            parsed_manifest = send(complex[:parser], value)
+            merged = parsed_api.merge(parsed_manifest.compact)
+            result[key] = send(complex[:serializer], merged)
+          elsif api_value.is_a?(Integer) && value.is_a?(String) && value.match?(/\A\d+\z/)
+            result[key] = value.to_i
+          else
+            result[key] = value
+          end
+        end
+      end
+
       private
 
       # Returns the section mappings for the given resource type.

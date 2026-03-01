@@ -848,6 +848,166 @@ class PushConfigTest < Minitest::Test
     @vm_repo.verify
   end
 
+  # --- update: omitted values should not generate diffs ---
+
+  def test_prepare_update_ignores_api_only_keys
+    # Manifest specifies only cores; API also has memory and smbios1.
+    # Keys only in API should NOT appear in the diff.
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 8
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { cores: 4, memory: 2048, smbios1: "uuid=abc-123" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    assert plan[:diff][:changed].key?(:cores)
+    # memory and smbios1 are API-only — should not be in diff
+    refute plan[:diff][:removed].include?(:memory), "API-only memory should not appear as removed"
+    refute plan[:diff][:removed].include?(:smbios1), "API-only smbios1 should not appear as removed"
+    @vm_repo.verify
+  end
+
+  def test_prepare_update_completes_disk_from_api
+    # Manifest has disk without volume — should be completed from API, no false diff
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          disks:
+            scsi0:
+              storage: local-lvm
+              iothread: true
+              size: 9G
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { scsi0: "local-lvm:vm-100-disk-0,iothread=1,size=9G" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    # Volume filled from API → no diff
+    assert_empty result[:plans]
+    assert result[:no_changes]
+    @vm_repo.verify
+  end
+
+  def test_prepare_update_completes_net_from_api
+    # Manifest has net without mac — should be completed from API, no false diff
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          network:
+            net0:
+              model: virtio
+              bridge: vmbr0
+              firewall: true
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { net0: "virtio=BC:24:11:16:54:F1,bridge=vmbr0,firewall=1" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    assert_empty result[:plans]
+    assert result[:no_changes]
+    @vm_repo.verify
+  end
+
+  def test_prepare_update_filters_nil_manifest_values
+    # Manifest has smbios1: null — should be ignored, not treated as removal
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+        options:
+          smbios1:
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { cores: 4, smbios1: "uuid=abc-123" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    # nil smbios1 filtered + cores unchanged = no changes
+    assert_empty result[:plans]
+    assert result[:no_changes]
+    @vm_repo.verify
+  end
+
+  def test_prepare_update_detects_real_changes_with_completed_values
+    # Manifest changes bridge but omits MAC — should detect bridge change only
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        node: pve1
+      spec:
+        hardware:
+          network:
+            net0:
+              model: virtio
+              bridge: vmbr1
+              firewall: true
+    YAML
+
+    vm = Pvectl::Models::Vm.new(vmid: 100, name: "test", node: "pve1", status: "running")
+    current_config = { net0: "virtio=BC:24:11:16:54:F1,bridge=vmbr0,firewall=1" }
+
+    @vm_repo.expect :get, vm, [100]
+    @vm_repo.expect :fetch_config, current_config, ["pve1", 100]
+
+    result = @service.prepare(yaml)
+
+    plan = result[:plans].first
+    assert_equal :update, plan[:action]
+    assert plan[:diff][:changed].key?(:net0)
+    # New value should include MAC (filled from API) and new bridge
+    new_val = plan[:diff][:changed][:net0][1]
+    assert_includes new_val, "BC:24:11:16:54:F1"
+    assert_includes new_val, "bridge=vmbr1"
+    @vm_repo.verify
+  end
+
   # --- disk value transformation for create ---
 
   def test_prepare_create_transforms_disk_with_volume_name

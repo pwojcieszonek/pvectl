@@ -42,6 +42,8 @@ module Pvectl
 
     def self.from_nested: (Hash[Symbol, untyped] nested, type: Symbol) -> Hash[Symbol, untyped]
 
+    def self.complete_from_api: (Hash[Symbol, untyped] manifest_flat, Hash[Symbol, untyped] api_flat, type: Symbol) -> Hash[Symbol, untyped]
+
     private
 
     def self.sections_for: (Symbol type) -> Hash[Symbol, untyped]

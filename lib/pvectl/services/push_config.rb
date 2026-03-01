@@ -55,13 +55,22 @@ module Pvectl
             ConfigSerializer.to_nested(current_config, type: type), type: type
           )
 
-          # Collect all readonly keys from both sides and strip them.
-          # Pull output may include readonly keys (digest, vmid, template, etc.)
-          # which should be silently ignored by push. The API enforces readonly.
-          all_flat = original_flat.merge(flat_from_manifest)
-          readonly_keys = collect_readonly_keys(all_flat, type)
-          comparable_original = original_flat.reject { |k, _| readonly_keys.include?(k) }
+          # Filter nil/empty values from manifest (treated as "not specified").
+          # YAML null or empty strings mean the user didn't set the value.
+          flat_from_manifest = flat_from_manifest.reject { |_, v| v.nil? || (v.is_a?(String) && v.empty?) }
+
+          # Complete manifest's complex values with sub-properties from API.
+          # When a manifest omits sub-properties (volume, MAC, size) the API
+          # values fill them in, preventing false diffs from partial specs.
+          flat_from_manifest = ConfigSerializer.complete_from_api(flat_from_manifest, original_flat, type: type)
+
+          # Collect readonly keys and strip them from both sides.
+          readonly_keys = collect_readonly_keys(flat_from_manifest.merge(original_flat), type)
           comparable_manifest = flat_from_manifest.reject { |k, _| readonly_keys.include?(k) }
+
+          # Only compare API keys that are also present in manifest.
+          # Keys only in API are "not specified" and should not generate diffs.
+          comparable_original = original_flat.select { |k, _| comparable_manifest.key?(k) }
 
           diff = ConfigSerializer.diff(comparable_original, comparable_manifest)
 
