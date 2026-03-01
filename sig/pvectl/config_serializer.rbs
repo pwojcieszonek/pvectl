@@ -8,6 +8,8 @@ module Pvectl
 
     AGENT_DEFAULTS: Hash[Symbol, String]
 
+    VM_DEFAULTS: Hash[Symbol, String]
+
     VM_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
 
     CT_COMPLEX_KEYS: Hash[Symbol, Hash[Symbol, Regexp | Symbol]]
@@ -49,6 +51,8 @@ module Pvectl
     def self.strip_comments: (String yaml_string) -> String
 
     def self.wrapper_section?: (Hash[Symbol, untyped] section_def) -> bool
+
+    def self.inject_defaults: (Hash[Symbol, untyped] flat_config, Symbol type) -> Hash[Symbol, untyped]
 
     def self.render_leaf_section: (Array[String] lines, Symbol section_name, Hash[Symbol, Array[Symbol] | Array[Regexp]] section_def, Hash[Symbol, untyped] flat_config) -> void
 

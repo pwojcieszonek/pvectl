@@ -139,6 +139,13 @@ module Pvectl
       type: "virtio"
     }.freeze
 
+    # Default values for VM config keys that Proxmox API omits when using defaults.
+    # These are injected by to_nested to produce complete manifests.
+    # Values sourced from Proxmox API docs (nodes-qemu-config.json).
+    VM_DEFAULTS = {
+      hotplug: "network,disk,usb"
+    }.freeze
+
     # Complex key mappings for QEMU VMs.
     # Each entry maps a category to a regex pattern and parser/serializer method names.
     # Used by to_nested/from_nested for bidirectional conversion of Proxmox config strings.
@@ -352,18 +359,19 @@ module Pvectl
       #   #=> { hardware: { cpu: { cores: 4 }, network: { net0: { model: "virtio", mac: "AA:BB", bridge: "vmbr0" } } } }
       def to_nested(flat_config, type:)
         sections = sections_for(type)
+        config_with_defaults = inject_defaults(flat_config, type)
         result = {}
 
         sections.each do |section_name, section_def|
           if wrapper_section?(section_def)
             wrapper = {}
             section_def.each do |sub_name, sub_def|
-              sub_hash = build_nested_section(flat_config, sub_def, type)
+              sub_hash = build_nested_section(config_with_defaults, sub_def, type)
               wrapper[sub_name] = sub_hash unless sub_hash.empty?
             end
             result[section_name] = wrapper unless wrapper.empty?
           else
-            section_hash = build_nested_section(flat_config, section_def, type)
+            section_hash = build_nested_section(config_with_defaults, section_def, type)
             result[section_name] = section_hash unless section_hash.empty?
           end
         end
@@ -403,7 +411,7 @@ module Pvectl
           end
         end
 
-        result
+        inject_defaults(result, type)
       end
 
       private
@@ -526,6 +534,19 @@ module Pvectl
       # @return [Boolean] true if wrapper section
       def wrapper_section?(section_def)
         !section_def.key?(:static)
+      end
+
+      # Merges default values for keys that Proxmox API omits when using defaults.
+      # Explicit values from the API response take precedence.
+      #
+      # @param flat_config [Hash] flat config from API
+      # @param type [Symbol] :vm or :container
+      # @return [Hash] config with defaults injected
+      def inject_defaults(flat_config, type)
+        defaults = type == :vm ? VM_DEFAULTS : {}
+        return flat_config if defaults.empty?
+
+        defaults.merge(flat_config)
       end
 
       # Renders a leaf section (non-wrapper) into YAML output lines.

@@ -601,7 +601,9 @@ class ConfigSerializerTest < Minitest::Test
     refute result[:hardware].key?(:memory)
     refute result[:hardware].key?(:network)
     refute result.key?(:general)
-    refute result.key?(:options)
+    # options is present because VM_DEFAULTS injects hotplug
+    assert result.key?(:options)
+    assert_equal "network,disk,usb", result[:options][:hotplug]
   end
 
   # ── from_nested tests ───────────────────────────────────────
@@ -656,7 +658,8 @@ class ConfigSerializerTest < Minitest::Test
     nested = Pvectl::ConfigSerializer.to_nested(original, type: :vm)
     result = Pvectl::ConfigSerializer.from_nested(nested, type: :vm)
 
-    assert_equal original, result
+    # VM_DEFAULTS injects hotplug; both to_nested and from_nested inject defaults
+    assert_equal original.merge(hotplug: "network,disk,usb"), result
   end
 
   def test_from_nested_round_trip_container

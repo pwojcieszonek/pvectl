@@ -151,6 +151,46 @@ class ConfigSerializerValueParsingTest < Minitest::Test
     assert_equal "enabled=1", flat_back[:agent]
   end
 
+  # ── VM defaults injection tests ────────────────────────────
+
+  def test_to_nested_injects_hotplug_default
+    flat_config = { cores: 4 }
+    nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
+
+    assert_equal "network,disk,usb", nested[:options][:hotplug]
+  end
+
+  def test_to_nested_preserves_explicit_hotplug
+    flat_config = { cores: 4, hotplug: "0" }
+    nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :vm)
+
+    assert_equal "0", nested[:options][:hotplug]
+  end
+
+  def test_hotplug_default_round_trip_no_false_diff
+    # Simulate push flow: both sides go through to_nested/from_nested
+    api_config = { cores: 4 }
+    manifest_nested = Pvectl::ConfigSerializer.to_nested(api_config, type: :vm)
+    manifest_flat = Pvectl::ConfigSerializer.from_nested(manifest_nested, type: :vm)
+
+    original_nested = Pvectl::ConfigSerializer.to_nested(api_config, type: :vm)
+    original_flat = Pvectl::ConfigSerializer.from_nested(original_nested, type: :vm)
+
+    diff = Pvectl::ConfigSerializer.diff(original_flat, manifest_flat)
+
+    assert_empty diff[:changed]
+    assert_empty diff[:added]
+    assert_empty diff[:removed]
+  end
+
+  def test_to_nested_does_not_inject_defaults_for_container
+    flat_config = { cores: 4 }
+    nested = Pvectl::ConfigSerializer.to_nested(flat_config, type: :container)
+
+    # Container has no hotplug
+    refute nested.dig(:options, :hotplug)
+  end
+
   def test_kv_round_trip
     original = "enabled=1,fstrim_cloned_disks=1"
     parsed = parse_kv(original)
