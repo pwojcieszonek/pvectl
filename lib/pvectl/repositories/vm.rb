@@ -286,18 +286,15 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/migrate"].post(params)
       end
 
-      # Finds the next available VMID starting from a minimum value.
+      # Returns the next available VMID from the Proxmox cluster.
       #
-      # Scans existing VMs and returns the lowest unused VMID at or above the
-      # specified minimum.
+      # Uses the +/cluster/nextid+ API endpoint which performs server-side allocation.
+      # This is more reliable than client-side scanning because it detects stale
+      # config files that don't appear in +/cluster/resources+.
       #
-      # @param min [Integer] minimum VMID to consider (default: 100)
       # @return [Integer] next available VMID
-      def next_available_vmid(min: 100)
-        used_ids = list.map(&:vmid).to_set
-        vmid = min
-        vmid += 1 while used_ids.include?(vmid)
-        vmid
+      def next_available_vmid
+        connection.client["cluster/nextid"].get.to_i
       end
 
       protected

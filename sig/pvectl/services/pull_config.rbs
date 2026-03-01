@@ -1,0 +1,18 @@
+module Pvectl
+  module Services
+    class PullConfig
+      @vm_repository: untyped
+      @container_repository: untyped
+
+      def initialize: (vm_repository: untyped, container_repository: untyped) -> void
+      def execute: (type: Symbol, ?ids: Array[Integer], ?all: bool, ?node: String?, ?selector: untyped?) -> Hash[Symbol, untyped]
+
+      private
+
+      def repository_for: (Symbol type) -> untyped
+      def pull_single: (untyped repo, untyped resource, Symbol type) -> Hash[Symbol, untyped]
+      def build_metadata: (untyped resource, Symbol type) -> Hash[Symbol, untyped]
+      def type_label: (Symbol type) -> String
+    end
+  end
+end

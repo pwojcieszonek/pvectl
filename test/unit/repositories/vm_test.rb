@@ -733,40 +733,16 @@ class RepositoriesVmTest < Minitest::Test
   # next_available_vmid() Method
   # ---------------------------
 
-  def test_next_available_vmid_returns_min_when_no_vms_exist
-    repo = create_repo_with_mock_response([])
+  def test_next_available_vmid_returns_server_allocated_id
+    repo = create_repo_with_mock_response(500)
 
-    assert_equal 100, repo.next_available_vmid
+    assert_equal 500, repo.next_available_vmid
   end
 
-  def test_next_available_vmid_returns_next_after_existing
-    vms = [
-      { vmid: 100, name: "vm1", status: "running", node: "pve1", type: "qemu" },
-      { vmid: 101, name: "vm2", status: "running", node: "pve1", type: "qemu" }
-    ]
-    repo = create_repo_with_mock_response(vms)
+  def test_next_available_vmid_handles_string_response
+    repo = create_repo_with_mock_response("123")
 
-    assert_equal 102, repo.next_available_vmid
-  end
-
-  def test_next_available_vmid_skips_used_ids
-    vms = [
-      { vmid: 100, name: "vm1", status: "running", node: "pve1", type: "qemu" },
-      { vmid: 102, name: "vm3", status: "running", node: "pve1", type: "qemu" }
-    ]
-    repo = create_repo_with_mock_response(vms)
-
-    assert_equal 101, repo.next_available_vmid
-  end
-
-  def test_next_available_vmid_respects_min_parameter
-    vms = [
-      { vmid: 100, name: "vm1", status: "running", node: "pve1", type: "qemu" },
-      { vmid: 200, name: "vm2", status: "running", node: "pve1", type: "qemu" }
-    ]
-    repo = create_repo_with_mock_response(vms)
-
-    assert_equal 201, repo.next_available_vmid(min: 200)
+    assert_equal 123, repo.next_available_vmid
   end
 
   private

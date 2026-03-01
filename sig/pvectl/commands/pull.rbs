@@ -1,0 +1,33 @@
+module Pvectl
+  module Commands
+    class Pull
+      RESOURCE_TYPES: Hash[String, Symbol]
+      FILE_PREFIXES: Hash[Symbol, String]
+
+      @args: Array[String]
+      @options: Hash[Symbol, untyped]
+      @global_options: Hash[Symbol, untyped]
+      @config: untyped
+
+      def self.register: (untyped cli) -> void
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+
+      def build_service: (untyped connection) -> Services::PullConfig
+      def build_selector: (Symbol type) -> untyped
+      def write_output: (Array[Hash[Symbol, untyped]] manifests, Symbol type, String? output) -> void
+      def build_file_operations: (Array[Hash[Symbol, untyped]] manifests, Symbol type, String output) -> Array[Hash[Symbol, untyped]]
+      def build_operation: (Hash[Symbol, untyped] manifest, String path, Symbol type) -> Hash[Symbol, untyped]
+      def compute_manifest_diff: (String old_yaml, String new_yaml, Symbol type) -> Hash[Symbol, untyped]?
+      def display_pull_plan: (Array[Hash[Symbol, untyped]] operations, Symbol type) -> void
+      def diff_has_changes?: (Hash[Symbol, untyped] diff) -> bool
+      def apply_file_operations: (Array[Hash[Symbol, untyped]] operations) -> void
+      def infer_ids_from_directory: (String directory, Symbol type) -> Array[Integer]
+      def directory_output?: (String path) -> bool
+      def load_config: () -> void
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

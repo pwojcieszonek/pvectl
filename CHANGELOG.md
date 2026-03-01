@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl pull` command — export VM/container configuration as kubectl-like YAML manifests (single, multiple, `--all`, selectors) with diff preview, `--yes`, `--dry-run` for file output
+- **commands**: `pvectl push` command — apply YAML manifests to cluster (create or update resources) with diff preview, `-f`/`--file`, stdin pipe support, auto-VMID allocation, `--yes`, `--dry-run`, post-apply manifest refresh
+- **manifest-serializer**: kubectl-like manifest format with `apiVersion`/`kind`/`metadata`/`spec` envelope
+- **config-serializer**: `to_nested`/`from_nested` methods for structured config with parsed complex values
+- **config-serializer**: bidirectional value parsing for complex Proxmox config strings (network, disk, boot, agent, startup, ipconfig)
 - **commands**: `pvectl set` command for non-interactive resource configuration (vm, container, volume, node) with key=value syntax
 - **commands**: `pvectl edit volume` for interactive volume property editing via YAML editor
 - **commands**: `pvectl edit node` for interactive node configuration editing via YAML editor
@@ -19,12 +24,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **repositories**: `Disk#smart` method for SMART data retrieval from Proxmox API (`GET /nodes/{node}/disks/smart`)
 
 ### Changed
+- **config-serializer**: section layout restructured to match Proxmox UI tabs (hardware/options/cloud-init for VM, resources/network/dns for CT)
+- **edit**: output format updated to reflect new section layout (hardware wrapper, options section)
 - **describe vm**: reorganize output to match PVE web UI tabs (Summary, Hardware, Cloud-Init, Options, Task History, Snapshots, Pending Changes) with previously hidden config keys (ACPI, KVM, Tablet, Freeze CPU, Local Time, NUMA) now visible in Options section
 - **describe container**: reorganize output to match PVE web UI tabs (Summary, Resources, Network, DNS, Options, Task History, Snapshots, High Availability) with all options visible
 - **describe**: add Task History section showing recent operations for VM and container resources
 - **get**: `storages` is now the primary resource name (consistent with `vms`, `nodes`, etc.); `storage` and `stor` remain as aliases
 
 ### Fixed
+- **push**: transform disk values to Proxmox create API format (`STORAGE_ID:SIZE_IN_GiB`) — strip volume names, handle cloud-init, EFI/TPM, and empty CD-ROM
+- **push**: normalize cloud-init volume names symmetrically in both directions (API→manifest and manifest→flat), preventing false diffs and invalid create params
+- **push**: complete manifest values from API before update diff — fill missing sub-properties (volume names, MAC addresses, cloudinit size) and restrict diff to manifest-only keys, preventing false diffs for default/omitted values
+- **push**: coerce numeric strings from YAML manifests to integers for consistent comparison with API values (e.g., `memory: '2048'` vs `2048`)
+- **push**: filter nil/empty values from create params and extract detailed error info from Proxmox API responses
+- **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
+- **push**: refresh unchanged manifest files with server-assigned values (MAC addresses, volume names, UUIDs) even when no config changes need to be applied
+- **push**: track async task completion for resize and create operations — report actual success/failure instead of fire-and-forget
+- **repositories**: use server-side `/cluster/nextid` API for VMID/CTID allocation instead of client-side scanning (fixes stale config file conflicts)
+- **pull**: rename `-o` flag to `-f`/`--file` to avoid conflict with global `-o`/`--output` format flag
 - **presenters**: rename misleading "Wearout" label to "Life Remaining" in describe disk output (Proxmox reports remaining life, not wear percentage)
 - **presenters**: remove "Mounted" field from describe disk output (mount status applies to partitions, not whole disks)
 

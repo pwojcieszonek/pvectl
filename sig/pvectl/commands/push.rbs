@@ -1,0 +1,32 @@
+module Pvectl
+  module Commands
+    class Push
+      RESOURCE_TYPES: Hash[String, Symbol]
+
+      @args: Array[String]
+      @options: Hash[Symbol, untyped]
+      @global_options: Hash[Symbol, untyped]
+      @config: untyped
+      @stdin_mode: bool
+
+      def self.register: (untyped cli) -> void
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+
+      def read_input: () -> Array[Hash[Symbol, untyped]]
+      def read_stdin: () -> Array[Hash[Symbol, untyped]]
+      def parse_resource_type: (Array[String] args) -> Symbol?
+      def collect_yaml_contents: (Array[String] paths) -> Array[Hash[Symbol, untyped]]
+      def display_plans: (Array[Hash[Symbol, untyped]] plans) -> void
+      def refresh_manifests: (Array[Hash[Symbol, untyped]] results, Array[Hash[Symbol, untyped]] plans, Services::PullConfig pull_service) -> void
+      def refresh_unchanged_manifests: (Array[Hash[Symbol, untyped]] unchanged, Services::PullConfig pull_service) -> void
+      def refresh_manifest_file: (String path, Symbol type, Integer vmid, Services::PullConfig pull_service) -> void
+      def type_label_for: (Hash[Symbol, untyped] result) -> String
+      def build_services: (untyped connection) -> [Services::PushConfig, Services::PullConfig]
+      def load_config: () -> void
+      def usage_error: (String message) -> Integer
+    end
+  end
+end

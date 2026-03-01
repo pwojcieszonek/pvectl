@@ -39,7 +39,7 @@ module Pvectl
 
       def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String
 
-      def next_available_vmid: (?min: Integer) -> Integer
+      def next_available_vmid: () -> Integer
 
       private
 
