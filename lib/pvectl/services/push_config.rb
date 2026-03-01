@@ -10,11 +10,15 @@ module Pvectl
     #   result = service.prepare(yaml_string)
     #   service.apply(result[:plans]) unless result[:plans].empty?
     class PushConfig
+      DEFAULT_TASK_TIMEOUT = 120
+
       # @param vm_repository [Repositories::Vm] VM repository
       # @param container_repository [Repositories::Container] container repository
-      def initialize(vm_repository:, container_repository:)
+      # @param task_repository [Repositories::Task, nil] task repository for tracking async operations
+      def initialize(vm_repository:, container_repository:, task_repository: nil)
         @vm_repository = vm_repository
         @container_repository = container_repository
+        @task_repository = task_repository
       end
 
       # Prepares a push plan from a single YAML manifest string.
@@ -132,6 +136,7 @@ module Pvectl
       end
 
       # Applies prepared plans (executes API calls).
+      # Tracks async task completion for resize and create operations.
       #
       # @param plans [Array<Hash>] plans from prepare/prepare_batch
       # @return [Hash] { results: Array<Hash>, errors: Array<String> }
@@ -148,14 +153,28 @@ module Pvectl
               unless config_params.empty?
                 repo.update(plan[:vmid], plan[:node], plan[:params])
               end
-              apply_resize_ops(repo, plan)
-              results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: true }
+
+              resize_errors = apply_resize_ops(repo, plan)
+              if resize_errors.any?
+                resize_errors.each { |e| errors << "Error resizing #{type_label(plan[:type])} #{plan[:vmid]}: #{e}" }
+                results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: false, error: resize_errors.join("; ") }
+              else
+                results << { action: :update, vmid: plan[:vmid], type: plan[:type], success: true }
+              end
             elsif plan[:action] == :create
-              repo.create(plan[:node], plan[:vmid], plan[:params])
-              results << {
-                action: :create, vmid: plan[:vmid], type: plan[:type], success: true,
-                auto_id: plan[:auto_id], source_path: plan[:source_path]
-              }
+              upid = repo.create(plan[:node], plan[:vmid], plan[:params])
+              task = wait_for_task(upid)
+
+              if task&.failed?
+                error_msg = task.exitstatus
+                errors << "Error creating #{type_label(plan[:type])} #{plan[:vmid]}: #{error_msg}"
+                results << { action: :create, vmid: plan[:vmid], type: plan[:type], success: false, error: error_msg }
+              else
+                results << {
+                  action: :create, vmid: plan[:vmid], type: plan[:type], success: true,
+                  auto_id: plan[:auto_id], source_path: plan[:source_path]
+                }
+              end
             end
           rescue StandardError => e
             errors << "Error applying #{plan[:action]} for #{type_label(plan[:type])} #{plan[:vmid]}: #{e.message}"
@@ -262,16 +281,35 @@ module Pvectl
       end
 
       # Applies disk resize operations from a plan.
+      # Waits for each resize task to complete and returns errors.
       #
       # @param repo [Repositories::Vm, Repositories::Container] repository
       # @param plan [Hash] update plan with optional :resize_ops
-      # @return [void]
+      # @return [Array<String>] list of error messages (empty if all succeeded)
       def apply_resize_ops(repo, plan)
-        return unless plan[:resize_ops]&.any?
+        errors = []
+        return errors unless plan[:resize_ops]&.any?
 
         plan[:resize_ops].each do |op|
-          repo.resize(plan[:vmid], plan[:node], disk: op[:disk], size: op[:size])
+          upid = repo.resize(plan[:vmid], plan[:node], disk: op[:disk], size: op[:size])
+          task = wait_for_task(upid)
+          if task&.failed?
+            errors << "#{op[:disk]}: #{task.exitstatus}"
+          end
         end
+
+        errors
+      end
+
+      # Waits for an async Proxmox task to complete.
+      # Returns nil when task_repository is not configured (fire-and-forget mode).
+      #
+      # @param upid [String, nil] task UPID
+      # @return [Models::Task, nil] completed task or nil
+      def wait_for_task(upid)
+        return nil unless @task_repository && upid
+
+        @task_repository.wait(upid, timeout: DEFAULT_TASK_TIMEOUT)
       end
 
       # Checks if a key is a VM disk key (scsi, ide, virtio, sata, efidisk, tpmstate).

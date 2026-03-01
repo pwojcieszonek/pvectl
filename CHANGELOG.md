@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **push**: detect disk size changes and use Proxmox resize API instead of config PUT (which only updates metadata without actually resizing the disk)
+- **push**: track async task completion for resize and create operations — report actual success/failure instead of fire-and-forget
 - **repositories**: use server-side `/cluster/nextid` API for VMID/CTID allocation instead of client-side scanning (fixes stale config file conflicts)
 - **pull**: rename `-o` flag to `-f`/`--file` to avoid conflict with global `-o`/`--output` format flag
 - **presenters**: rename misleading "Wearout" label to "Life Remaining" in describe disk output (Proxmox reports remaining life, not wear percentage)

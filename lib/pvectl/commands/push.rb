@@ -272,9 +272,11 @@ module Pvectl
       def build_service(connection)
         vm_repo = Pvectl::Repositories::Vm.new(connection)
         ct_repo = Pvectl::Repositories::Container.new(connection)
+        task_repo = Pvectl::Repositories::Task.new(connection)
         Pvectl::Services::PushConfig.new(
           vm_repository: vm_repo,
-          container_repository: ct_repo
+          container_repository: ct_repo,
+          task_repository: task_repo
         )
       end
 

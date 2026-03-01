@@ -1,10 +1,13 @@
 module Pvectl
   module Services
     class PushConfig
+      DEFAULT_TASK_TIMEOUT: Integer
+
       @vm_repository: untyped
       @container_repository: untyped
+      @task_repository: untyped
 
-      def initialize: (vm_repository: untyped, container_repository: untyped) -> void
+      def initialize: (vm_repository: untyped, container_repository: untyped, ?task_repository: untyped) -> void
       def prepare: (String yaml_string) -> Hash[Symbol, untyped]
       def prepare_batch: (Array[Hash[Symbol, untyped]] yaml_contents, ?filter_type: Symbol?) -> Hash[Symbol, untyped]
       def apply: (Array[Hash[Symbol, untyped]] plans) -> Hash[Symbol, untyped]
@@ -15,7 +18,8 @@ module Pvectl
       def allocate_vmid: (untyped repo, Symbol type) -> Integer
       def repository_for: (Symbol type) -> untyped
       def build_update_params: (Hash[Symbol, untyped] diff, Hash[Symbol, untyped] original_config, Symbol type) -> Hash[Symbol, untyped]
-      def apply_resize_ops: (untyped repo, Hash[Symbol, untyped] plan) -> void
+      def apply_resize_ops: (untyped repo, Hash[Symbol, untyped] plan) -> Array[String]
+      def wait_for_task: (untyped upid) -> untyped
       def vm_disk_key?: (Symbol | String key) -> bool
       def extract_disk_size: (String disk_value) -> String?
       def disk_value_without_size: (String value) -> String

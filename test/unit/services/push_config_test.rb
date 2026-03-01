@@ -722,4 +722,129 @@ class PushConfigTest < Minitest::Test
     assert plan[:params].key?(:scsi0)
     @vm_repo.verify
   end
+
+  # --- async task tracking ---
+
+  def test_apply_resize_reports_failure_when_task_fails
+    task_repo = Object.new
+    failed_task = Pvectl::Models::Task.new(
+      upid: "UPID:pve1:000:00:00:qmresize:100:root@pam:",
+      node: "pve1", type: "qmresize", status: "stopped",
+      exitstatus: "can't lock file - got timeout",
+      starttime: Time.now.to_i, user: "root@pam"
+    )
+    task_repo.define_singleton_method(:wait) { |_upid, **_kwargs| failed_task }
+
+    service = Pvectl::Services::PushConfig.new(
+      vm_repository: @vm_repo,
+      container_repository: @ct_repo,
+      task_repository: task_repo
+    )
+
+    plan = {
+      action: :update,
+      type: :vm,
+      vmid: 100,
+      node: "pve1",
+      params: { digest: "abc123" },
+      resize_ops: [{ disk: "scsi0", size: "9G" }]
+    }
+
+    @vm_repo.expect :resize, "UPID:pve1:000:00:00:qmresize:100:root@pam:", [100, "pve1"], disk: "scsi0", size: "9G"
+
+    result = service.apply([plan])
+
+    refute result[:results].first[:success]
+    assert_equal 1, result[:errors].length
+    assert result[:errors].first.include?("lock file")
+    @vm_repo.verify
+  end
+
+  def test_apply_resize_reports_success_when_task_succeeds
+    task_repo = Object.new
+    ok_task = Pvectl::Models::Task.new(
+      upid: "UPID:pve1:000:00:00:qmresize:100:root@pam:",
+      node: "pve1", type: "qmresize", status: "stopped",
+      exitstatus: "OK",
+      starttime: Time.now.to_i, user: "root@pam"
+    )
+    task_repo.define_singleton_method(:wait) { |_upid, **_kwargs| ok_task }
+
+    service = Pvectl::Services::PushConfig.new(
+      vm_repository: @vm_repo,
+      container_repository: @ct_repo,
+      task_repository: task_repo
+    )
+
+    plan = {
+      action: :update,
+      type: :vm,
+      vmid: 100,
+      node: "pve1",
+      params: { digest: "abc123" },
+      resize_ops: [{ disk: "scsi0", size: "9G" }]
+    }
+
+    @vm_repo.expect :resize, "UPID:pve1:000:00:00:qmresize:100:root@pam:", [100, "pve1"], disk: "scsi0", size: "9G"
+
+    result = service.apply([plan])
+
+    assert result[:results].first[:success]
+    assert_empty result[:errors]
+    @vm_repo.verify
+  end
+
+  def test_apply_create_reports_failure_when_task_fails
+    task_repo = Object.new
+    failed_task = Pvectl::Models::Task.new(
+      upid: "UPID:pve2:000:00:00:qmcreate:999:root@pam:",
+      node: "pve2", type: "qmcreate", status: "stopped",
+      exitstatus: "No space left on device",
+      starttime: Time.now.to_i, user: "root@pam"
+    )
+    task_repo.define_singleton_method(:wait) { |_upid, **_kwargs| failed_task }
+
+    service = Pvectl::Services::PushConfig.new(
+      vm_repository: @vm_repo,
+      container_repository: @ct_repo,
+      task_repository: task_repo
+    )
+
+    plan = {
+      action: :create,
+      type: :vm,
+      vmid: 999,
+      node: "pve1",
+      params: { cores: 4 }
+    }
+
+    @vm_repo.expect :create, "UPID:pve2:000:00:00:qmcreate:999:root@pam:", ["pve1", 999, { cores: 4 }]
+
+    result = service.apply([plan])
+
+    refute result[:results].first[:success]
+    assert_equal 1, result[:errors].length
+    assert result[:errors].first.include?("No space left")
+    @vm_repo.verify
+  end
+
+  def test_apply_without_task_repo_still_reports_success
+    # Backward compatibility: when task_repository is nil, fire-and-forget
+    plan = {
+      action: :update,
+      type: :vm,
+      vmid: 100,
+      node: "pve1",
+      params: { digest: "abc123" },
+      resize_ops: [{ disk: "scsi0", size: "9G" }]
+    }
+
+    @vm_repo.expect :resize, "UPID:pve1:000:resize:100", [100, "pve1"], disk: "scsi0", size: "9G"
+
+    result = @service.apply([plan])
+
+    # Without task_repo, we can't verify — reports success (fire-and-forget)
+    assert result[:results].first[:success]
+    @vm_repo.verify
+  end
 end
