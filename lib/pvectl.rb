@@ -350,6 +350,9 @@ require_relative "pvectl/commands/console"
 # Commands - Pull
 require_relative "pvectl/commands/pull"
 
+# Commands - Push
+require_relative "pvectl/commands/push"
+
 # Wizards
 require_relative "pvectl/wizards/create_vm"
 require_relative "pvectl/wizards/create_container"

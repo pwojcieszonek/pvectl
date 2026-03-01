@@ -1,0 +1,26 @@
+module Pvectl
+  module Commands
+    class Push
+      RESOURCE_TYPES: Hash[String, Symbol]
+
+      @args: Array[String]
+      @options: Hash[Symbol, untyped]
+      @global_options: Hash[Symbol, untyped]
+      @config: untyped
+
+      def self.register: (untyped cli) -> void
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+      def execute: () -> Integer
+
+      private
+
+      def parse_resource_type: (Array[String] args) -> Symbol?
+      def collect_yaml_contents: (Array[String] paths) -> Array[Hash[Symbol, untyped]]
+      def display_plans: (Array[Hash[Symbol, untyped]] plans) -> void
+      def type_label_for: (Hash[Symbol, untyped] result) -> String
+      def build_service: (untyped connection) -> Services::PushConfig
+      def load_config: () -> void
+      def usage_error: (String message) -> Integer
+    end
+  end
+end
