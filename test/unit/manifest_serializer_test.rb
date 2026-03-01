@@ -40,4 +40,116 @@ class ManifestSerializerTest < Minitest::Test
 
     assert_equal "prod;critical", parsed.dig("metadata", "tags")
   end
+
+  # ── from_yaml tests ─────────────────────────────────────────────
+
+  def test_from_yaml_extracts_metadata_and_spec
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        name: web
+        node: pve1
+        status: running
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+          memory:
+            memory: 8192
+    YAML
+
+    result = Pvectl::ManifestSerializer.from_yaml(yaml)
+
+    assert_equal :vm, result[:type]
+    assert_equal 100, result[:metadata][:vmid]
+    assert_equal "web", result[:metadata][:name]
+    assert_equal "pve1", result[:metadata][:node]
+    assert_equal "running", result[:metadata][:status]
+    assert_equal 4, result[:spec].dig(:hardware, :cpu, :cores)
+    assert_equal 8192, result[:spec].dig(:hardware, :memory, :memory)
+  end
+
+  def test_from_yaml_container
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: Container
+      metadata:
+        vmid: 200
+        name: ct-web
+        node: pve1
+        status: running
+      spec:
+        resources:
+          cpu:
+            cores: 2
+    YAML
+
+    result = Pvectl::ManifestSerializer.from_yaml(yaml)
+
+    assert_equal :container, result[:type]
+    assert_equal 200, result[:metadata][:vmid]
+  end
+
+  # ── validate tests ──────────────────────────────────────────────
+
+  def test_validate_accepts_valid_manifest
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+        name: web
+      spec:
+        hardware:
+          cpu:
+            cores: 4
+    YAML
+
+    errors = Pvectl::ManifestSerializer.validate(yaml)
+
+    assert_empty errors
+  end
+
+  def test_validate_rejects_missing_api_version
+    yaml = <<~YAML
+      kind: VirtualMachine
+      metadata:
+        vmid: 100
+      spec: {}
+    YAML
+
+    errors = Pvectl::ManifestSerializer.validate(yaml)
+
+    assert errors.any? { |e| e.include?("apiVersion") }
+  end
+
+  def test_validate_rejects_unknown_kind
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: Firewall
+      metadata:
+        vmid: 100
+      spec: {}
+    YAML
+
+    errors = Pvectl::ManifestSerializer.validate(yaml)
+
+    assert errors.any? { |e| e.include?("kind") }
+  end
+
+  def test_validate_rejects_missing_vmid
+    yaml = <<~YAML
+      apiVersion: pvectl/v1
+      kind: VirtualMachine
+      metadata:
+        name: web
+      spec: {}
+    YAML
+
+    errors = Pvectl::ManifestSerializer.validate(yaml)
+
+    assert errors.any? { |e| e.include?("vmid") }
+  end
 end

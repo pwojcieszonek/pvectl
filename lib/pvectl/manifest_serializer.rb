@@ -34,6 +34,55 @@ module Pvectl
         YAML.dump(manifest)
       end
 
+      # Parses a YAML manifest string into type, metadata, and spec.
+      #
+      # @param yaml_string [String] YAML manifest
+      # @return [Hash] { type: Symbol, metadata: Hash, spec: Hash }
+      def from_yaml(yaml_string)
+        parsed = YAML.safe_load(yaml_string)
+        type = KINDS_REVERSE[parsed["kind"]]
+
+        {
+          type: type,
+          metadata: symbolize_metadata(parsed["metadata"] || {}),
+          spec: symbolize_keys_deep(parsed["spec"] || {})
+        }
+      end
+
+      # Validates manifest structure (envelope only, not spec content).
+      #
+      # @param yaml_string [String] YAML manifest
+      # @return [Array<String>] error messages (empty if valid)
+      def validate(yaml_string)
+        errors = []
+
+        begin
+          parsed = YAML.safe_load(yaml_string)
+        rescue Psych::SyntaxError => e
+          return ["YAML syntax error: #{e.message}"]
+        end
+
+        unless parsed.is_a?(Hash)
+          return ["Invalid manifest: expected a YAML mapping"]
+        end
+
+        errors << "Missing required field 'apiVersion'" unless parsed["apiVersion"]
+        errors << "Missing required field 'kind'" unless parsed["kind"]
+
+        if parsed["kind"] && !KINDS_REVERSE.key?(parsed["kind"])
+          errors << "Unknown kind '#{parsed["kind"]}'. Valid: #{KINDS.values.join(', ')}"
+        end
+
+        metadata = parsed["metadata"]
+        if metadata.nil? || !metadata.is_a?(Hash)
+          errors << "Missing required field 'metadata'"
+        elsif !metadata.key?("vmid")
+          errors << "Missing required field 'metadata.vmid'"
+        end
+
+        errors
+      end
+
       private
 
       # Builds string-keyed metadata hash from symbol-keyed input.
@@ -57,6 +106,30 @@ module Pvectl
       def stringify_keys_deep(hash)
         hash.transform_keys(&:to_s).transform_values do |v|
           v.is_a?(Hash) ? stringify_keys_deep(v) : v
+        end
+      end
+
+      # Converts string-keyed metadata to symbol-keyed hash.
+      #
+      # @param hash [Hash] string-keyed metadata from YAML
+      # @return [Hash] symbol-keyed metadata
+      def symbolize_metadata(hash)
+        result = {}
+        result[:vmid] = hash["vmid"] if hash["vmid"]
+        result[:name] = hash["name"] if hash["name"]
+        result[:node] = hash["node"] if hash["node"]
+        result[:status] = hash["status"] if hash["status"]
+        result[:tags] = hash["tags"] if hash["tags"]
+        result
+      end
+
+      # Recursively converts string keys to symbol keys.
+      #
+      # @param hash [Hash] string-keyed hash from YAML
+      # @return [Hash] symbol-keyed hash
+      def symbolize_keys_deep(hash)
+        hash.to_h do |k, v|
+          [k.to_sym, v.is_a?(Hash) ? symbolize_keys_deep(v) : v]
         end
       end
     end

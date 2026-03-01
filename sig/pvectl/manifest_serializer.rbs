@@ -1,0 +1,18 @@
+module Pvectl
+  module ManifestSerializer
+    API_VERSION: String
+    KINDS: Hash[Symbol, String]
+    KINDS_REVERSE: Hash[String, Symbol]
+
+    def self.to_yaml: (Hash[Symbol, untyped] nested_config, type: Symbol, metadata: Hash[Symbol, untyped]) -> String
+    def self.from_yaml: (String yaml_string) -> Hash[Symbol, untyped]
+    def self.validate: (String yaml_string) -> Array[String]
+
+    private
+
+    def self.build_metadata: (Hash[Symbol, untyped] metadata) -> Hash[String, untyped]
+    def self.stringify_keys_deep: (Hash[Symbol, untyped] hash) -> Hash[String, untyped]
+    def self.symbolize_metadata: (Hash[String, untyped] hash) -> Hash[Symbol, untyped]
+    def self.symbolize_keys_deep: (Hash[String, untyped] hash) -> Hash[Symbol, untyped]
+  end
+end
