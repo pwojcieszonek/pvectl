@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pvectl (0.1.0)
+    pvectl (0.2.0)
       gli (~> 2.22)
       pastel (~> 0.8)
       proxmox-api (~> 1.1)
