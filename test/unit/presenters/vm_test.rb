@@ -574,6 +574,74 @@ class PresentersVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # Block Device Statistics Section
+  # ---------------------------
+
+  def test_to_description_blockstat_renders_table_for_running_vm
+    data = base_describe_data.tap do |d|
+      d[:status][:blockstat] = {
+        scsi0: { rd_bytes: 1_610_612_736, wr_bytes: 268_435_456,
+                 rd_operations: 12_345, wr_operations: 6789 },
+        ide2: { rd_bytes: 0, wr_bytes: 0, rd_operations: 0, wr_operations: 0 }
+      }
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    table = desc["Block Device Statistics"]
+    assert_kind_of Array, table
+    assert_equal 2, table.size
+
+    scsi0 = table.find { |row| row["DEVICE"] == "scsi0" }
+    refute_nil scsi0
+    assert_equal %w[DEVICE READ WRITTEN READ_IOPS WRITE_IOPS], scsi0.keys
+    assert_includes scsi0["READ"], "GiB"
+    assert_includes scsi0["WRITTEN"], "MiB"
+    assert_equal "12345", scsi0["READ_IOPS"]
+    assert_equal "6789", scsi0["WRITE_IOPS"]
+
+    ide2 = table.find { |row| row["DEVICE"] == "ide2" }
+    refute_nil ide2
+    assert_equal "-", ide2["READ"]
+    assert_equal "-", ide2["WRITTEN"]
+    assert_equal "0", ide2["READ_IOPS"]
+    assert_equal "0", ide2["WRITE_IOPS"]
+  end
+
+  def test_to_description_blockstat_omitted_when_absent
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Block Device Statistics"]
+  end
+
+  def test_to_description_blockstat_omitted_when_empty
+    data = base_describe_data.tap { |d| d[:status][:blockstat] = {} }
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Block Device Statistics"]
+  end
+
+  def test_to_description_blockstat_consumed_from_status
+    # blockstat lives in status, not config — verify Additional Configuration
+    # catch-all does not pick it up (it never would, but assert the key is
+    # not leaked into config-level output).
+    data = base_describe_data.tap do |d|
+      d[:status][:blockstat] = { scsi0: { rd_bytes: 1, wr_bytes: 1,
+                                          rd_operations: 1, wr_operations: 1 } }
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      refute(additional.any? { |row| row["KEY"] == "blockstat" })
+    end
+  end
+
+  # ---------------------------
   # Hardware Section
   # ---------------------------
 

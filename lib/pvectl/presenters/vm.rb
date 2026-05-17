@@ -146,6 +146,7 @@ module Pvectl
           "Tags" => tags_display,
           "Description" => config[:description] || "-",
           "Summary" => format_summary(config, status),
+          "Block Device Statistics" => format_blockstat(status),
           "Hardware" => format_hardware(config, data),
           "Cloud-Init" => format_cloud_init(config),
           "Options" => format_options(config),
@@ -304,6 +305,30 @@ module Pvectl
           end
         end
         vm.maxdisk ? format_bytes(vm.maxdisk) : "-"
+      end
+
+      # Formats Block Device Statistics section.
+      #
+      # Renders per-disk I/O statistics from the running VM's status payload.
+      # Available only for running VMs — Proxmox populates +blockstat+ as
+      # part of +/status/current+ when the QEMU process is alive.
+      #
+      # @param status [Hash] VM status payload from /status/current
+      # @return [Array<Hash>, String] per-device I/O table or "-" when absent
+      def format_blockstat(status)
+        blockstat = status[:blockstat]
+        return "-" if blockstat.nil? || blockstat.empty?
+
+        blockstat.sort_by { |name, _| name.to_s }.map do |name, stats|
+          stats ||= {}
+          {
+            "DEVICE" => name.to_s,
+            "READ" => format_bytes(stats[:rd_bytes]),
+            "WRITTEN" => format_bytes(stats[:wr_bytes]),
+            "READ_IOPS" => (stats[:rd_operations] || 0).to_s,
+            "WRITE_IOPS" => (stats[:wr_operations] || 0).to_s
+          }
+        end
       end
 
       # Formats Hardware section (PVE Hardware tab).
