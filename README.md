@@ -81,6 +81,7 @@ pvectl top nodes                  # Resource usage
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
+| `sendkey` | Send a QEMU monitor key event to a VM (e.g., `ctrl-alt-delete`) |
 | `ping` | Check cluster connectivity |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 
