@@ -217,6 +217,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Sendkey
+require_relative "pvectl/services/sendkey"
+
 # Services - Set Volume
 require_relative "pvectl/services/set_volume"
 
