@@ -350,6 +350,9 @@ require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"
 require_relative "pvectl/commands/console"
 
+# Sendkey
+require_relative "pvectl/commands/sendkey_vm"
+
 # Commands - Pull
 require_relative "pvectl/commands/pull"
 
