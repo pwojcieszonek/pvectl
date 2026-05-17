@@ -722,6 +722,60 @@ class RepositoriesVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # sendkey() Method
+  # ---------------------------
+
+  def test_sendkey_puts_to_correct_endpoint
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ key: "ctrl-alt-delete" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/sendkey"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.sendkey(100, "pve1", "ctrl-alt-delete")
+
+    assert_nil result
+    mock_resource.verify
+    mock_client.verify
+  end
+
+  def test_sendkey_passes_key_param_verbatim
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ key: "ret" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve2/qemu/200/sendkey"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.sendkey(200, "pve2", "ret")
+
+    mock_resource.verify
+  end
+
+  def test_sendkey_supports_composite_keys
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ key: "ctrl-alt-f1" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/sendkey"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.sendkey(100, "pve1", "ctrl-alt-f1")
+
+    mock_resource.verify
+  end
+
+  # ---------------------------
   # fetch_config() Public Access
   # ---------------------------
 
