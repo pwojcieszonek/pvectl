@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl move disk vm/ct` — migrate disk/volume between storages on same node (`--target STORAGE`, `--format` for VMs, `--delete-source`, `--bandwidth`, `--wait`, `--timeout`, `-y`)
+- **repositories**: `Vm#move_disk` and `Container#move_volume` wrapping Proxmox `move_disk`/`move_volume` endpoints
+- **services**: `Services::MoveDisk` orchestrates async repository call + optional task polling and returns a typed `OperationResult`
 
 ### Changed
 
