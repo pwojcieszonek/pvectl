@@ -150,6 +150,7 @@ module Pvectl
           "Cloud-Init" => format_cloud_init(config),
           "Options" => format_options(config),
           "Firewall" => format_firewall(data[:firewall]),
+          "Firewall Rules" => format_firewall_rules(data[:firewall]),
           "Task History" => format_task_history(data[:tasks]),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Pending Changes" => format_pending_changes(data[:pending]),
