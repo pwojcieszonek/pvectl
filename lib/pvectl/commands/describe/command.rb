@@ -41,7 +41,9 @@ module Pvectl
             VM SECTIONS (matches PVE web UI tabs)
               Summary        HA state, CPU/memory usage, bootdisk size, uptime,
                              QEMU version, machine type, network/disk I/O
-              Hardware       Memory, balloon, processors, BIOS, machine, display,
+              Hardware       Memory (with balloon details: actual, max, free
+                             and total inside guest when ballooning active),
+                             balloon, processors, BIOS, machine, display,
                              SCSI controller, EFI/TPM, disks, network, USB/PCI,
                              serial ports, audio
               Cloud-Init     Type, user, DNS, SSH keys, IP config

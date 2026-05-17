@@ -318,9 +318,11 @@ module Pvectl
         consume(:bios, :machine, :scsihw, :memory, :balloon, :shares,
                 :sockets, :cores, :cpu, :vcpus, :cpulimit, :cpuunits, :vga)
 
-        # Memory line
+        # Memory line — flat string by default, expanded to a Hash with
+        # ballooning details when status payload contains ballooninfo.
         total_mb = config[:memory] || (vm.maxmem ? vm.maxmem / 1024 / 1024 : nil)
         memory_str = total_mb ? "#{(total_mb.to_f / 1024).round(2)} GiB" : "-"
+        memory_section = format_memory_section(memory_str, data[:status])
 
         # Balloon line
         balloon = config[:balloon]
@@ -345,7 +347,7 @@ module Pvectl
         machine_str = config[:machine] || "i440fx"
 
         {
-          "Memory" => memory_str,
+          "Memory" => memory_section,
           "Balloon" => balloon_str,
           "Processors" => processors_str,
           "BIOS" => bios_display,
@@ -360,6 +362,31 @@ module Pvectl
           "PCI Passthrough" => format_pci_passthrough(config),
           "Serial Ports" => format_serial_ports(config),
           "Audio" => format_audio(config)
+        }
+      end
+
+      # Formats Memory entry in the Hardware section.
+      #
+      # Returns a flat string with configured memory when ballooning info
+      # is not available (balloon driver inactive or VM stopped). When the
+      # status payload contains +ballooninfo+, returns a Hash with the
+      # configured value plus runtime balloon metrics from the guest:
+      # actual ballooned size, maximum, free memory inside the guest,
+      # and total guest-visible memory.
+      #
+      # @param memory_str [String] formatted configured memory
+      # @param status [Hash, nil] VM status payload
+      # @return [String, Hash] flat string or nested sub-section
+      def format_memory_section(memory_str, status)
+        info = status.is_a?(Hash) ? status[:ballooninfo] : nil
+        return memory_str unless info.is_a?(Hash)
+
+        {
+          "Configured" => memory_str,
+          "Actual" => format_bytes(info[:actual]),
+          "Max" => format_bytes(info[:max_mem]),
+          "Free (inside guest)" => format_bytes(info[:free_mem]),
+          "Total (guest visible)" => format_bytes(info[:total_mem])
         }
       end
 

@@ -622,6 +622,54 @@ class PresentersVmTest < Minitest::Test
     assert_equal "disabled", desc["Hardware"]["Balloon"]
   end
 
+  def test_to_description_hardware_memory_with_ballooninfo
+    data = base_describe_data.tap do |d|
+      d[:config][:balloon] = 2048
+      d[:status][:ballooninfo] = {
+        actual: 4_294_967_296,        # 4 GiB
+        max_mem: 8_589_934_592,       # 8 GiB
+        free_mem: 1_073_741_824,      # 1 GiB
+        total_mem: 4_294_967_296      # 4 GiB
+      }
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    memory = desc["Hardware"]["Memory"]
+    assert_kind_of Hash, memory
+    assert_equal "2.0 GiB", memory["Configured"]
+    assert_equal "4.0 GiB", memory["Actual"]
+    assert_equal "8.0 GiB", memory["Max"]
+    assert_equal "1.0 GiB", memory["Free (inside guest)"]
+    assert_equal "4.0 GiB", memory["Total (guest visible)"]
+  end
+
+  def test_to_description_hardware_memory_without_ballooninfo
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    # No ballooninfo (balloon disabled or VM stopped) — Memory stays a flat string
+    assert_kind_of String, desc["Hardware"]["Memory"]
+    assert_includes desc["Hardware"]["Memory"], "GiB"
+  end
+
+  def test_to_description_ballooninfo_not_leaked_to_additional_configuration
+    data = base_describe_data.tap do |d|
+      d[:status][:ballooninfo] = { actual: 1_073_741_824, max_mem: 2_147_483_648 }
+    end
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    # ballooninfo belongs to status, not config — must not appear in
+    # Additional Configuration regardless of consumption tracking.
+    additional = desc["Additional Configuration"]
+    if additional.is_a?(Array)
+      keys = additional.map { |row| row["KEY"] }
+      refute_includes keys, "ballooninfo"
+    end
+  end
+
   def test_to_description_hardware_bios_seabios_default
     data = base_describe_data
     vm = create_vm_from_data(data)

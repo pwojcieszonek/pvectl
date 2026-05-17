@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **describe vm**: Balloon memory details (actual, max, free, total inside guest) in Memory section
 
 ### Changed
 
