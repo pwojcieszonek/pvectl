@@ -178,6 +178,9 @@ require_relative "pvectl/services/container_lifecycle"
 # Services - Snapshot
 require_relative "pvectl/services/snapshot"
 
+# Services - Cloudinit
+require_relative "pvectl/services/cloudinit"
+
 # Services - Backup
 require_relative "pvectl/services/backup"
 
