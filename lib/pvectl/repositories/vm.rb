@@ -256,6 +256,27 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/resize"].put({ disk: disk, size: size })
       end
 
+      # Unlinks (removes) one or more disks from a VM configuration.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/unlink+ with the comma-separated
+      # list of disk IDs. By default, Proxmox keeps removed volumes as
+      # +unused[n]+ entries in the config; with +force: true+ the underlying
+      # volume is physically removed.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @param disk_ids [Array<String>, String] disk identifiers (e.g., "scsi0"
+      #   or %w[scsi0 scsi1] or "scsi0,scsi1")
+      # @param force [Boolean] physically delete the underlying volume(s)
+      #   (default: false — keep as unused[n])
+      # @return [nil] this is a synchronous operation and returns no UPID
+      def unlink_disks(node, vmid, disk_ids, force: false)
+        idlist = Array(disk_ids).flat_map { |id| id.to_s.split(",") }.map(&:strip).reject(&:empty?).join(",")
+        connection.client["nodes/#{node}/qemu/#{vmid}/unlink"].put(
+          { idlist: idlist, force: force ? 1 : 0 }
+        )
+      end
+
       # Fetches VM configuration.
       #
       # @param node [String] node name
