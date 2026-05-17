@@ -20,8 +20,8 @@ Use `AskUserQuestion` to discuss the trade-offs and let the user decide.
 
 ### When this applies
 
-- During brainstorming phase — refactoring should be one of the 2-3 proposed approaches when relevant
-- During plan execution — if you discover that refactoring would significantly simplify the current or upcoming tasks
+- When proposing approaches for a new feature — refactoring should be one of the 2-3 considered approaches when relevant
+- During implementation — if you discover that refactoring would significantly simplify the current or upcoming work
 - When adding a new resource/handler/command that is structurally similar to existing ones with code duplication
 
 ### When this does NOT apply
