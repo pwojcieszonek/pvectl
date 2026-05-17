@@ -1,0 +1,24 @@
+module Pvectl
+  module Models
+    class Subscription < Base
+      attr_reader node: String?
+      attr_reader status: String?
+      attr_reader level: String?
+      attr_reader productname: String?
+      attr_reader key: String?
+      attr_reader nextduedate: String?
+      attr_reader regdate: String?
+      attr_reader checktime: Integer?
+      attr_reader serverid: String?
+      attr_reader sockets: Integer?
+      attr_reader url: String?
+      attr_reader signature: String?
+      attr_reader message: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def active?: () -> bool
+      def missing?: () -> bool
+    end
+  end
+end
