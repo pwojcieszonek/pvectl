@@ -226,6 +226,9 @@ require_relative "pvectl/services/clone_container"
 # Services - Resource Migration
 require_relative "pvectl/services/resource_migration"
 
+# Services - Move Disk
+require_relative "pvectl/services/move_disk"
+
 # Services - Console
 require_relative "pvectl/services/console"
 
