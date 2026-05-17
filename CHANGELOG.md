@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: Cloud-init management — `pvectl cloudinit regenerate/pending/dump vm` to rebuild the cloud-init ISO, list pending configuration changes, and print generated user/network/meta YAML
 
 ### Changed
 

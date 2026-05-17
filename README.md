@@ -81,6 +81,7 @@ pvectl top nodes                  # Resource usage
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
+| `cloudinit` | Manage cloud-init for VMs (`regenerate`, `pending`, `dump`) |
 | `ping` | Check cluster connectivity |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 
