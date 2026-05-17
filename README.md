@@ -81,6 +81,7 @@ pvectl top nodes                  # Resource usage
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
+| `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
 | `ping` | Check cluster connectivity |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 
