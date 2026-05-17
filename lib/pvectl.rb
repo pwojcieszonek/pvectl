@@ -356,6 +356,9 @@ require_relative "pvectl/commands/pull"
 # Commands - Push
 require_relative "pvectl/commands/push"
 
+# Commands - Unlink
+require_relative "pvectl/commands/unlink_disk_vm"
+
 # Wizards
 require_relative "pvectl/wizards/create_vm"
 require_relative "pvectl/wizards/create_container"

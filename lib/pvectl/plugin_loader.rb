@@ -43,6 +43,7 @@ module Pvectl
       Commands::Console,
       Commands::Pull,
       Commands::Push,
+      Commands::UnlinkDiskVm,
     ].freeze
 
     @registered_plugins = []

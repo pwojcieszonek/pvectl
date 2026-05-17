@@ -78,6 +78,10 @@ module Pvectl
 
       def test_returns_not_found_when_vmid_not_resolved
         cmd = build_command(["999", "scsi1"], { yes: true })
+        cmd.define_singleton_method(:resolve_node) do |vmid|
+          $stderr.puts "Error: VM #{vmid} not found"
+          nil
+        end
         repo = StubRepo.new(vm: nil)
         cmd.instance_variable_set(:@repository, repo)
 

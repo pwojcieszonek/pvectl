@@ -1,0 +1,27 @@
+module Pvectl
+  module Commands
+    class UnlinkDiskVm
+      def self.register: (untyped cli) -> void
+
+      def self.execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def load_config: () -> void
+
+      def resolve_node: (Integer vmid) -> String?
+
+      def build_repository: () -> Repositories::Vm
+
+      def confirm_operation: (Integer vmid, String disk_list) -> bool
+
+      def output_result: (Models::VmOperationResult result) -> void
+
+      def usage_error: (String message) -> Integer
+    end
+  end
+end
