@@ -78,6 +78,7 @@ pvectl top nodes                  # Resource usage
 | `pull` | Export resource configuration as kubectl-like YAML manifests |
 | `push` | Apply YAML manifests to cluster (create or update resources) |
 | `template` | Convert VM/container to template |
+| `unlink` | Unlink disk(s) from a VM (keep volume as `unused[n]` or delete with `--force`) |
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |

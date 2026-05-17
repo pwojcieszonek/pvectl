@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl unlink disk vm` — remove disk from VM config without deleting volume (or `--force` to delete)
 
 ### Changed
 
