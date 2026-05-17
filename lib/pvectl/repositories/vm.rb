@@ -286,6 +286,45 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/migrate"].post(params)
       end
 
+      # Regenerates the cloud-init configuration ISO for a VM.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/cloudinit+. The Proxmox API
+      # endpoint returns null on success.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @return [nil]
+      def cloudinit_regenerate(node, vmid)
+        connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit"].put
+      end
+
+      # Fetches pending cloud-init configuration changes for a VM.
+      #
+      # GETs from +/nodes/{node}/qemu/{vmid}/cloudinit+. Returns an array
+      # of pending entries, each with +:key+, +:value+, +:pending+, and
+      # optional +:delete+ keys.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @return [Array<Hash{Symbol => untyped}>] pending entries
+      def cloudinit_pending(node, vmid)
+        response = connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit"].get
+        normalize_response(response)
+      end
+
+      # Dumps the generated cloud-init configuration for a VM.
+      #
+      # GETs from +/nodes/{node}/qemu/{vmid}/cloudinit/dump+ with the
+      # specified +type+ query parameter. Returns the raw YAML/text body.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @param type [String] config type — one of +"user"+, +"network"+, +"meta"+
+      # @return [String] cloud-init configuration as raw text
+      def cloudinit_dump(node, vmid, type)
+        connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit/dump"].get(params: { type: type })
+      end
+
       # Returns the next available VMID from the Proxmox cluster.
       #
       # Uses the +/cluster/nextid+ API endpoint which performs server-side allocation.
