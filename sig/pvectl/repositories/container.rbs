@@ -23,6 +23,8 @@ module Pvectl
 
       def migrate: (Integer ctid, String node, ?Hash[Symbol, untyped] params) -> String
 
+      def feature_available?: (Integer | String ctid, String node, String feature, ?snapname: String?) -> Hash[Symbol, untyped]
+
       def next_available_ctid: () -> Integer
 
       def termproxy: (Integer | String ctid, String node) -> Hash[Symbol, untyped]
