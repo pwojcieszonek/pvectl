@@ -89,6 +89,7 @@ require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
 require_relative "pvectl/models/volume"
+require_relative "pvectl/models/capability"
 
 # Repositories
 require_relative "pvectl/repositories/base"
@@ -105,6 +106,7 @@ require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
 require_relative "pvectl/repositories/volume"
+require_relative "pvectl/repositories/capabilities"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -132,6 +134,7 @@ require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
 require_relative "pvectl/presenters/disk"
 require_relative "pvectl/presenters/volume"
+require_relative "pvectl/presenters/capability"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -238,6 +241,9 @@ require_relative "pvectl/services/pull_config"
 # Services - Push Config
 require_relative "pvectl/services/push_config"
 
+# Services - Wakeonlan
+require_relative "pvectl/services/wakeonlan"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -258,6 +264,7 @@ require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
+require_relative "pvectl/commands/get/handlers/capabilities"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -352,6 +359,9 @@ require_relative "pvectl/commands/pull"
 
 # Commands - Push
 require_relative "pvectl/commands/push"
+
+# Commands - Wakeonlan
+require_relative "pvectl/commands/wakeonlan_node"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"

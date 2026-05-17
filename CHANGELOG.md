@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl wakeonlan node <NAME>` — send Wake-on-LAN to a cluster node via `POST /nodes/{node}/wakeonlan`; surfaces the MAC address used for the magic packet on success
+- **commands**: `pvectl get node-capabilities` (aliases: `capabilities`, `caps`) — list supported QEMU CPU models and machine types per node via `/nodes/{node}/capabilities/qemu/*`
 
 ### Changed
 
