@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: `pvectl get time` — show node time and timezone (single node via `--node`, otherwise iterates online nodes)
+- **commands**: `pvectl set node N timezone=...` — change node timezone via the dedicated `/nodes/{node}/time` API endpoint
 
 ### Changed
 
