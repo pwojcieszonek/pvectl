@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **commands**: Node DNS configuration — `pvectl get dns --node NODE` reads per-node DNS resolver settings; `pvectl edit dns NODE` opens DNS configuration (search domain, dns1, dns2, dns3) in an interactive YAML editor with diff preview and `--dry-run` support
 
 ### Changed
 
