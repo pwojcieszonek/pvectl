@@ -166,6 +166,10 @@ require_relative "pvectl/commands/config/set_cluster"
 require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
 require_relative "pvectl/commands/config/command"
+require_relative "pvectl/commands/cloudinit/regenerate"
+require_relative "pvectl/commands/cloudinit/pending"
+require_relative "pvectl/commands/cloudinit/dump"
+require_relative "pvectl/commands/cloudinit/command"
 require_relative "pvectl/commands/ping"
 
 # Services - Get

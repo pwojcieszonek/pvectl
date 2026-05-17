@@ -1,0 +1,13 @@
+module Pvectl
+  module Commands
+    module Cloudinit
+      class Dump
+        VALID_TYPES: Array[String]
+
+        def self.register_subcommand: (untyped parent) -> void
+
+        def self.execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+    end
+  end
+end

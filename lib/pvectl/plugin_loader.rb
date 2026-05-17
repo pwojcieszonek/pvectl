@@ -20,6 +20,7 @@ module Pvectl
     BUILTIN_COMMANDS = [
       Commands::Ping,
       Commands::Config::Command,
+      Commands::Cloudinit,
       Commands::Get::Command,
       Commands::Top::Command,
       Commands::Logs::Command,
