@@ -217,6 +217,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Unlink Disk
+require_relative "pvectl/services/unlink_disk"
+
 # Services - Set Volume
 require_relative "pvectl/services/set_volume"
 
