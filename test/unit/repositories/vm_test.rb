@@ -862,6 +862,147 @@ class RepositoriesVmTest < Minitest::Test
     assert_equal 123, repo.next_available_vmid
   end
 
+  # ---------------------------
+  # cloudinit_regenerate() Method
+  # ---------------------------
+
+  def test_cloudinit_regenerate_puts_to_correct_endpoint
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/cloudinit"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.cloudinit_regenerate("pve1", 100)
+
+    assert_nil result
+    mock_resource.verify
+    mock_client.verify
+  end
+
+  # ---------------------------
+  # cloudinit_pending() Method
+  # ---------------------------
+
+  def test_cloudinit_pending_gets_from_correct_endpoint
+    pending_response = [
+      { key: "user", value: "current-user", pending: "new-user" },
+      { key: "password", delete: 1 }
+    ]
+    mock_resource = Object.new
+    mock_resource.define_singleton_method(:get) { |**_kwargs| pending_response }
+
+    mock_client = Object.new
+    captured_path = nil
+    mock_client.define_singleton_method(:[]) do |path|
+      captured_path = path
+      mock_resource
+    end
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.cloudinit_pending("pve1", 100)
+
+    assert_equal "nodes/pve1/qemu/100/cloudinit", captured_path
+    assert_kind_of Array, result
+    assert_equal 2, result.length
+    assert_equal "user", result[0][:key]
+    assert_equal "new-user", result[0][:pending]
+  end
+
+  def test_cloudinit_pending_returns_empty_array_when_no_changes
+    mock_resource = Object.new
+    mock_resource.define_singleton_method(:get) { |**_kwargs| [] }
+
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) { |_path| mock_resource }
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    assert_empty repo.cloudinit_pending("pve1", 100)
+  end
+
+  # ---------------------------
+  # cloudinit_dump() Method
+  # ---------------------------
+
+  def test_cloudinit_dump_gets_from_correct_endpoint_with_type
+    yaml_response = "#cloud-config\nuser: ubuntu\n"
+    mock_resource = Object.new
+    captured_kwargs = nil
+    mock_resource.define_singleton_method(:get) do |**kwargs|
+      captured_kwargs = kwargs
+      yaml_response
+    end
+
+    captured_path = nil
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) do |path|
+      captured_path = path
+      mock_resource
+    end
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.cloudinit_dump("pve1", 100, "user")
+
+    assert_equal "nodes/pve1/qemu/100/cloudinit/dump", captured_path
+    assert_equal({ params: { type: "user" } }, captured_kwargs)
+    assert_equal yaml_response, result
+  end
+
+  def test_cloudinit_dump_supports_network_type
+    mock_resource = Object.new
+    captured_kwargs = nil
+    mock_resource.define_singleton_method(:get) do |**kwargs|
+      captured_kwargs = kwargs
+      "version: 1\n"
+    end
+
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) { |_path| mock_resource }
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.cloudinit_dump("pve1", 100, "network")
+
+    assert_equal({ params: { type: "network" } }, captured_kwargs)
+    assert_equal "version: 1\n", result
+  end
+
+  def test_cloudinit_dump_supports_meta_type
+    mock_resource = Object.new
+    captured_kwargs = nil
+    mock_resource.define_singleton_method(:get) do |**kwargs|
+      captured_kwargs = kwargs
+      "instance-id: vm-100\n"
+    end
+
+    mock_client = Object.new
+    mock_client.define_singleton_method(:[]) { |_path| mock_resource }
+
+    mock_connection = Object.new
+    mock_connection.define_singleton_method(:client) { mock_client }
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.cloudinit_dump("pve1", 100, "meta")
+
+    assert_equal({ params: { type: "meta" } }, captured_kwargs)
+    assert_equal "instance-id: vm-100\n", result
+  end
+
   private
 
   # Creates a repository with a mock connection that returns the given response

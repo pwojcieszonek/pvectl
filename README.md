@@ -85,6 +85,7 @@ pvectl top nodes                  # Resource usage
 | `console` | Interactive terminal session |
 | `service` | Manage systemd services on Proxmox nodes (start, stop, restart, reload) |
 | `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
+| `cloudinit` | Manage cloud-init for VMs (`regenerate`, `pending`, `dump`) |
 | `ping` | Check cluster connectivity |
 | `wakeonlan` | Send Wake-on-LAN packet to a cluster node |
 | `config` | Manage configuration (contexts, clusters, credentials) |
