@@ -51,6 +51,7 @@ module Pvectl
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
               time                      Node time and timezone settings
+              node-capabilities (caps)  Supported QEMU CPU models and machine types
 
             EXAMPLES
               List all VMs in table format:
@@ -93,6 +94,10 @@ module Pvectl
 
               Show time and timezone for all online nodes:
                 $ pvectl get time
+
+              List supported CPU models / machine types for a node:
+                $ pvectl get node-capabilities --node pve1
+                $ pvectl get caps --node pve1 -o json
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or
