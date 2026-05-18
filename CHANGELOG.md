@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: Node systemd services — `get services`, `pvectl service start/stop/restart/reload`
 - **commands**: `pvectl get time` — show node time and timezone (single node via `--node`, otherwise iterates online nodes)
 - **commands**: `pvectl set node N timezone=...` — change node timezone via the dedicated `/nodes/{node}/time` API endpoint
+- **commands**: Node hosts file editing — `edit hosts NODE` opens `/etc/hosts` in editor and posts back with original digest for optimistic locking, plus `get hosts --node NODE` to read raw contents
 - **commands**: `pvectl move disk vm/ct` — migrate disk/volume between storages on same node (`--target STORAGE`, `--format` for VMs, `--delete-source`, `--bandwidth`, `--wait`, `--timeout`, `-y`)
 - **repositories**: `Vm#move_disk` and `Container#move_volume` wrapping Proxmox `move_disk`/`move_volume` endpoints
 - **services**: `Services::MoveDisk` orchestrates async repository call + optional task polling and returns a typed `OperationResult`
