@@ -1,0 +1,29 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Capabilities
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Capabilities?, ?node_repository: Repositories::Node?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Capability]
+
+          def presenter: () -> Presenters::Capability
+
+          private
+
+          def fetch_for: (String node_name) -> Array[Models::Capability]
+
+          def online_node_names: () -> Array[String]
+
+          def repository: () -> Repositories::Capabilities
+
+          def node_repository: () -> Repositories::Node
+
+          def connection: () -> untyped
+        end
+      end
+    end
+  end
+end

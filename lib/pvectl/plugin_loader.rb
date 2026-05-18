@@ -44,6 +44,8 @@ module Pvectl
       Commands::Pull,
       Commands::Push,
       Commands::Service,
+      Commands::Apt,
+      Commands::WakeonlanNode,
       Commands::UnlinkDiskVm,
     ].freeze
 

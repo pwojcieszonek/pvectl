@@ -68,6 +68,7 @@ require_relative "pvectl/formatters/output_helper"
 
 # Models
 require_relative "pvectl/models/base"
+require_relative "pvectl/models/apt_package"
 require_relative "pvectl/models/network_interface"
 require_relative "pvectl/models/physical_disk"
 require_relative "pvectl/models/service"
@@ -92,9 +93,11 @@ require_relative "pvectl/models/volume"
 require_relative "pvectl/models/dns_config"
 require_relative "pvectl/models/time_config"
 require_relative "pvectl/models/hosts_file"
+require_relative "pvectl/models/capability"
 
 # Repositories
 require_relative "pvectl/repositories/base"
+require_relative "pvectl/repositories/apt"
 require_relative "pvectl/repositories/vm"
 require_relative "pvectl/repositories/node"
 require_relative "pvectl/repositories/storage"
@@ -112,9 +115,11 @@ require_relative "pvectl/repositories/dns"
 require_relative "pvectl/repositories/service"
 require_relative "pvectl/repositories/time_config"
 require_relative "pvectl/repositories/hosts"
+require_relative "pvectl/repositories/capabilities"
 
 # Presenters
 require_relative "pvectl/presenters/base"
+require_relative "pvectl/presenters/apt_package"
 require_relative "pvectl/presenters/config/context"
 require_relative "pvectl/presenters/vm"
 require_relative "pvectl/presenters/node"
@@ -143,6 +148,7 @@ require_relative "pvectl/presenters/dns_config"
 require_relative "pvectl/presenters/service"
 require_relative "pvectl/presenters/time_config"
 require_relative "pvectl/presenters/hosts_file"
+require_relative "pvectl/presenters/capability"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -178,6 +184,7 @@ require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
 require_relative "pvectl/commands/config/command"
 require_relative "pvectl/commands/ping"
+require_relative "pvectl/commands/apt"
 
 # Services - Get
 require_relative "pvectl/services/get/resource_service"
@@ -261,6 +268,9 @@ require_relative "pvectl/services/push_config"
 # Services - Service Lifecycle (systemd services on nodes)
 require_relative "pvectl/services/service_lifecycle"
 
+# Services - Wakeonlan
+require_relative "pvectl/services/wakeonlan"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -285,6 +295,7 @@ require_relative "pvectl/commands/get/handlers/dns"
 require_relative "pvectl/commands/get/handlers/services"
 require_relative "pvectl/commands/get/handlers/time"
 require_relative "pvectl/commands/get/handlers/hosts"
+require_relative "pvectl/commands/get/handlers/capabilities"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -384,6 +395,9 @@ require_relative "pvectl/commands/push"
 
 # Commands - Service (systemd lifecycle on nodes)
 require_relative "pvectl/commands/service"
+
+# Commands - Wakeonlan
+require_relative "pvectl/commands/wakeonlan_node"
 
 # Commands - Unlink
 require_relative "pvectl/commands/unlink_disk_vm"
