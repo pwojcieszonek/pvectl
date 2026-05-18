@@ -1,0 +1,13 @@
+module Pvectl
+  module Repositories
+    class Hosts < Base
+      def fetch: (String node_name) -> Models::HostsFile
+
+      def update: (String node_name, String data, ?String? digest) -> void
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::HostsFile
+    end
+  end
+end
