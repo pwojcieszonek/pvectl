@@ -1,0 +1,43 @@
+module Pvectl
+  module Commands
+    module FeatureCommand
+      VALID_FEATURES: Array[String]
+
+      module ClassMethods
+        def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      def self.included: (Class base) -> void
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def resource_type_symbol: () -> Symbol
+
+      def id_label: () -> String
+
+      def type_name: () -> String
+
+      def perform_operation: (Integer id, String feature) -> Integer
+
+      def resolve_resource: (untyped connection, Integer id) -> untyped
+
+      def build_repository: (untyped connection) -> untyped
+
+      def load_config: () -> void
+
+      def output_result: (Hash[Symbol, untyped] result, String feature) -> void
+
+      def payload: (Hash[Symbol, untyped] result, String feature) -> Hash[Symbol, untyped]
+
+      def stringify_keys: (Hash[Symbol, untyped] hash) -> Hash[String, untyped]
+
+      def usage_error: (String message) -> Integer
+
+      def resource_not_found: (Integer id) -> Integer
+    end
+  end
+end
