@@ -45,6 +45,8 @@ module Pvectl
 
       def format_hardware: (Hash[Symbol, untyped] config, Hash[Symbol, untyped] data) -> Hash[String, untyped]
 
+      def format_memory_section: (String memory_str, Hash[Symbol, untyped]? status) -> (Hash[String, String] | String)
+
       def format_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
 
       def format_agent_options: (Hash[Symbol, untyped] config) -> Hash[String, String]
