@@ -1,0 +1,29 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Time
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::TimeConfig?, ?node_repository: Repositories::Node?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::TimeConfig]
+
+          def presenter: () -> Presenters::TimeConfig
+
+          private
+
+          def fetch_for: (String node_name) -> Models::TimeConfig
+
+          def online_node_names: () -> Array[String]
+
+          def repository: () -> Repositories::TimeConfig
+
+          def node_repository: () -> Repositories::Node
+
+          def connection: () -> untyped
+        end
+      end
+    end
+  end
+end

@@ -146,10 +146,12 @@ module Pvectl
           "Tags" => tags_display,
           "Description" => config[:description] || "-",
           "Summary" => format_summary(config, status),
+          "Block Device Statistics" => format_blockstat(status),
           "Hardware" => format_hardware(config, data),
           "Cloud-Init" => format_cloud_init(config),
           "Options" => format_options(config),
           "Firewall" => format_firewall(data[:firewall]),
+          "Firewall Rules" => format_firewall_rules(data[:firewall]),
           "Task History" => format_task_history(data[:tasks]),
           "Snapshots" => format_snapshots(data[:snapshots]),
           "Pending Changes" => format_pending_changes(data[:pending]),
@@ -306,6 +308,30 @@ module Pvectl
         vm.maxdisk ? format_bytes(vm.maxdisk) : "-"
       end
 
+      # Formats Block Device Statistics section.
+      #
+      # Renders per-disk I/O statistics from the running VM's status payload.
+      # Available only for running VMs — Proxmox populates +blockstat+ as
+      # part of +/status/current+ when the QEMU process is alive.
+      #
+      # @param status [Hash] VM status payload from /status/current
+      # @return [Array<Hash>, String] per-device I/O table or "-" when absent
+      def format_blockstat(status)
+        blockstat = status[:blockstat]
+        return "-" if blockstat.nil? || blockstat.empty?
+
+        blockstat.sort_by { |name, _| name.to_s }.map do |name, stats|
+          stats ||= {}
+          {
+            "DEVICE" => name.to_s,
+            "READ" => format_bytes(stats[:rd_bytes]),
+            "WRITTEN" => format_bytes(stats[:wr_bytes]),
+            "READ_IOPS" => (stats[:rd_operations] || 0).to_s,
+            "WRITE_IOPS" => (stats[:wr_operations] || 0).to_s
+          }
+        end
+      end
+
       # Formats Hardware section (PVE Hardware tab).
       #
       # Shows memory, balloon, processors, BIOS, machine type, display,
@@ -318,9 +344,11 @@ module Pvectl
         consume(:bios, :machine, :scsihw, :memory, :balloon, :shares,
                 :sockets, :cores, :cpu, :vcpus, :cpulimit, :cpuunits, :vga)
 
-        # Memory line
+        # Memory line — flat string by default, expanded to a Hash with
+        # ballooning details when status payload contains ballooninfo.
         total_mb = config[:memory] || (vm.maxmem ? vm.maxmem / 1024 / 1024 : nil)
         memory_str = total_mb ? "#{(total_mb.to_f / 1024).round(2)} GiB" : "-"
+        memory_section = format_memory_section(memory_str, data[:status])
 
         # Balloon line
         balloon = config[:balloon]
@@ -345,7 +373,7 @@ module Pvectl
         machine_str = config[:machine] || "i440fx"
 
         {
-          "Memory" => memory_str,
+          "Memory" => memory_section,
           "Balloon" => balloon_str,
           "Processors" => processors_str,
           "BIOS" => bios_display,
@@ -360,6 +388,31 @@ module Pvectl
           "PCI Passthrough" => format_pci_passthrough(config),
           "Serial Ports" => format_serial_ports(config),
           "Audio" => format_audio(config)
+        }
+      end
+
+      # Formats Memory entry in the Hardware section.
+      #
+      # Returns a flat string with configured memory when ballooning info
+      # is not available (balloon driver inactive or VM stopped). When the
+      # status payload contains +ballooninfo+, returns a Hash with the
+      # configured value plus runtime balloon metrics from the guest:
+      # actual ballooned size, maximum, free memory inside the guest,
+      # and total guest-visible memory.
+      #
+      # @param memory_str [String] formatted configured memory
+      # @param status [Hash, nil] VM status payload
+      # @return [String, Hash] flat string or nested sub-section
+      def format_memory_section(memory_str, status)
+        info = status.is_a?(Hash) ? status[:ballooninfo] : nil
+        return memory_str unless info.is_a?(Hash)
+
+        {
+          "Configured" => memory_str,
+          "Actual" => format_bytes(info[:actual]),
+          "Max" => format_bytes(info[:max_mem]),
+          "Free (inside guest)" => format_bytes(info[:free_mem]),
+          "Total (guest visible)" => format_bytes(info[:total_mem])
         }
       end
 

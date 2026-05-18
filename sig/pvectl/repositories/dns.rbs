@@ -1,0 +1,13 @@
+module Pvectl
+  module Repositories
+    class Dns < Base
+      def fetch: (String node_name) -> Models::DnsConfig
+
+      def update: (String node_name, ?Hash[Symbol, untyped] params) -> void
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::DnsConfig
+    end
+  end
+end
