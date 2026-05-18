@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Hosts
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Hosts?) -> void
+
+          def list: (?node: String?, **untyped options) -> Array[Models::HostsFile]
+
+          def presenter: () -> Presenters::HostsFile
+
+          def describe: (name: String?, ?node: String?, **untyped opts) -> Models::HostsFile
+
+          private
+
+          attr_reader repository: Repositories::Hosts
+
+          def build_repository: () -> Repositories::Hosts
+        end
+      end
+    end
+  end
+end
