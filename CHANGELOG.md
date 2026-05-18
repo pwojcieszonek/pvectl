@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: `pvectl get time` — show node time and timezone (single node via `--node`, otherwise iterates online nodes)
 - **commands**: `pvectl set node N timezone=...` — change node timezone via the dedicated `/nodes/{node}/time` API endpoint
 - **commands**: Node hosts file editing — `edit hosts NODE` opens `/etc/hosts` in editor and posts back with original digest for optimistic locking, plus `get hosts --node NODE` to read raw contents
+- **commands**: APT package management — `pvectl apt list/update/changelog/versions`
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section

@@ -82,6 +82,7 @@ pvectl top nodes                  # Resource usage
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
 | `service` | Manage systemd services on Proxmox nodes (start, stop, restart, reload) |
+| `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
 | `ping` | Check cluster connectivity |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 

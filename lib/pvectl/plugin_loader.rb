@@ -44,6 +44,7 @@ module Pvectl
       Commands::Pull,
       Commands::Push,
       Commands::Service,
+      Commands::Apt,
     ].freeze
 
     @registered_plugins = []
