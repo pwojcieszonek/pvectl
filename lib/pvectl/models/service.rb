@@ -31,6 +31,15 @@ module Pvectl
       # @return [String, nil] the service description
       attr_reader :desc
 
+      # @return [String, nil] systemd ActiveState (active, inactive, failed, ...)
+      attr_reader :active_state
+
+      # @return [String, nil] systemd UnitFileState (enabled, disabled, masked, ...)
+      attr_reader :unit_state
+
+      # @return [String, nil] node name this service belongs to
+      attr_reader :node
+
       # Creates a new Service instance.
       #
       # @param attrs [Hash] service attributes
@@ -38,12 +47,19 @@ module Pvectl
       # @option attrs [String] :name the display name
       # @option attrs [String] :state the current state
       # @option attrs [String] :desc the description
+      # @option attrs [String] :active_state systemd ActiveState
+      # @option attrs [String] :unit_state systemd UnitFileState
+      # @option attrs [String] :node the node this service runs on
       def initialize(attrs = {})
         super
         @service = attributes[:service]
         @name = attributes[:name]
         @state = attributes[:state]
         @desc = attributes[:desc]
+        # Accept both symbol keys (:active_state) and dasherized keys (:"active-state")
+        @active_state = attributes[:active_state] || attributes[:"active-state"]
+        @unit_state = attributes[:unit_state] || attributes[:"unit-state"]
+        @node = attributes[:node]
       end
 
       # Checks if the service is currently running.

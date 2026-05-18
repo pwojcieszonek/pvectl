@@ -64,7 +64,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services) |
 | `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
@@ -81,6 +81,7 @@ pvectl top nodes                  # Resource usage
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
+| `service` | Manage systemd services on Proxmox nodes (start, stop, restart, reload) |
 | `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
 | `ping` | Check cluster connectivity |
 | `config` | Manage configuration (contexts, clusters, credentials) |
