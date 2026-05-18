@@ -23,6 +23,8 @@ module Pvectl
 
       def migrate: (Integer ctid, String node, ?Hash[Symbol, untyped] params) -> String
 
+      def move_volume: (Integer | String ctid, String node, String volume, String target_storage, ?delete: bool, ?bwlimit: Integer?) -> String
+
       def next_available_ctid: () -> Integer
 
       def termproxy: (Integer | String ctid, String node) -> Hash[Symbol, untyped]

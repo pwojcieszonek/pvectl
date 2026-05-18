@@ -118,6 +118,22 @@ module Pvectl
         connection.client["nodes/#{node_name}/config"].put(params)
       end
 
+      # Sends a Wake-on-LAN packet to a node.
+      #
+      # Calls `POST /nodes/{node}/wakeonlan`. The target node must have its
+      # MAC address registered in the cluster configuration beforehand
+      # (via `pvecm` or the web UI). The API returns the MAC address used
+      # for the magic packet.
+      #
+      # @param node_name [String] cluster node name
+      # @return [String, nil] MAC address used to assemble the WoL packet
+      # @raise [StandardError] propagates any API error (e.g., missing MAC)
+      def wakeonlan(node_name)
+        response = connection.client["nodes/#{node_name}/wakeonlan"].post
+        data = extract_data(response)
+        data.is_a?(String) ? data : nil
+      end
+
       protected
 
       # Builds Node model from API response data.

@@ -38,6 +38,7 @@ module Pvectl
       Commands::SetVm,
       Commands::CloneVm,
       Commands::MigrateVm,
+      Commands::MoveDiskVm,
       Commands::TemplateVm,
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
@@ -45,6 +46,8 @@ module Pvectl
       Commands::Pull,
       Commands::Push,
       Commands::Service,
+      Commands::Apt,
+      Commands::WakeonlanNode,
     ].freeze
 
     @registered_plugins = []

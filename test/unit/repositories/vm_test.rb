@@ -730,6 +730,123 @@ class RepositoriesVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # move_disk() Method
+  # ---------------------------
+
+  def test_move_disk_posts_to_correct_endpoint_with_required_params
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movedisk1",
+                         [{ disk: "scsi0", storage: "storage2" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/qemu/100/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.move_disk(100, "pve1", "scsi0", "storage2")
+
+    assert_equal "UPID:pve1:movedisk1", result
+    mock_endpoint.verify
+    mock_client.verify
+  end
+
+  def test_move_disk_includes_format_when_provided
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movedisk1",
+                         [{ disk: "scsi0", storage: "storage2", format: "qcow2" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/qemu/100/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.move_disk(100, "pve1", "scsi0", "storage2", format: "qcow2")
+
+    mock_endpoint.verify
+  end
+
+  def test_move_disk_includes_delete_as_1_when_true
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movedisk1",
+                         [{ disk: "scsi0", storage: "storage2", delete: 1 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/qemu/100/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.move_disk(100, "pve1", "scsi0", "storage2", delete: true)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_disk_omits_delete_when_false
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movedisk1",
+                         [{ disk: "scsi0", storage: "storage2" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/qemu/100/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.move_disk(100, "pve1", "scsi0", "storage2", delete: false)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_disk_includes_bwlimit_when_provided
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movedisk1",
+                         [{ disk: "scsi0", storage: "storage2", bwlimit: 10_240 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/qemu/100/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.move_disk(100, "pve1", "scsi0", "storage2", bwlimit: 10_240)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_disk_passes_all_optional_params_together
+    expected_params = {
+      disk: "virtio0",
+      storage: "storage2",
+      format: "raw",
+      delete: 1,
+      bwlimit: 5120
+    }
+
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve2:movedisk1", [expected_params])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve2/qemu/200/move_disk"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.move_disk(200, "pve2", "virtio0", "storage2",
+                            format: "raw", delete: true, bwlimit: 5120)
+
+    assert_equal "UPID:pve2:movedisk1", result
+    mock_endpoint.verify
+  end
+
+  # ---------------------------
   # next_available_vmid() Method
   # ---------------------------
 
