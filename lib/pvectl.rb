@@ -272,12 +272,9 @@ require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
-<<<<<<< HEAD
-require_relative "pvectl/commands/get/handlers/time"
-=======
 require_relative "pvectl/commands/get/handlers/dns"
 require_relative "pvectl/commands/get/handlers/services"
->>>>>>> origin/main
+require_relative "pvectl/commands/get/handlers/time"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
