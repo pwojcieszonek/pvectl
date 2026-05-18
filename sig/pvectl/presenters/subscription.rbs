@@ -1,0 +1,36 @@
+module Pvectl
+  module Presenters
+    class Subscription < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def extra_values: (untyped model, **untyped context) -> Array[String]
+
+      def to_wide_row: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      def to_description: (untyped model) -> Hash[String, untyped]
+
+      def node_display: () -> String
+      def status_display: () -> String
+      def level_display: () -> String
+      def product_display: () -> String
+      def regdate_display: () -> String
+      def serverid_display: () -> String
+      def nextduedate_display: () -> String
+      def sockets_display: () -> String
+      def message_display: () -> String
+      def checktime_display: () -> String
+      def masked_key: () -> String
+      def full_key_display: () -> String
+
+      private
+
+      attr_reader subscription: untyped
+    end
+  end
+end

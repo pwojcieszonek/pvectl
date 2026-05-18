@@ -56,6 +56,7 @@ Once configured, explore your cluster:
 pvectl get nodes                  # List cluster nodes
 pvectl get vms                    # List all VMs
 pvectl get vms -o wide            # Extended columns
+pvectl get subscription           # Show Proxmox subscription per node (key masked)
 pvectl describe vm 100            # Detailed VM info
 pvectl top nodes                  # Resource usage
 ```
@@ -64,7 +65,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services, hosts, node-capabilities) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services, hosts, node-capabilities, subscription) |
 | `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |

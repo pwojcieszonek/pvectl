@@ -94,6 +94,7 @@ require_relative "pvectl/models/dns_config"
 require_relative "pvectl/models/time_config"
 require_relative "pvectl/models/hosts_file"
 require_relative "pvectl/models/capability"
+require_relative "pvectl/models/subscription"
 
 # Repositories
 require_relative "pvectl/repositories/base"
@@ -116,6 +117,7 @@ require_relative "pvectl/repositories/service"
 require_relative "pvectl/repositories/time_config"
 require_relative "pvectl/repositories/hosts"
 require_relative "pvectl/repositories/capabilities"
+require_relative "pvectl/repositories/subscription"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -149,6 +151,7 @@ require_relative "pvectl/presenters/service"
 require_relative "pvectl/presenters/time_config"
 require_relative "pvectl/presenters/hosts_file"
 require_relative "pvectl/presenters/capability"
+require_relative "pvectl/presenters/subscription"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -309,6 +312,7 @@ require_relative "pvectl/commands/get/handlers/services"
 require_relative "pvectl/commands/get/handlers/time"
 require_relative "pvectl/commands/get/handlers/hosts"
 require_relative "pvectl/commands/get/handlers/capabilities"
+require_relative "pvectl/commands/get/handlers/subscription"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
