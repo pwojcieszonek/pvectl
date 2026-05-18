@@ -1,0 +1,13 @@
+module Pvectl
+  module Models
+    class HostsFile < Base
+      attr_reader node: String?
+      attr_reader data: String
+      attr_reader digest: String?
+
+      def initialize: (?Hash[Symbol | String, untyped] attributes) -> void
+
+      def line_count: () -> Integer
+    end
+  end
+end
