@@ -1,0 +1,21 @@
+module Pvectl
+  module Commands
+    class WakeonlanNode
+      def self.register: (untyped cli) -> void
+
+      def initialize: (String? node_name, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?service: Services::Wakeonlan?) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def service: () -> Services::Wakeonlan
+
+      def render: (Models::NodeOperationResult result) -> void
+
+      def color_enabled: () -> bool
+
+      def usage_error: (String msg) -> Integer
+    end
+  end
+end

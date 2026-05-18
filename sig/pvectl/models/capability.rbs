@@ -1,0 +1,16 @@
+module Pvectl
+  module Models
+    class Capability < Base
+      attr_reader node_name: String?
+      attr_reader kind: Symbol?
+      attr_reader name: String?
+      attr_reader vendor: String?
+      attr_reader custom: bool
+      attr_reader machine_type: String?
+      attr_reader version: String?
+      attr_reader changes: String?
+
+      def initialize: (?Hash[Symbol, untyped] attributes) -> void
+    end
+  end
+end
