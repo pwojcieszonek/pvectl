@@ -45,6 +45,7 @@ module Pvectl
       Commands::Push,
       Commands::Service,
       Commands::Apt,
+      Commands::WakeonlanNode,
     ].freeze
 
     @registered_plugins = []

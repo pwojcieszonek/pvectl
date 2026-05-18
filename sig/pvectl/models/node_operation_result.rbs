@@ -2,8 +2,11 @@ module Pvectl
   module Models
     class NodeOperationResult < OperationResult
       attr_reader node_model: Models::Node?
+      attr_reader info: String?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def message: () -> String
     end
   end
 end

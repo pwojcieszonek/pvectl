@@ -14,6 +14,8 @@ module Pvectl
 
       def update: (String node_name, ?Hash[Symbol, untyped] params) -> void
 
+      def wakeonlan: (String node_name) -> String?
+
       private
 
       def build_model: (Hash[Symbol, untyped] data) -> Models::Node

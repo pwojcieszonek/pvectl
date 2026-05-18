@@ -1,0 +1,17 @@
+module Pvectl
+  module Services
+    class Wakeonlan
+      def initialize: (node_repository: Repositories::Node) -> void
+
+      def execute: (node_name: String) -> Models::NodeOperationResult
+
+      private
+
+      def build_result: (Models::Node node, **untyped attrs) -> Models::NodeOperationResult
+
+      def not_found_result: (String node_name) -> Models::NodeOperationResult
+
+      def success_message: (String? mac) -> String
+    end
+  end
+end
