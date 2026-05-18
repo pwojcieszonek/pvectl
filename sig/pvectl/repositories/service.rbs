@@ -1,0 +1,27 @@
+module Pvectl
+  module Repositories
+    class Service < Base
+      def list: (?node: String?) -> Array[Models::Service]
+
+      def state: (String node, String service) -> Models::Service?
+
+      def start: (String node, String service) -> String
+
+      def stop: (String node, String service) -> String
+
+      def restart: (String node, String service) -> String
+
+      def reload: (String node, String service) -> String
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::Service
+
+      def post_action: (String node, String service, String action) -> String
+
+      def services_for_node: (String node_name) -> Array[Models::Service]
+
+      def online_nodes: () -> Array[String]
+    end
+  end
+end

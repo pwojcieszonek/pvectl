@@ -1,0 +1,13 @@
+module Pvectl
+  module Repositories
+    class TimeConfig < Base
+      def fetch: (String node_name) -> Models::TimeConfig
+
+      def set_timezone: (String node_name, String timezone) -> nil
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::TimeConfig
+    end
+  end
+end

@@ -196,8 +196,6 @@ module Pvectl
 
         options = firewall_data[:options]
         options = {} unless options.is_a?(Hash)
-        rules = firewall_data[:rules]
-        rules = [] unless rules.is_a?(Array)
         aliases = firewall_data[:aliases]
         aliases = [] unless aliases.is_a?(Array)
         ipset = firewall_data[:ipset]
@@ -218,25 +216,6 @@ module Pvectl
         result["Log Level In"] = options[:log_level_in].to_s if options[:log_level_in] && options[:log_level_in] != "nolog"
         result["Log Level Out"] = options[:log_level_out].to_s if options[:log_level_out] && options[:log_level_out] != "nolog"
 
-        # Rules table
-        result["Rules"] = if rules.empty?
-                            "No rules configured"
-                          else
-                            rules.sort_by { |r| r[:pos].to_i }.map do |rule|
-                              {
-                                "ON" => rule[:enable] == 1 ? "Yes" : "No",
-                                "TYPE" => rule[:type]&.to_s&.upcase || "-",
-                                "ACTION" => rule[:action] || "-",
-                                "PROTO" => rule[:proto] || "-",
-                                "S.PORT" => rule[:sport] || "-",
-                                "D.PORT" => rule[:dport] || "-",
-                                "SOURCE" => rule[:source] || "-",
-                                "DEST" => rule[:dest] || "-",
-                                "COMMENT" => rule[:comment] || "-"
-                              }
-                            end
-                          end
-
         # Aliases table
         if aliases.any?
           result["Aliases"] = aliases.map do |a|
@@ -252,6 +231,34 @@ module Pvectl
         end
 
         result
+      end
+
+      # Formats Firewall Rules section as a standalone table.
+      #
+      # Renders firewall rules with the columns: ENABLED, TYPE, ACTION,
+      # PROTO, SOURCE, DEST, COMMENT. Used as a top-level describe section
+      # for VMs and containers. Empty or missing rules render as "-".
+      #
+      # @param firewall_data [Hash, nil] firewall data with :rules key
+      # @return [Array<Hash>, String] rules table or "-" when empty
+      def format_firewall_rules(firewall_data)
+        return "-" if firewall_data.nil? || firewall_data.empty?
+
+        rules = firewall_data[:rules]
+        rules = [] unless rules.is_a?(Array)
+        return "-" if rules.empty?
+
+        rules.sort_by { |r| r[:pos].to_i }.map do |rule|
+          {
+            "ENABLED" => rule[:enable] == 1 ? "yes" : "no",
+            "TYPE" => rule[:type]&.to_s&.upcase || "-",
+            "ACTION" => rule[:action] || "-",
+            "PROTO" => rule[:proto] || "-",
+            "SOURCE" => (rule[:source].nil? || rule[:source].to_s.empty?) ? "-" : rule[:source],
+            "DEST" => (rule[:dest].nil? || rule[:dest].to_s.empty?) ? "-" : rule[:dest],
+            "COMMENT" => (rule[:comment].nil? || rule[:comment].to_s.empty?) ? "-" : rule[:comment]
+          }
+        end
       end
 
       # Formats bytes to human readable string.

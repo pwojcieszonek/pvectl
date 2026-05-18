@@ -5,6 +5,9 @@ module Pvectl
       attr_reader name: String?
       attr_reader state: String?
       attr_reader desc: String?
+      attr_reader active_state: String?
+      attr_reader unit_state: String?
+      attr_reader node: String?
 
       def initialize: (?Hash[Symbol, untyped] attrs) -> void
 

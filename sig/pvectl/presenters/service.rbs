@@ -1,0 +1,15 @@
+module Pvectl
+  module Presenters
+    class Service < Base
+      def columns: () -> Array[String]
+
+      def extra_columns: () -> Array[String]
+
+      def to_row: (Models::Service model, **untyped context) -> Array[String]
+
+      def extra_values: (Models::Service model, **untyped context) -> Array[String]
+
+      def to_hash: (Models::Service model) -> Hash[String, String?]
+    end
+  end
+end
