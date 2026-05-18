@@ -89,6 +89,7 @@ require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
 require_relative "pvectl/models/volume"
+require_relative "pvectl/models/dns_config"
 require_relative "pvectl/models/time_config"
 
 # Repositories
@@ -106,6 +107,8 @@ require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
 require_relative "pvectl/repositories/volume"
+require_relative "pvectl/repositories/dns"
+require_relative "pvectl/repositories/service"
 require_relative "pvectl/repositories/time_config"
 
 # Presenters
@@ -134,6 +137,8 @@ require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
 require_relative "pvectl/presenters/disk"
 require_relative "pvectl/presenters/volume"
+require_relative "pvectl/presenters/dns_config"
+require_relative "pvectl/presenters/service"
 require_relative "pvectl/presenters/time_config"
 
 # Selectors
@@ -205,6 +210,9 @@ require_relative "pvectl/services/edit_container"
 # Services - Edit Node
 require_relative "pvectl/services/edit_node"
 
+# Services - Edit DNS
+require_relative "pvectl/services/edit_dns"
+
 # Services - Edit Volume
 require_relative "pvectl/services/edit_volume"
 
@@ -241,6 +249,9 @@ require_relative "pvectl/services/pull_config"
 # Services - Push Config
 require_relative "pvectl/services/push_config"
 
+# Services - Service Lifecycle (systemd services on nodes)
+require_relative "pvectl/services/service_lifecycle"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -261,7 +272,12 @@ require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
+<<<<<<< HEAD
 require_relative "pvectl/commands/get/handlers/time"
+=======
+require_relative "pvectl/commands/get/handlers/dns"
+require_relative "pvectl/commands/get/handlers/services"
+>>>>>>> origin/main
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -319,6 +335,7 @@ require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
 require_relative "pvectl/commands/edit_node"
 require_relative "pvectl/commands/edit_volume"
+require_relative "pvectl/commands/edit_dns"
 
 # Commands - Set
 require_relative "pvectl/commands/set_resource_command"
@@ -356,6 +373,9 @@ require_relative "pvectl/commands/pull"
 
 # Commands - Push
 require_relative "pvectl/commands/push"
+
+# Commands - Service (systemd lifecycle on nodes)
+require_relative "pvectl/commands/service"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"

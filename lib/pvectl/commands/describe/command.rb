@@ -41,7 +41,12 @@ module Pvectl
             VM SECTIONS (matches PVE web UI tabs)
               Summary        HA state, CPU/memory usage, bootdisk size, uptime,
                              QEMU version, machine type, network/disk I/O
-              Hardware       Memory, balloon, processors, BIOS, machine, display,
+              Block Device Statistics
+                             Per-disk I/O counters (read/written bytes, IOPS)
+                             for running VMs
+              Hardware       Memory (with balloon details: actual, max, free
+                             and total inside guest when ballooning active),
+                             balloon, processors, BIOS, machine, display,
                              SCSI controller, EFI/TPM, disks, network, USB/PCI,
                              serial ports, audio
               Cloud-Init     Type, user, DNS, SSH keys, IP config
@@ -49,6 +54,9 @@ module Pvectl
                              tablet, hotplug, ACPI, KVM, freeze, localtime,
                              NUMA, QEMU guest agent, protection, firewall,
                              hookscript
+              Firewall       Enable, input/output policies, aliases, IP sets
+              Firewall Rules Per-rule table (ENABLED, TYPE, ACTION, PROTO,
+                             SOURCE, DEST, COMMENT)
               Task History   Recent operations (type, status, date, duration, user)
               Snapshots      Name, date, VM state, description
               Pending        Configuration changes awaiting reboot
@@ -62,6 +70,9 @@ module Pvectl
               Options        Start at boot, startup order, OS type, architecture,
                              unprivileged, features, console mode, TTY, protection,
                              hookscript
+              Firewall       Enable, input/output policies, aliases, IP sets
+              Firewall Rules Per-rule table (ENABLED, TYPE, ACTION, PROTO,
+                             SOURCE, DEST, COMMENT)
               Task History   Recent operations (type, status, date, duration, user)
               Snapshots      Name, date, description
               High Avail.    HA state and group
