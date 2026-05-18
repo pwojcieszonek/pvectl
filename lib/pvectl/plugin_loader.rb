@@ -50,6 +50,7 @@ module Pvectl
       Commands::Service,
       Commands::Apt,
       Commands::WakeonlanNode,
+      Commands::UnlinkDiskVm,
     ].freeze
 
     @registered_plugins = []

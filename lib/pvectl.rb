@@ -254,6 +254,9 @@ require_relative "pvectl/services/resize_volume"
 # Services - Sendkey
 require_relative "pvectl/services/sendkey"
 
+# Services - Unlink Disk
+require_relative "pvectl/services/unlink_disk"
+
 # Services - Set Volume
 require_relative "pvectl/services/set_volume"
 
@@ -423,6 +426,9 @@ require_relative "pvectl/commands/service"
 
 # Commands - Wakeonlan
 require_relative "pvectl/commands/wakeonlan_node"
+
+# Commands - Unlink
+require_relative "pvectl/commands/unlink_disk_vm"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"

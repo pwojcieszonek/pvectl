@@ -776,6 +776,76 @@ class RepositoriesVmTest < Minitest::Test
   end
 
   # ---------------------------
+  # unlink_disks() Method
+  # ---------------------------
+
+  def test_unlink_disks_puts_to_correct_endpoint_with_single_disk
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ idlist: "scsi1", force: 0 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/unlink"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    result = repo.unlink_disks("pve1", 100, "scsi1")
+
+    assert_nil result
+    mock_resource.verify
+    mock_client.verify
+  end
+
+  def test_unlink_disks_joins_array_into_comma_separated_idlist
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ idlist: "scsi1,scsi2", force: 0 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/unlink"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.unlink_disks("pve1", 100, %w[scsi1 scsi2])
+
+    mock_resource.verify
+  end
+
+  def test_unlink_disks_passes_force_as_1_when_true
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ idlist: "scsi1,scsi2", force: 1 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve1/qemu/100/unlink"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.unlink_disks("pve1", 100, "scsi1,scsi2", force: true)
+
+    mock_resource.verify
+  end
+
+  def test_unlink_disks_accepts_comma_string_disk_ids
+    mock_resource = Minitest::Mock.new
+    mock_resource.expect(:put, nil, [{ idlist: "scsi1,virtio0", force: 0 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_resource, ["nodes/pve2/qemu/200/unlink"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Vm.new(mock_connection)
+    repo.unlink_disks("pve2", 200, "scsi1,virtio0")
+
+    mock_resource.verify
+  end
+
+  # ---------------------------
   # fetch_config() Public Access
   # ---------------------------
 

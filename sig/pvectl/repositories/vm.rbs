@@ -37,6 +37,8 @@ module Pvectl
 
       def sendkey: (Integer | String vmid, String node, String key) -> nil
 
+      def unlink_disks: (String node, Integer | String vmid, Array[String] | String disk_ids, ?force: bool) -> nil
+
       def fetch_config: (String node, Integer vmid) -> Hash[Symbol, untyped]
 
       def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String

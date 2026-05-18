@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: `pvectl sendkey vm` — send QEMU keycodes to a running VM (e.g., ctrl-alt-delete)
 - **commands**: `pvectl get subscription` — show Proxmox subscription status per node (level, status, next due date, masked key). Use `-o wide` to reveal the full license key.
 - **commands**: `pvectl feature vm/ct` — query availability of clone/snapshot/copy for a VM or container
+- **commands**: `pvectl unlink disk vm` — remove disk from VM config without deleting volume (or `--force` to delete)
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
