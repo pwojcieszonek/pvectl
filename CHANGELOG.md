@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **describe vm**: Block Device Statistics section with per-disk read/write bytes and IOPS
 - **describe vm**: Balloon memory details (actual, max, free, total inside guest) in Memory section
 - **commands**: Node DNS configuration — `pvectl get dns --node NODE` reads per-node DNS resolver settings; `pvectl edit dns NODE` opens DNS configuration (search domain, dns1, dns2, dns3) in an interactive YAML editor with diff preview and `--dry-run` support
+- **commands**: Node systemd services — `get services`, `pvectl service start/stop/restart/reload`
+- **commands**: `pvectl get time` — show node time and timezone (single node via `--node`, otherwise iterates online nodes)
+- **commands**: `pvectl set node N timezone=...` — change node timezone via the dedicated `/nodes/{node}/time` API endpoint
+- **commands**: Node hosts file editing — `edit hosts NODE` opens `/etc/hosts` in editor and posts back with original digest for optimistic locking, plus `get hosts --node NODE` to read raw contents
 - **commands**: `pvectl get subscription` — show Proxmox subscription status per node (level, status, next due date, masked key). Use `-o wide` to reveal the full license key.
 
 ### Changed

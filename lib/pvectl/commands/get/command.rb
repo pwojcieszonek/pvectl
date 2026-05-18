@@ -50,6 +50,7 @@ module Pvectl
               tasks (task)              Task history
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
+              time                      Node time and timezone settings
               subscription (sub)        Proxmox subscription status per node
 
             EXAMPLES
@@ -87,6 +88,12 @@ module Pvectl
 
               List volumes with filtering:
                 $ pvectl get volume vm 100 -l format=raw
+
+              Show node time and timezone for a single node:
+                $ pvectl get time --node pve1
+
+              Show time and timezone for all online nodes:
+                $ pvectl get time
 
               List subscription status across the cluster:
                 $ pvectl get subscription
