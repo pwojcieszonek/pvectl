@@ -1,0 +1,13 @@
+module Pvectl
+  module Presenters
+    class DnsConfig < Base
+      def columns: () -> Array[String]
+
+      def to_row: (Models::DnsConfig model, **untyped context) -> Array[String]
+
+      def to_hash: (Models::DnsConfig model) -> Hash[String, untyped]
+
+      def to_description: (Models::DnsConfig model) -> Hash[String, untyped]
+    end
+  end
+end

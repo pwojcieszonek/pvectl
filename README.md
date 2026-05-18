@@ -65,7 +65,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, subscription) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, subscription) |
 | `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
@@ -74,7 +74,7 @@ pvectl top nodes                  # Resource usage
 | `delete` | Delete resources |
 | `clone` | Clone VMs or containers with optional config changes |
 | `migrate` | Migrate resources between nodes (supports live migration) |
-| `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume) |
+| `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume, dns) |
 | `set` | Set resource properties non-interactively with key=value pairs |
 | `pull` | Export resource configuration as kubectl-like YAML manifests |
 | `push` | Apply YAML manifests to cluster (create or update resources) |
