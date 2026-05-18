@@ -1,11 +1,20 @@
 module Pvectl
   module Services
     class SetNode
-      def initialize: (node_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      TIMEZONE_KEY: Symbol
+
+      def initialize: (node_repository: untyped, ?time_repository: untyped?, ?options: Hash[Symbol, untyped]) -> void
       def execute: (node_name: String, params: Hash[Symbol | String, untyped]) -> Models::NodeOperationResult?
 
       private
+      def split_timezone: (Hash[Symbol | String, untyped] params) -> [Hash[Symbol | String, untyped], String?]
+      def current_timezone: (String node_name) -> String?
+      def compute_timezone_change: (String? current, String? requested) -> Hash[Symbol, String]?
+      def merge_timezone_into_diff: (Hash[Symbol, untyped] changes, Hash[Symbol, String] tz_change) -> void
       def compute_diff: (Hash[Symbol, untyped] config, Hash[Symbol | String, untyped] params) -> Hash[Symbol, untyped]
+      def no_changes?: (Hash[Symbol, untyped] changes) -> bool
+      def apply_config_changes: (String node_name, Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> void
+      def config_changes_empty?: (Hash[Symbol, untyped] changes, Hash[Symbol, String]? tz_change) -> bool
       def build_update_params: (Hash[Symbol, untyped] changes, Hash[Symbol, untyped] original_config) -> Hash[Symbol, untyped]
       def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::NodeOperationResult
       def not_found_result: (String node_name) -> Models::NodeOperationResult

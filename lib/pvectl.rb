@@ -90,6 +90,7 @@ require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
 require_relative "pvectl/models/volume"
 require_relative "pvectl/models/dns_config"
+require_relative "pvectl/models/time_config"
 
 # Repositories
 require_relative "pvectl/repositories/base"
@@ -108,6 +109,7 @@ require_relative "pvectl/repositories/disk"
 require_relative "pvectl/repositories/volume"
 require_relative "pvectl/repositories/dns"
 require_relative "pvectl/repositories/service"
+require_relative "pvectl/repositories/time_config"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -137,6 +139,7 @@ require_relative "pvectl/presenters/disk"
 require_relative "pvectl/presenters/volume"
 require_relative "pvectl/presenters/dns_config"
 require_relative "pvectl/presenters/service"
+require_relative "pvectl/presenters/time_config"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -271,6 +274,7 @@ require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
 require_relative "pvectl/commands/get/handlers/dns"
 require_relative "pvectl/commands/get/handlers/services"
+require_relative "pvectl/commands/get/handlers/time"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
