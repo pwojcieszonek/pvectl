@@ -40,8 +40,10 @@ module Pvectl
       # @return [Services::SetNode] node set service
       def build_set_service(connection)
         node_repo = Pvectl::Repositories::Node.new(connection)
+        time_repo = Pvectl::Repositories::TimeConfig.new(connection)
         Pvectl::Services::SetNode.new(
           node_repository: node_repo,
+          time_repository: time_repo,
           options: service_options
         )
       end

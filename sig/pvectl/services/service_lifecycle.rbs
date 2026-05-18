@@ -1,0 +1,17 @@
+module Pvectl
+  module Services
+    class ServiceLifecycle
+      OPERATIONS: Array[Symbol]
+
+      def initialize: (service_repository: Repositories::Service) -> void
+
+      def execute: (operation: Symbol, node: String, service: String) -> Models::NodeOperationResult
+
+      private
+
+      def validate_operation!: (Symbol operation) -> void
+
+      def build_result: (operation: Symbol, node: String, service: String, **untyped attrs) -> Models::NodeOperationResult
+    end
+  end
+end

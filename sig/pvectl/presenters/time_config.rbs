@@ -1,0 +1,19 @@
+module Pvectl
+  module Presenters
+    class TimeConfig < Base
+      TIMESTAMP_FORMAT: String
+
+      def columns: () -> Array[String]
+
+      def to_row: (untyped model, **untyped context) -> Array[String]
+
+      def to_hash: (untyped model) -> Hash[String, untyped]
+
+      private
+
+      def format_timestamp: (Integer? epoch) -> String
+
+      def iso: (Integer? epoch) -> String?
+    end
+  end
+end
