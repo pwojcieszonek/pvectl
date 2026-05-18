@@ -1,39 +1,43 @@
 # Branch Before Changes Rule
 
-## MUST create a feature branch before modifying any repository files
+## MUST work on a feature branch before modifying any repository files
 
 Every time you need to modify files in the repository, you MUST follow this sequence:
 
 ```
-1. Create branch  →  2. Make changes  →  3. Commit  →  4. Push  →  5. Create PR
+1. Be on a feature branch  →  2. Make changes  →  3. Commit  →  STOP
 ```
+
+**Workflow ends at commit.** The agent must NOT push and must NOT create a pull request on its own initiative. Push and PR creation require an explicit user request — see `git-workflow.md` for details.
 
 ### Workflow
 
 ```bash
-# 1. Ensure you are on main and up to date
-git checkout main
-git pull
+# 1. Determine the working branch
+#    - If already on a non-main feature branch: continue using it (preferred)
+#    - If on main: create a new feature branch
+git status                              # check current branch
+git checkout -b <type>/<short-description> main   # only if on main
 
-# 2. Create feature branch (see git-workflow.md for naming conventions)
-git checkout -b <type>/<short-description> main
-
-# 3. Make changes, commit (see git-workflow.md for commit conventions)
+# 2. Make changes, commit (see git-workflow.md for commit conventions)
 git add <files>
 git commit -m "<type>(<scope>): <description>"
 
-# 4. Push and create PR
-git push -u origin <type>/<short-description>
-gh pr create --title "<title>" --body "<body>"
+# 3. STOP. Do NOT push or create PRs on your own — these need explicit user request.
+#    git merge is allowed for local integration when appropriate.
 ```
 
 ### Rules
 
-- **NEVER commit changes directly to `main`** — always create a branch first
-- Create the branch **before** making any file modifications, not after
-- One logical change per branch — don't mix unrelated work
-- If the user asks to make a change without specifying a branch, create one automatically following `git-workflow.md` naming conventions
-- After PR is created, stay on the feature branch unless the user says otherwise
+- **NEVER commit changes directly to `main`** — always work on a feature branch.
+- **NEVER push to remote on agent initiative** — `git push` only when the user explicitly asks for it.
+- **NEVER create pull requests on agent initiative** — `gh pr create` only when the user explicitly asks for it.
+- `git merge` is allowed for local merges between branches.
+- If currently on a non-`main` branch, **continue working there** — do not create a new branch unless the new request is clearly a different scope.
+- Create a new branch **before** making any file modifications, not after.
+- One logical *initiative* per branch — multiple commits per branch is expected and desired.
+- If the user asks to make a change without specifying a branch and we're on `main`, create one automatically following `git-workflow.md` naming conventions.
+- After committing, stay on the feature branch.
 
 ### When this applies
 

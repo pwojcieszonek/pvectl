@@ -16,7 +16,6 @@
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
-      "Bash(git push:*)",
       "Bash(git pull:*)",
       "Bash(git merge:*)",
       "Bash(git restore:*)",
