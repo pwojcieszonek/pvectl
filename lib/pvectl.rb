@@ -183,6 +183,10 @@ require_relative "pvectl/commands/config/set_cluster"
 require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
 require_relative "pvectl/commands/config/command"
+require_relative "pvectl/commands/cloudinit/regenerate"
+require_relative "pvectl/commands/cloudinit/pending"
+require_relative "pvectl/commands/cloudinit/dump"
+require_relative "pvectl/commands/cloudinit/command"
 require_relative "pvectl/commands/ping"
 require_relative "pvectl/commands/apt"
 
@@ -195,6 +199,9 @@ require_relative "pvectl/services/container_lifecycle"
 
 # Services - Snapshot
 require_relative "pvectl/services/snapshot"
+
+# Services - Cloudinit
+require_relative "pvectl/services/cloudinit"
 
 # Services - Backup
 require_relative "pvectl/services/backup"
@@ -241,6 +248,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Sendkey
+require_relative "pvectl/services/sendkey"
+
 # Services - Unlink Disk
 require_relative "pvectl/services/unlink_disk"
 
@@ -252,6 +262,9 @@ require_relative "pvectl/services/clone_container"
 
 # Services - Resource Migration
 require_relative "pvectl/services/resource_migration"
+
+# Services - Move Disk
+require_relative "pvectl/services/move_disk"
 
 # Services - Console
 require_relative "pvectl/services/console"
@@ -381,11 +394,17 @@ require_relative "pvectl/commands/clone_container"
 require_relative "pvectl/commands/migrate_command"
 require_relative "pvectl/commands/migrate_vm"
 require_relative "pvectl/commands/migrate_container"
+require_relative "pvectl/commands/move_disk_command"
+require_relative "pvectl/commands/move_disk_vm"
+require_relative "pvectl/commands/move_disk_container"
 
 # Commands - Console
 require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"
 require_relative "pvectl/commands/console"
+
+# Sendkey
+require_relative "pvectl/commands/sendkey_vm"
 
 # Commands - Pull
 require_relative "pvectl/commands/pull"
