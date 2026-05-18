@@ -51,6 +51,7 @@ module Pvectl
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
               time                      Node time and timezone settings
+              node-capabilities (caps)  Supported QEMU CPU models and machine types
               subscription (sub)        Proxmox subscription status per node
 
             EXAMPLES
@@ -94,6 +95,10 @@ module Pvectl
 
               Show time and timezone for all online nodes:
                 $ pvectl get time
+
+              List supported CPU models / machine types for a node:
+                $ pvectl get node-capabilities --node pve1
+                $ pvectl get caps --node pve1 -o json
 
               List subscription status across the cluster:
                 $ pvectl get subscription

@@ -1,0 +1,19 @@
+module Pvectl
+  module Services
+    class Cloudinit
+      VALID_DUMP_TYPES: Array[String]
+
+      def initialize: (vm_repository: untyped, resource_resolver: untyped) -> void
+
+      def regenerate: (Integer vmid, ?node: String?) -> Hash[Symbol, untyped]
+
+      def pending: (Integer vmid, ?node: String?) -> Array[Hash[Symbol, untyped]]
+
+      def dump: (Integer vmid, String type, ?node: String?) -> String
+
+      private
+
+      def resolve_node!: (Integer vmid) -> String
+    end
+  end
+end

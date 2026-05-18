@@ -1,0 +1,21 @@
+module Pvectl
+  module Services
+    class MoveDisk
+      DEFAULT_TIMEOUT: Integer
+
+      def initialize: (vm_repository: untyped, container_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (Symbol resource_type, Models::Vm | Models::Container resource, disk: String, target_storage: String) -> (Models::VmOperationResult | Models::ContainerOperationResult)
+
+      private
+
+      def move_single: (Models::Vm | Models::Container resource, String disk, String target_storage) -> (Models::VmOperationResult | Models::ContainerOperationResult)
+
+      def invoke_repository: (Models::Vm | Models::Container resource, String disk, String target_storage) -> String
+
+      def build_result: (Models::Vm | Models::Container resource, **untyped attrs) -> (Models::VmOperationResult | Models::ContainerOperationResult)
+
+      def timeout: () -> Integer
+    end
+  end
+end

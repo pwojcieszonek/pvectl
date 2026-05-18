@@ -256,6 +256,20 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/resize"].put({ disk: disk, size: size })
       end
 
+      # Sends a QEMU monitor key event to a running VM.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/sendkey+ with the +key+ parameter.
+      # The +key+ uses QEMU qcode format (e.g., "ctrl-alt-delete", "ret", "f1").
+      # This is a synchronous operation — Proxmox returns null on success.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node name
+      # @param key [String] QEMU qcode key sequence (e.g., "ctrl-alt-delete")
+      # @return [nil]
+      def sendkey(vmid, node, key)
+        connection.client["nodes/#{node}/qemu/#{vmid}/sendkey"].put({ key: key })
+      end
+
       # Fetches VM configuration.
       #
       # @param node [String] node name
@@ -284,6 +298,76 @@ module Pvectl
         end
 
         connection.client["nodes/#{node}/qemu/#{vmid}/migrate"].post(params)
+      end
+
+      # Moves a VM disk to a different storage on the same node.
+      #
+      # POSTs to +/nodes/{node}/qemu/{vmid}/move_disk+ with the disk identifier
+      # and target storage. The operation is asynchronous — the returned UPID
+      # can be polled via Repositories::Task to track completion.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node name where the VM currently resides
+      # @param disk [String] disk identifier (e.g., "scsi0", "virtio0")
+      # @param target_storage [String] destination storage ID
+      # @param format [String, nil] target disk format ("raw", "qcow2", "vmdk")
+      # @param delete [Boolean] delete the source disk after copy (default: false)
+      # @param bwlimit [Integer, nil] I/O bandwidth limit in KiB/s
+      # @return [String] Task UPID
+      #
+      # @example Move scsi0 to local-lvm storage
+      #   repo.move_disk(100, "pve1", "scsi0", "local-lvm")
+      #   #=> "UPID:pve1:..."
+      #
+      # @example Move and convert format, delete source
+      #   repo.move_disk(100, "pve1", "scsi0", "local-lvm",
+      #                  format: "qcow2", delete: true)
+      def move_disk(vmid, node, disk, target_storage, format: nil, delete: false, bwlimit: nil)
+        params = { disk: disk, storage: target_storage }
+        params[:format] = format if format
+        params[:delete] = 1 if delete
+        params[:bwlimit] = bwlimit if bwlimit
+
+        connection.client["nodes/#{node}/qemu/#{vmid}/move_disk"].post(params)
+      end
+
+      # Regenerates the cloud-init configuration ISO for a VM.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/cloudinit+. The Proxmox API
+      # endpoint returns null on success.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @return [nil]
+      def cloudinit_regenerate(node, vmid)
+        connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit"].put
+      end
+
+      # Fetches pending cloud-init configuration changes for a VM.
+      #
+      # GETs from +/nodes/{node}/qemu/{vmid}/cloudinit+. Returns an array
+      # of pending entries, each with +:key+, +:value+, +:pending+, and
+      # optional +:delete+ keys.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @return [Array<Hash{Symbol => untyped}>] pending entries
+      def cloudinit_pending(node, vmid)
+        response = connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit"].get
+        normalize_response(response)
+      end
+
+      # Dumps the generated cloud-init configuration for a VM.
+      #
+      # GETs from +/nodes/{node}/qemu/{vmid}/cloudinit/dump+ with the
+      # specified +type+ query parameter. Returns the raw YAML/text body.
+      #
+      # @param node [String] node name
+      # @param vmid [Integer, String] VM identifier
+      # @param type [String] config type — one of +"user"+, +"network"+, +"meta"+
+      # @return [String] cloud-init configuration as raw text
+      def cloudinit_dump(node, vmid, type)
+        connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit/dump"].get(params: { type: type })
       end
 
       # Returns the next available VMID from the Proxmox cluster.

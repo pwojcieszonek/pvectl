@@ -35,11 +35,21 @@ module Pvectl
 
       def resize: (Integer | String vmid, String node, disk: String, size: String) -> nil
 
+      def sendkey: (Integer | String vmid, String node, String key) -> nil
+
       def fetch_config: (String node, Integer vmid) -> Hash[Symbol, untyped]
 
       def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String
 
+      def move_disk: (Integer | String vmid, String node, String disk, String target_storage, ?format: String?, ?delete: bool, ?bwlimit: Integer?) -> String
+
       def next_available_vmid: () -> Integer
+
+      def cloudinit_regenerate: (String node, Integer | String vmid) -> nil
+
+      def cloudinit_pending: (String node, Integer | String vmid) -> Array[Hash[Symbol, untyped]]
+
+      def cloudinit_dump: (String node, Integer | String vmid, String type) -> String
 
       private
 

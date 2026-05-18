@@ -1,0 +1,20 @@
+module Pvectl
+  module Repositories
+    class Capabilities < Base
+      CPU_ENDPOINT: String
+      MACHINES_ENDPOINT: String
+
+      def list: (node: String) -> Array[Models::Capability]
+
+      private
+
+      def cpus: (String node) -> Array[Models::Capability]
+
+      def machines: (String node) -> Array[Models::Capability]
+
+      def build_cpu: (Hash[Symbol, untyped] data, String node) -> Models::Capability
+
+      def build_machine: (Hash[Symbol, untyped] data, String node) -> Models::Capability
+    end
+  end
+end

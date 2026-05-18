@@ -1,0 +1,17 @@
+module Pvectl
+  module Commands
+    module Cloudinit
+      class Pending
+        def self.register_subcommand: (untyped parent) -> void
+
+        def self.execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+        def self.render: (Array[Hash[Symbol, untyped]] entries, Hash[Symbol, untyped] global_options) -> void
+
+        def self.render_table: (Array[Hash[Symbol, untyped]] entries) -> void
+
+        def self.stringify_keys: (Hash[Symbol, untyped] hash) -> Hash[String, untyped]
+      end
+    end
+  end
+end

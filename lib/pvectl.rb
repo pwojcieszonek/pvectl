@@ -68,6 +68,7 @@ require_relative "pvectl/formatters/output_helper"
 
 # Models
 require_relative "pvectl/models/base"
+require_relative "pvectl/models/apt_package"
 require_relative "pvectl/models/network_interface"
 require_relative "pvectl/models/physical_disk"
 require_relative "pvectl/models/service"
@@ -92,10 +93,12 @@ require_relative "pvectl/models/volume"
 require_relative "pvectl/models/dns_config"
 require_relative "pvectl/models/time_config"
 require_relative "pvectl/models/hosts_file"
+require_relative "pvectl/models/capability"
 require_relative "pvectl/models/subscription"
 
 # Repositories
 require_relative "pvectl/repositories/base"
+require_relative "pvectl/repositories/apt"
 require_relative "pvectl/repositories/vm"
 require_relative "pvectl/repositories/node"
 require_relative "pvectl/repositories/storage"
@@ -113,10 +116,12 @@ require_relative "pvectl/repositories/dns"
 require_relative "pvectl/repositories/service"
 require_relative "pvectl/repositories/time_config"
 require_relative "pvectl/repositories/hosts"
+require_relative "pvectl/repositories/capabilities"
 require_relative "pvectl/repositories/subscription"
 
 # Presenters
 require_relative "pvectl/presenters/base"
+require_relative "pvectl/presenters/apt_package"
 require_relative "pvectl/presenters/config/context"
 require_relative "pvectl/presenters/vm"
 require_relative "pvectl/presenters/node"
@@ -145,6 +150,7 @@ require_relative "pvectl/presenters/dns_config"
 require_relative "pvectl/presenters/service"
 require_relative "pvectl/presenters/time_config"
 require_relative "pvectl/presenters/hosts_file"
+require_relative "pvectl/presenters/capability"
 require_relative "pvectl/presenters/subscription"
 
 # Selectors
@@ -180,7 +186,12 @@ require_relative "pvectl/commands/config/set_cluster"
 require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
 require_relative "pvectl/commands/config/command"
+require_relative "pvectl/commands/cloudinit/regenerate"
+require_relative "pvectl/commands/cloudinit/pending"
+require_relative "pvectl/commands/cloudinit/dump"
+require_relative "pvectl/commands/cloudinit/command"
 require_relative "pvectl/commands/ping"
+require_relative "pvectl/commands/apt"
 
 # Services - Get
 require_relative "pvectl/services/get/resource_service"
@@ -191,6 +202,9 @@ require_relative "pvectl/services/container_lifecycle"
 
 # Services - Snapshot
 require_relative "pvectl/services/snapshot"
+
+# Services - Cloudinit
+require_relative "pvectl/services/cloudinit"
 
 # Services - Backup
 require_relative "pvectl/services/backup"
@@ -237,6 +251,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Sendkey
+require_relative "pvectl/services/sendkey"
+
 # Services - Set Volume
 require_relative "pvectl/services/set_volume"
 
@@ -245,6 +262,9 @@ require_relative "pvectl/services/clone_container"
 
 # Services - Resource Migration
 require_relative "pvectl/services/resource_migration"
+
+# Services - Move Disk
+require_relative "pvectl/services/move_disk"
 
 # Services - Console
 require_relative "pvectl/services/console"
@@ -260,6 +280,9 @@ require_relative "pvectl/services/push_config"
 
 # Services - Service Lifecycle (systemd services on nodes)
 require_relative "pvectl/services/service_lifecycle"
+
+# Services - Wakeonlan
+require_relative "pvectl/services/wakeonlan"
 
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
@@ -285,6 +308,7 @@ require_relative "pvectl/commands/get/handlers/dns"
 require_relative "pvectl/commands/get/handlers/services"
 require_relative "pvectl/commands/get/handlers/time"
 require_relative "pvectl/commands/get/handlers/hosts"
+require_relative "pvectl/commands/get/handlers/capabilities"
 require_relative "pvectl/commands/get/handlers/subscription"
 
 # Commands - Describe
@@ -371,11 +395,17 @@ require_relative "pvectl/commands/clone_container"
 require_relative "pvectl/commands/migrate_command"
 require_relative "pvectl/commands/migrate_vm"
 require_relative "pvectl/commands/migrate_container"
+require_relative "pvectl/commands/move_disk_command"
+require_relative "pvectl/commands/move_disk_vm"
+require_relative "pvectl/commands/move_disk_container"
 
 # Commands - Console
 require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"
 require_relative "pvectl/commands/console"
+
+# Sendkey
+require_relative "pvectl/commands/sendkey_vm"
 
 # Commands - Pull
 require_relative "pvectl/commands/pull"
@@ -385,6 +415,9 @@ require_relative "pvectl/commands/push"
 
 # Commands - Service (systemd lifecycle on nodes)
 require_relative "pvectl/commands/service"
+
+# Commands - Wakeonlan
+require_relative "pvectl/commands/wakeonlan_node"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"
