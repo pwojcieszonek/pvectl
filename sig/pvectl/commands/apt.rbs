@@ -1,0 +1,47 @@
+module Pvectl
+  module Commands
+    class Apt
+      def self.register: (untyped cli) -> void
+
+      def self.register_list: (untyped parent) -> void
+
+      def self.register_update: (untyped parent) -> void
+
+      def self.register_changelog: (untyped parent) -> void
+
+      def self.register_versions: (untyped parent) -> void
+
+      def self.execute: (Symbol operation, Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (Symbol operation, Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?output: untyped) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def load_config: () -> void
+
+      def resolve_node: () -> String?
+
+      def repository: () -> Repositories::Apt
+
+      def run_list: (String node) -> Integer
+
+      def run_update: (String node) -> Integer
+
+      def run_changelog: (String node) -> Integer
+
+      def run_versions: (String node) -> Integer
+
+      def render_packages: (Array[Models::AptPackage] packages) -> void
+
+      def render_operation_result: (Models::NodeOperationResult result) -> void
+
+      def build_update_result: (String node, String upid) -> Models::NodeOperationResult
+
+      def usage_error: (String message) -> Integer
+
+      def config_error: (String message) -> Integer
+    end
+  end
+end

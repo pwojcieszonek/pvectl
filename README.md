@@ -56,6 +56,7 @@ Once configured, explore your cluster:
 pvectl get nodes                  # List cluster nodes
 pvectl get vms                    # List all VMs
 pvectl get vms -o wide            # Extended columns
+pvectl get subscription           # Show Proxmox subscription per node (key masked)
 pvectl describe vm 100            # Detailed VM info
 pvectl top nodes                  # Resource usage
 ```
@@ -64,7 +65,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services, hosts, node-capabilities, subscription) |
 | `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
@@ -73,15 +74,23 @@ pvectl top nodes                  # Resource usage
 | `delete` | Delete resources |
 | `clone` | Clone VMs or containers with optional config changes |
 | `migrate` | Migrate resources between nodes (supports live migration) |
-| `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume) |
+| `move disk` | Move VM disk / container volume between storages on the same node |
+| `feature` | Query whether a feature (clone/snapshot/copy) is available for a VM/CT |
+| `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume, dns, hosts) |
 | `set` | Set resource properties non-interactively with key=value pairs |
 | `pull` | Export resource configuration as kubectl-like YAML manifests |
 | `push` | Apply YAML manifests to cluster (create or update resources) |
 | `template` | Convert VM/container to template |
+| `unlink` | Unlink disk(s) from a VM (keep volume as `unused[n]` or delete with `--force`) |
 | `rollback` | Rollback to a snapshot |
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
+| `service` | Manage systemd services on Proxmox nodes (start, stop, restart, reload) |
+| `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
+| `cloudinit` | Manage cloud-init for VMs (`regenerate`, `pending`, `dump`) |
+| `sendkey` | Send a QEMU monitor key event to a VM (e.g., `ctrl-alt-delete`) |
 | `ping` | Check cluster connectivity |
+| `wakeonlan` | Send Wake-on-LAN packet to a cluster node |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 
 Use `pvectl help <command>` for detailed usage, examples, and options.

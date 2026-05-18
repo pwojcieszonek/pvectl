@@ -8,8 +8,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **describe**: Firewall Rules section in `describe vm`, `describe container`, and `describe node` output — top-level table with ENABLED, TYPE, ACTION, PROTO, SOURCE, DEST, COMMENT columns
+- **describe vm**: Block Device Statistics section with per-disk read/write bytes and IOPS
+- **describe vm**: Balloon memory details (actual, max, free, total inside guest) in Memory section
+- **commands**: Node DNS configuration — `pvectl get dns --node NODE` reads per-node DNS resolver settings; `pvectl edit dns NODE` opens DNS configuration (search domain, dns1, dns2, dns3) in an interactive YAML editor with diff preview and `--dry-run` support
+- **commands**: Node systemd services — `get services`, `pvectl service start/stop/restart/reload`
+- **commands**: `pvectl get time` — show node time and timezone (single node via `--node`, otherwise iterates online nodes)
+- **commands**: `pvectl set node N timezone=...` — change node timezone via the dedicated `/nodes/{node}/time` API endpoint
+- **commands**: Node hosts file editing — `edit hosts NODE` opens `/etc/hosts` in editor and posts back with original digest for optimistic locking, plus `get hosts --node NODE` to read raw contents
+- **commands**: APT package management — `pvectl apt list/update/changelog/versions`
+- **commands**: `pvectl wakeonlan node <NAME>` — send Wake-on-LAN to a cluster node via `POST /nodes/{node}/wakeonlan`; surfaces the MAC address used for the magic packet on success
+- **commands**: `pvectl get node-capabilities` (aliases: `capabilities`, `caps`) — list supported QEMU CPU models and machine types per node via `/nodes/{node}/capabilities/qemu/*`
+- **commands**: `pvectl move disk vm/ct` — migrate disk/volume between storages on same node (`--target STORAGE`, `--format` for VMs, `--delete-source`, `--bandwidth`, `--wait`, `--timeout`, `-y`)
+- **repositories**: `Vm#move_disk` and `Container#move_volume` wrapping Proxmox `move_disk`/`move_volume` endpoints
+- **services**: `Services::MoveDisk` orchestrates async repository call + optional task polling and returns a typed `OperationResult`
+- **commands**: Cloud-init management — `pvectl cloudinit regenerate/pending/dump vm` to rebuild the cloud-init ISO, list pending configuration changes, and print generated user/network/meta YAML
+- **commands**: `pvectl sendkey vm` — send QEMU keycodes to a running VM (e.g., ctrl-alt-delete)
+- **commands**: `pvectl get subscription` — show Proxmox subscription status per node (level, status, next due date, masked key). Use `-o wide` to reveal the full license key.
+- **commands**: `pvectl feature vm/ct` — query availability of clone/snapshot/copy for a VM or container
+- **commands**: `pvectl unlink disk vm` — remove disk from VM config without deleting volume (or `--force` to delete)
 
 ### Changed
+- **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
 
 ### Fixed
 

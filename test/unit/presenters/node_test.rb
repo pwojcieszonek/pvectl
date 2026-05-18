@@ -650,11 +650,14 @@ class PresentersNodeTest < Minitest::Test
     assert_equal "DROP", fw["Input Policy"]
     assert_equal "ACCEPT", fw["Output Policy"]
 
-    rules = fw["Rules"]
+    assert_nil fw["Rules"]
+
+    rules = desc["Firewall Rules"]
     assert_kind_of Array, rules
     assert_equal 1, rules.length
+    assert_equal "yes", rules[0]["ENABLED"]
+    assert_equal "IN", rules[0]["TYPE"]
     assert_equal "ACCEPT", rules[0]["ACTION"]
-    assert_equal "8006", rules[0]["D.PORT"]
     assert_equal "PVE Web UI", rules[0]["COMMENT"]
   end
 

@@ -50,6 +50,9 @@ module Pvectl
               tasks (task)              Task history
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
+              time                      Node time and timezone settings
+              node-capabilities (caps)  Supported QEMU CPU models and machine types
+              subscription (sub)        Proxmox subscription status per node
 
             EXAMPLES
               List all VMs in table format:
@@ -86,6 +89,22 @@ module Pvectl
 
               List volumes with filtering:
                 $ pvectl get volume vm 100 -l format=raw
+
+              Show node time and timezone for a single node:
+                $ pvectl get time --node pve1
+
+              Show time and timezone for all online nodes:
+                $ pvectl get time
+
+              List supported CPU models / machine types for a node:
+                $ pvectl get node-capabilities --node pve1
+                $ pvectl get caps --node pve1 -o json
+
+              List subscription status across the cluster:
+                $ pvectl get subscription
+
+              Show full license key for one node (key is masked by default):
+                $ pvectl get subscription --node pve1 -o wide
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or

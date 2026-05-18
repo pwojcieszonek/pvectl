@@ -1,0 +1,17 @@
+module Pvectl
+  module Services
+    class UnlinkDisk
+      def initialize: (repository: untyped) -> void
+
+      def execute: (vmid: Integer, node: String, disk_ids: Array[String] | String, ?force: bool) -> Models::VmOperationResult
+
+      private
+
+      def build_result: (Integer vmid, String node, Array[String] | String disk_ids, bool force, **untyped attrs) -> Models::VmOperationResult
+
+      def fetch_vm: (Integer vmid) -> Models::Vm?
+
+      def format_disk_ids: (Array[String] | String disk_ids) -> String
+    end
+  end
+end

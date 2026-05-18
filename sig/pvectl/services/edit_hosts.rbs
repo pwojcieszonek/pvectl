@@ -1,0 +1,13 @@
+module Pvectl
+  module Services
+    class EditHosts
+      def initialize: (hosts_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (node_name: String) -> Models::NodeOperationResult?
+
+      private
+
+      def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::NodeOperationResult
+    end
+  end
+end

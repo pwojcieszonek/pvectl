@@ -20,6 +20,7 @@ module Pvectl
     BUILTIN_COMMANDS = [
       Commands::Ping,
       Commands::Config::Command,
+      Commands::Cloudinit,
       Commands::Get::Command,
       Commands::Top::Command,
       Commands::Logs::Command,
@@ -37,12 +38,19 @@ module Pvectl
       Commands::SetVm,
       Commands::CloneVm,
       Commands::MigrateVm,
+      Commands::MoveDiskVm,
+      Commands::FeatureVm,
       Commands::TemplateVm,
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
       Commands::Console,
+      Commands::SendkeyVm,
       Commands::Pull,
       Commands::Push,
+      Commands::Service,
+      Commands::Apt,
+      Commands::WakeonlanNode,
+      Commands::UnlinkDiskVm,
     ].freeze
 
     @registered_plugins = []

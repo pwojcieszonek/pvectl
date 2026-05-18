@@ -41,8 +41,14 @@ module Pvectl
             Edit a node configuration:
               $ pvectl edit node pve1
 
+            Edit node DNS resolver settings:
+              $ pvectl edit dns pve1
+
             Edit volume properties:
               $ pvectl edit volume vm 100 scsi0
+
+            Edit /etc/hosts on a node:
+              $ pvectl edit hosts pve1
 
             Preview changes without applying:
               $ pvectl edit vm 100 --dry-run
@@ -54,9 +60,18 @@ module Pvectl
             In --dry-run mode, shows the diff between current and edited
             configuration without applying changes to Proxmox.
 
-            Supported resource types: vm, container (ct), node, volume.
+            Supported resource types: vm, container (ct), node, volume, dns, hosts.
+
+            For DNS, the node identifier is given as a positional argument
+            (pvectl edit dns NODE). DNS settings include search domain and
+            up to three nameservers (dns1, dns2, dns3).
 
             For volumes, syntax is: pvectl edit volume <vm|container> <id> <disk>
+
+            For hosts, the node identifier is given as a positional argument
+            (pvectl edit hosts NODE). The /etc/hosts file is edited as raw
+            text — Proxmox requires the pvelocalhost entry to remain present
+            and will reject updates removing it.
 
             Not all configuration keys can be changed while a VM is running.
             Proxmox will reject invalid changes with an error message.
@@ -87,9 +102,13 @@ module Pvectl
               Commands::EditNode.execute(resource_ids, options, global_options)
             when "volume"
               Commands::EditVolume.execute(resource_ids, options, global_options)
+            when "dns"
+              Commands::EditDns.execute(resource_ids, options, global_options)
+            when "hosts"
+              Commands::EditHosts.execute(resource_ids, options, global_options)
             else
               $stderr.puts "Error: Unknown resource type: #{resource_type}"
-              $stderr.puts "Valid types: vm, container, node, volume"
+              $stderr.puts "Valid types: vm, container, node, volume, dns, hosts"
               ExitCodes::USAGE_ERROR
             end
 

@@ -1,0 +1,43 @@
+module Pvectl
+  module Commands
+    module MoveDiskCommand
+      VALID_FORMATS: Array[String]
+
+      module ClassMethods
+        def execute: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+      end
+
+      def self.included: (Class base) -> void
+
+      def initialize: (Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def resource_type_symbol: () -> Symbol
+
+      def id_label: () -> String
+
+      def disk_label: () -> String
+
+      def perform_operation: (Integer id, String disk, String target) -> Integer
+
+      def resolve_resource: (untyped connection, Integer id) -> (Models::Vm | Models::Container)?
+
+      def build_service: (untyped connection) -> Services::MoveDisk
+
+      def service_options: () -> Hash[Symbol, untyped]
+
+      def confirm_operation: (Models::Vm | Models::Container resource, String disk, String target) -> bool
+
+      def load_config: () -> void
+
+      def output_result: (Models::VmOperationResult | Models::ContainerOperationResult result) -> void
+
+      def usage_error: (String message) -> Integer
+
+      def resource_not_found: (Integer id) -> Integer
+    end
+  end
+end

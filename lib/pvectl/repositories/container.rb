@@ -170,6 +170,63 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/migrate"].post(params)
       end
 
+      # Moves a container volume to a different storage on the same node.
+      #
+      # POSTs to +/nodes/{node}/lxc/{ctid}/move_volume+ with the volume identifier
+      # and target storage. The operation is asynchronous — the returned UPID
+      # can be polled via Repositories::Task to track completion.
+      #
+      # @param ctid [Integer, String] container identifier
+      # @param node [String] node name where the container currently resides
+      # @param volume [String] volume identifier (e.g., "rootfs", "mp0")
+      # @param target_storage [String] destination storage ID
+      # @param delete [Boolean] delete the source volume after copy (default: false)
+      # @param bwlimit [Integer, nil] I/O bandwidth limit in KiB/s
+      # @return [String] Task UPID
+      #
+      # @example Move rootfs to a different storage
+      #   repo.move_volume(200, "pve1", "rootfs", "local-lvm")
+      #   #=> "UPID:pve1:..."
+      #
+      # @example Move and delete source volume
+      #   repo.move_volume(200, "pve1", "mp0", "ceph-pool", delete: true)
+      def move_volume(ctid, node, volume, target_storage, delete: false, bwlimit: nil)
+        params = { volume: volume, storage: target_storage }
+        params[:delete] = 1 if delete
+        params[:bwlimit] = bwlimit if bwlimit
+
+        connection.client["nodes/#{node}/lxc/#{ctid}/move_volume"].post(params)
+      end
+
+      # Checks whether a feature (clone, snapshot, copy) is available for a container.
+      #
+      # Calls +GET /nodes/{node}/lxc/{vmid}/feature+ with the feature and
+      # optional snapshot name. The Proxmox LXC API returns +hasFeature+ (0/1).
+      # Unlike the QEMU variant, the LXC endpoint does not return a +nodes+ array;
+      # this method always returns +nodes: []+ for shape compatibility.
+      #
+      # @param ctid [Integer, String] container identifier
+      # @param node [String] node currently hosting the container
+      # @param feature [String] feature name (one of: clone, snapshot, copy)
+      # @param snapname [String, nil] snapshot name (required for some checks)
+      # @return [Hash] result with :available (Boolean) and :nodes (Array<String>)
+      #
+      # @example Check whether container 200 can be cloned
+      #   repo.feature_available?(200, "pve1", "clone")
+      #   #=> { available: true, nodes: [] }
+      def feature_available?(ctid, node, feature, snapname: nil)
+        params = { feature: feature }
+        params[:snapname] = snapname unless snapname.nil?
+
+        response = connection.client["nodes/#{node}/lxc/#{ctid}/feature"].get(params: params)
+        data = extract_data(response)
+
+        {
+          available: data[:hasFeature].to_i == 1,
+          nodes: Array(data[:nodes])
+        }
+      end
+
       # Returns the next available CTID from the Proxmox cluster.
       #
       # Uses the +/cluster/nextid+ API endpoint which performs server-side allocation.
