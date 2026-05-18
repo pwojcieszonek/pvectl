@@ -41,6 +41,9 @@ module Pvectl
             VM SECTIONS (matches PVE web UI tabs)
               Summary        HA state, CPU/memory usage, bootdisk size, uptime,
                              QEMU version, machine type, network/disk I/O
+              Block Device Statistics
+                             Per-disk I/O counters (read/written bytes, IOPS)
+                             for running VMs
               Hardware       Memory, balloon, processors, BIOS, machine, display,
                              SCSI controller, EFI/TPM, disks, network, USB/PCI,
                              serial ports, audio
