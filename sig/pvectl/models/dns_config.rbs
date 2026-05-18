@@ -1,0 +1,15 @@
+module Pvectl
+  module Models
+    class DnsConfig < Base
+      attr_reader node: String?
+      attr_reader search: String?
+      attr_reader dns1: String?
+      attr_reader dns2: String?
+      attr_reader dns3: String?
+
+      def initialize: (?Hash[Symbol | String, untyped] attributes) -> void
+
+      def servers: () -> Array[String]
+    end
+  end
+end

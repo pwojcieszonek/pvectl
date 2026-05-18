@@ -50,6 +50,7 @@ module Pvectl
               tasks (task)              Task history
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
+              time                      Node time and timezone settings
 
             EXAMPLES
               List all VMs in table format:
@@ -86,6 +87,12 @@ module Pvectl
 
               List volumes with filtering:
                 $ pvectl get volume vm 100 -l format=raw
+
+              Show node time and timezone for a single node:
+                $ pvectl get time --node pve1
+
+              Show time and timezone for all online nodes:
+                $ pvectl get time
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or

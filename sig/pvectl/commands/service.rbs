@@ -1,0 +1,38 @@
+module Pvectl
+  module Commands
+    class Service
+      CONFIRMABLE_OPERATIONS: Array[Symbol]
+      OPERATIONS: Array[Symbol]
+
+      def self.register: (untyped cli) -> void
+
+      def self.register_subcommand: (untyped parent, Symbol operation) -> void
+
+      def self.subcommand_long_desc: (Symbol operation) -> String
+
+      def self.execute: (Symbol operation, Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options) -> Integer
+
+      def initialize: (Symbol operation, Array[String] args, Hash[Symbol, untyped] options, Hash[Symbol, untyped] global_options, ?prompt: untyped, ?output: untyped) -> void
+
+      def execute: () -> Integer
+
+      private
+
+      def load_config: () -> void
+
+      def resolve_node: () -> String?
+
+      def confirm!: (String service_name, String node) -> bool
+
+      def service_warning: (String service_name) -> String?
+
+      def perform: (String service_name, String node) -> Models::NodeOperationResult
+
+      def output_result: (Models::NodeOperationResult result) -> void
+
+      def usage_error: (String message) -> Integer
+
+      def config_error: (String message) -> Integer
+    end
+  end
+end

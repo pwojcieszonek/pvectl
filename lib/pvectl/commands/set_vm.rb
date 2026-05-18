@@ -45,6 +45,9 @@ module Pvectl
             Set node description:
               $ pvectl set node pve1 description="Production node"
 
+            Change node timezone:
+              $ pvectl set node pve1 timezone=Europe/Warsaw
+
             Preview changes without applying:
               $ pvectl set vm 100 memory=8192 --dry-run
 

@@ -44,6 +44,7 @@ module Pvectl
       Commands::SendkeyVm,
       Commands::Pull,
       Commands::Push,
+      Commands::Service,
     ].freeze
 
     @registered_plugins = []
