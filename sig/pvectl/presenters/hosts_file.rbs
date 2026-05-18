@@ -1,0 +1,13 @@
+module Pvectl
+  module Presenters
+    class HostsFile < Base
+      def columns: () -> Array[String]
+
+      def to_row: (Models::HostsFile model, **untyped context) -> Array[String]
+
+      def to_hash: (Models::HostsFile model) -> Hash[String, untyped]
+
+      def to_description: (Models::HostsFile model) -> Hash[String, untyped]
+    end
+  end
+end
