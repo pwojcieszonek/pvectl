@@ -987,7 +987,8 @@ class PresentersContainerTest < Minitest::Test
     assert_equal "DROP", fw["Input Policy"]
     assert_equal "ACCEPT", fw["Output Policy"]
     assert_equal "Yes", fw["MAC Filter"]
-    assert_equal "No rules configured", fw["Rules"]
+    assert_nil fw["Rules"]
+    assert_equal "-", desc["Firewall Rules"]
   end
 
   def test_to_description_firewall_with_rules
@@ -1010,13 +1011,47 @@ class PresentersContainerTest < Minitest::Test
     ct = Pvectl::Models::Container.new(attrs)
     desc = @presenter.to_description(ct)
 
-    rules = desc["Firewall"]["Rules"]
+    rules = desc["Firewall Rules"]
     assert_kind_of Array, rules
     assert_equal 1, rules.length
-    assert_equal "Yes", rules[0]["ON"]
+    assert_equal "yes", rules[0]["ENABLED"]
     assert_equal "IN", rules[0]["TYPE"]
     assert_equal "ACCEPT", rules[0]["ACTION"]
+    assert_equal "tcp", rules[0]["PROTO"]
+    assert_equal "-", rules[0]["SOURCE"]
+    assert_equal "-", rules[0]["DEST"]
     assert_equal "SSH", rules[0]["COMMENT"]
+  end
+
+  def test_to_description_firewall_rules_with_ipset_source
+    data = base_container_config
+    attrs = create_describe_attrs.merge(
+      describe_data: {
+        config: data,
+        status: { pid: 54321 },
+        snapshots: [],
+        firewall: {
+          options: { enable: 1 },
+          rules: [
+            { pos: 0, enable: 0, type: "group", action: "managers",
+              source: "+trusted_nets", dest: "", comment: "" }
+          ],
+          aliases: [],
+          ipset: []
+        }
+      }
+    )
+    ct = Pvectl::Models::Container.new(attrs)
+    desc = @presenter.to_description(ct)
+
+    rules = desc["Firewall Rules"]
+    assert_kind_of Array, rules
+    assert_equal "no", rules[0]["ENABLED"]
+    assert_equal "GROUP", rules[0]["TYPE"]
+    assert_equal "managers", rules[0]["ACTION"]
+    assert_equal "+trusted_nets", rules[0]["SOURCE"]
+    assert_equal "-", rules[0]["DEST"]
+    assert_equal "-", rules[0]["COMMENT"]
   end
 
   # ---------------------------
