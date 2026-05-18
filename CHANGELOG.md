@@ -8,9 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **describe**: Firewall Rules section in `describe vm`, `describe container`, and `describe node` output — top-level table with ENABLED, TYPE, ACTION, PROTO, SOURCE, DEST, COMMENT columns
+- **describe vm**: Block Device Statistics section with per-disk read/write bytes and IOPS
+- **describe vm**: Balloon memory details (actual, max, free, total inside guest) in Memory section
 - **commands**: Node hosts file editing — `edit hosts NODE` opens `/etc/hosts` in editor and posts back with original digest for optimistic locking, plus `get hosts --node NODE` to read raw contents
 
 ### Changed
+- **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
 
 ### Fixed
 
