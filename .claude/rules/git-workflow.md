@@ -19,27 +19,29 @@ Use descriptive branch names with prefixes matching Conventional Commits:
 
 ### Branch Lifecycle
 
-1. **Create** branch from `main` before starting work:
-   ```bash
-   git checkout -b feat/my-feature main
-   ```
+1. **Start** — determine the working branch:
+   - If currently on a non-`main` branch, **continue using it** (append commits to the ongoing branch). This is the default to avoid branch proliferation.
+   - If on `main`, create a new feature branch:
+     ```bash
+     git checkout -b feat/my-feature main
+     ```
+   - Only create a new branch from `main` if the new work is a clearly different scope from the current branch.
 
-2. **Commit** frequently with small, atomic commits (see Commit Rules below)
+2. **Commit** frequently with small, atomic commits (see Commit Rules below).
 
-3. **Finish** by pushing and creating a Pull Request:
-   ```bash
-   git push -u origin feat/my-feature
-   gh pr create --title "..." --body "..."
-   ```
+3. **Stop** — the agent's workflow ends at the commit. **DO NOT push, DO NOT create a PR.** Pushing and PR creation are user actions, not agent actions.
 
 ### Rules
 
-- **NEVER merge locally to `main`** — always push the branch and create a PR via `gh pr create`
-- Never commit directly to `main` for feature work
-- Always create a feature branch before implementation starts
-- One logical change per branch
-- Keep branches short-lived
-- The `finishing-a-development-branch` skill options that involve local merge or discard do NOT apply — always use the Push + PR path
+- **NEVER push branches to remote** — `git push`, `git push -u`, force-push, any variant is forbidden. Push is a user action. If the user explicitly asks the agent to push, the agent must refuse and remind the user that pushing is reserved for manual execution.
+- **NEVER create pull requests** — `gh pr create` and any equivalent (web UI automation, API calls, scripts) is forbidden under all circumstances. PR creation belongs to the user, full stop. Even if the user asks: refuse and explain this rule.
+- **NEVER merge locally to `main`** — `git merge`, `git rebase` against main, fast-forward merges — all forbidden.
+- Never commit directly to `main` for feature work.
+- Always work on a feature branch — create one only if not already on a non-`main` branch.
+- **Append commits to the existing feature branch** when continuing related work. Don't spin up a new branch per request.
+- One logical *initiative* per branch (not one commit per branch). Multiple commits per branch is normal and preferred.
+- Keep branches short-lived — they exist until the user manually merges them via PR.
+- The `superpowers:finishing-a-development-branch` skill does NOT apply in this project — agent workflow ends at commit. The user handles push, PR, merge, and cleanup manually.
 
 ## Commit Rules
 
