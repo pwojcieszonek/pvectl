@@ -68,6 +68,7 @@ require_relative "pvectl/formatters/output_helper"
 
 # Models
 require_relative "pvectl/models/base"
+require_relative "pvectl/models/apt_package"
 require_relative "pvectl/models/network_interface"
 require_relative "pvectl/models/physical_disk"
 require_relative "pvectl/models/service"
@@ -96,6 +97,7 @@ require_relative "pvectl/models/capability"
 
 # Repositories
 require_relative "pvectl/repositories/base"
+require_relative "pvectl/repositories/apt"
 require_relative "pvectl/repositories/vm"
 require_relative "pvectl/repositories/node"
 require_relative "pvectl/repositories/storage"
@@ -117,6 +119,7 @@ require_relative "pvectl/repositories/capabilities"
 
 # Presenters
 require_relative "pvectl/presenters/base"
+require_relative "pvectl/presenters/apt_package"
 require_relative "pvectl/presenters/config/context"
 require_relative "pvectl/presenters/vm"
 require_relative "pvectl/presenters/node"
@@ -181,6 +184,7 @@ require_relative "pvectl/commands/config/set_credentials"
 require_relative "pvectl/commands/config/view"
 require_relative "pvectl/commands/config/command"
 require_relative "pvectl/commands/ping"
+require_relative "pvectl/commands/apt"
 
 # Services - Get
 require_relative "pvectl/services/get/resource_service"

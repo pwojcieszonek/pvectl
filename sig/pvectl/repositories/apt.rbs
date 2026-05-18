@@ -1,0 +1,17 @@
+module Pvectl
+  module Repositories
+    class Apt < Base
+      def pending: (String node) -> Array[Models::AptPackage]
+
+      def refresh: (String node, ?notify: bool, ?quiet: bool) -> String
+
+      def changelog: (String node, String package, ?version: String?) -> String
+
+      def versions: (String node) -> Array[Models::AptPackage]
+
+      private
+
+      def build_model: (Hash[Symbol, untyped] data) -> Models::AptPackage
+    end
+  end
+end

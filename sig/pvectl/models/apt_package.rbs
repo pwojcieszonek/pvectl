@@ -1,0 +1,26 @@
+module Pvectl
+  module Models
+    class AptPackage < Base
+      attr_reader package: String?
+      attr_reader title: String?
+      attr_reader version: String?
+      attr_reader old_version: String?
+      attr_reader origin: String?
+      attr_reader section: String?
+      attr_reader priority: String?
+      attr_reader arch: String?
+      attr_reader description: String?
+      attr_reader notify_status: String?
+      attr_reader current_state: String?
+      attr_reader manager_version: String?
+      attr_reader running_kernel: String?
+      attr_reader node: String?
+
+      def initialize: (?Hash[Symbol, untyped] attrs) -> void
+
+      def upgrade?: () -> bool
+
+      def installed_state: () -> String
+    end
+  end
+end
