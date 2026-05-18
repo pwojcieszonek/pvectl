@@ -73,6 +73,7 @@ pvectl top nodes                  # Resource usage
 | `delete` | Delete resources |
 | `clone` | Clone VMs or containers with optional config changes |
 | `migrate` | Migrate resources between nodes (supports live migration) |
+| `move disk` | Move VM disk / container volume between storages on the same node |
 | `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume, dns, hosts) |
 | `set` | Set resource properties non-interactively with key=value pairs |
 | `pull` | Export resource configuration as kubectl-like YAML manifests |

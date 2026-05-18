@@ -250,6 +250,9 @@ require_relative "pvectl/services/clone_container"
 # Services - Resource Migration
 require_relative "pvectl/services/resource_migration"
 
+# Services - Move Disk
+require_relative "pvectl/services/move_disk"
+
 # Services - Console
 require_relative "pvectl/services/console"
 
@@ -378,6 +381,9 @@ require_relative "pvectl/commands/clone_container"
 require_relative "pvectl/commands/migrate_command"
 require_relative "pvectl/commands/migrate_vm"
 require_relative "pvectl/commands/migrate_container"
+require_relative "pvectl/commands/move_disk_command"
+require_relative "pvectl/commands/move_disk_vm"
+require_relative "pvectl/commands/move_disk_container"
 
 # Commands - Console
 require_relative "pvectl/commands/console_vm"

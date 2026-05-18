@@ -681,6 +681,105 @@ class RepositoriesContainerTest < Minitest::Test
   end
 
   # ---------------------------
+  # move_volume() Method
+  # ---------------------------
+
+  def test_move_volume_posts_to_correct_endpoint_with_required_params
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movevol1",
+                         [{ volume: "rootfs", storage: "storage2" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/lxc/200/move_volume"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    result = repo.move_volume(200, "pve1", "rootfs", "storage2")
+
+    assert_equal "UPID:pve1:movevol1", result
+    mock_endpoint.verify
+    mock_client.verify
+  end
+
+  def test_move_volume_includes_delete_as_1_when_true
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movevol1",
+                         [{ volume: "rootfs", storage: "storage2", delete: 1 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/lxc/200/move_volume"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    repo.move_volume(200, "pve1", "rootfs", "storage2", delete: true)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_volume_omits_delete_when_false
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movevol1",
+                         [{ volume: "rootfs", storage: "storage2" }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/lxc/200/move_volume"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    repo.move_volume(200, "pve1", "rootfs", "storage2", delete: false)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_volume_includes_bwlimit_when_provided
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve1:movevol1",
+                         [{ volume: "rootfs", storage: "storage2", bwlimit: 10_240 }])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve1/lxc/200/move_volume"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    repo.move_volume(200, "pve1", "rootfs", "storage2", bwlimit: 10_240)
+
+    mock_endpoint.verify
+  end
+
+  def test_move_volume_passes_all_optional_params_together
+    expected_params = {
+      volume: "mp0",
+      storage: "storage2",
+      delete: 1,
+      bwlimit: 5120
+    }
+
+    mock_endpoint = Minitest::Mock.new
+    mock_endpoint.expect(:post, "UPID:pve2:movevol1", [expected_params])
+
+    mock_client = Minitest::Mock.new
+    mock_client.expect(:[], mock_endpoint, ["nodes/pve2/lxc/300/move_volume"])
+
+    mock_connection = Minitest::Mock.new
+    mock_connection.expect(:client, mock_client)
+
+    repo = Pvectl::Repositories::Container.new(mock_connection)
+    result = repo.move_volume(300, "pve2", "mp0", "storage2",
+                              delete: true, bwlimit: 5120)
+
+    assert_equal "UPID:pve2:movevol1", result
+    mock_endpoint.verify
+  end
+
+  # ---------------------------
   # next_available_ctid() Method
   # ---------------------------
 
