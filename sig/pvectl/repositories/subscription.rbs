@@ -1,0 +1,17 @@
+module Pvectl
+  module Repositories
+    class Subscription < Base
+      def list: (?node: String?) -> Array[Models::Subscription]
+
+      def get: (String node) -> Models::Subscription
+
+      private
+
+      def online_node_names: () -> Array[String]
+
+      def fetch_for: (String node_name) -> Models::Subscription
+
+      def build_model: (Hash[Symbol, untyped]? data, String node_name) -> Models::Subscription
+    end
+  end
+end

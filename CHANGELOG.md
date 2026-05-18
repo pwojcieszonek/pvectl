@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **repositories**: `Vm#move_disk` and `Container#move_volume` wrapping Proxmox `move_disk`/`move_volume` endpoints
 - **services**: `Services::MoveDisk` orchestrates async repository call + optional task polling and returns a typed `OperationResult`
 - **commands**: Cloud-init management — `pvectl cloudinit regenerate/pending/dump vm` to rebuild the cloud-init ISO, list pending configuration changes, and print generated user/network/meta YAML
+- **commands**: `pvectl sendkey vm` — send QEMU keycodes to a running VM (e.g., ctrl-alt-delete)
+- **commands**: `pvectl get subscription` — show Proxmox subscription status per node (level, status, next due date, masked key). Use `-o wide` to reveal the full license key.
 - **commands**: `pvectl feature vm/ct` — query availability of clone/snapshot/copy for a VM or container
 
 ### Changed

@@ -1,0 +1,19 @@
+module Pvectl
+  module Services
+    class Sendkey
+      def initialize: (vm_repository: untyped) -> void
+
+      def execute: (vmid: Integer | String, key: String, ?node: String?) -> Models::VmOperationResult
+
+      private
+
+      def not_found_result: (Integer vmid) -> Models::VmOperationResult
+
+      def not_running_result: (Models::Vm vm, String node, String key) -> Models::VmOperationResult
+
+      def success_result: (Models::Vm vm, String node, String key) -> Models::VmOperationResult
+
+      def failure_result: (Models::Vm? vm, String? node, String key, String message) -> Models::VmOperationResult
+    end
+  end
+end
