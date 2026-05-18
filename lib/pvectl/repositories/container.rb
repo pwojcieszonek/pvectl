@@ -170,6 +170,34 @@ module Pvectl
         connection.client["nodes/#{node}/lxc/#{ctid}/migrate"].post(params)
       end
 
+      # Moves a container volume to a different storage on the same node.
+      #
+      # POSTs to +/nodes/{node}/lxc/{ctid}/move_volume+ with the volume identifier
+      # and target storage. The operation is asynchronous — the returned UPID
+      # can be polled via Repositories::Task to track completion.
+      #
+      # @param ctid [Integer, String] container identifier
+      # @param node [String] node name where the container currently resides
+      # @param volume [String] volume identifier (e.g., "rootfs", "mp0")
+      # @param target_storage [String] destination storage ID
+      # @param delete [Boolean] delete the source volume after copy (default: false)
+      # @param bwlimit [Integer, nil] I/O bandwidth limit in KiB/s
+      # @return [String] Task UPID
+      #
+      # @example Move rootfs to a different storage
+      #   repo.move_volume(200, "pve1", "rootfs", "local-lvm")
+      #   #=> "UPID:pve1:..."
+      #
+      # @example Move and delete source volume
+      #   repo.move_volume(200, "pve1", "mp0", "ceph-pool", delete: true)
+      def move_volume(ctid, node, volume, target_storage, delete: false, bwlimit: nil)
+        params = { volume: volume, storage: target_storage }
+        params[:delete] = 1 if delete
+        params[:bwlimit] = bwlimit if bwlimit
+
+        connection.client["nodes/#{node}/lxc/#{ctid}/move_volume"].post(params)
+      end
+
       # Checks whether a feature (clone, snapshot, copy) is available for a container.
       #
       # Calls +GET /nodes/{node}/lxc/{vmid}/feature+ with the feature and

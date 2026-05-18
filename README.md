@@ -64,7 +64,7 @@ pvectl top nodes                  # Resource usage
 
 | Command | Description |
 |---------|-------------|
-| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services, hosts) |
+| `get` | List resources (nodes, VMs, containers, storage, disks, volumes, snapshots, backups, tasks, dns, services, hosts, node-capabilities) |
 | `describe` | Show detailed information about a resource (nodes, VMs, containers, storage, disks, volumes, snapshots) |
 | `top` | Display resource usage metrics (CPU, memory, disk) |
 | `logs` | Show logs and task history (syslog, journal, task detail) |
@@ -73,6 +73,7 @@ pvectl top nodes                  # Resource usage
 | `delete` | Delete resources |
 | `clone` | Clone VMs or containers with optional config changes |
 | `migrate` | Migrate resources between nodes (supports live migration) |
+| `move disk` | Move VM disk / container volume between storages on the same node |
 | `feature` | Query whether a feature (clone/snapshot/copy) is available for a VM/CT |
 | `edit` | Edit resource configuration in $EDITOR (vm, container, node, volume, dns, hosts) |
 | `set` | Set resource properties non-interactively with key=value pairs |
@@ -83,7 +84,9 @@ pvectl top nodes                  # Resource usage
 | `restore` | Restore from a backup |
 | `console` | Interactive terminal session |
 | `service` | Manage systemd services on Proxmox nodes (start, stop, restart, reload) |
+| `apt` | Manage APT packages on Proxmox nodes (list, update, changelog, versions) |
 | `ping` | Check cluster connectivity |
+| `wakeonlan` | Send Wake-on-LAN packet to a cluster node |
 | `config` | Manage configuration (contexts, clusters, credentials) |
 
 Use `pvectl help <command>` for detailed usage, examples, and options.

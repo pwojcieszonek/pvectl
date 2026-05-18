@@ -39,6 +39,8 @@ module Pvectl
 
       def migrate: (Integer vmid, String node, ?Hash[Symbol, untyped] params) -> String
 
+      def move_disk: (Integer | String vmid, String node, String disk, String target_storage, ?format: String?, ?delete: bool, ?bwlimit: Integer?) -> String
+
       def feature_available?: (Integer | String vmid, String node, String feature, ?snapname: String?) -> Hash[Symbol, untyped]
 
       def next_available_vmid: () -> Integer

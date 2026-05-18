@@ -286,6 +286,37 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/migrate"].post(params)
       end
 
+      # Moves a VM disk to a different storage on the same node.
+      #
+      # POSTs to +/nodes/{node}/qemu/{vmid}/move_disk+ with the disk identifier
+      # and target storage. The operation is asynchronous — the returned UPID
+      # can be polled via Repositories::Task to track completion.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node name where the VM currently resides
+      # @param disk [String] disk identifier (e.g., "scsi0", "virtio0")
+      # @param target_storage [String] destination storage ID
+      # @param format [String, nil] target disk format ("raw", "qcow2", "vmdk")
+      # @param delete [Boolean] delete the source disk after copy (default: false)
+      # @param bwlimit [Integer, nil] I/O bandwidth limit in KiB/s
+      # @return [String] Task UPID
+      #
+      # @example Move scsi0 to local-lvm storage
+      #   repo.move_disk(100, "pve1", "scsi0", "local-lvm")
+      #   #=> "UPID:pve1:..."
+      #
+      # @example Move and convert format, delete source
+      #   repo.move_disk(100, "pve1", "scsi0", "local-lvm",
+      #                  format: "qcow2", delete: true)
+      def move_disk(vmid, node, disk, target_storage, format: nil, delete: false, bwlimit: nil)
+        params = { disk: disk, storage: target_storage }
+        params[:format] = format if format
+        params[:delete] = 1 if delete
+        params[:bwlimit] = bwlimit if bwlimit
+
+        connection.client["nodes/#{node}/qemu/#{vmid}/move_disk"].post(params)
+      end
+
       # Checks whether a feature (clone, snapshot, copy) is available for a VM.
       #
       # Calls +GET /nodes/{node}/qemu/{vmid}/feature+ with the feature and
