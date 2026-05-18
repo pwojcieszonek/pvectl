@@ -52,6 +52,7 @@ module Pvectl
               volumes (volume, vol)     Virtual disks attached to VMs/containers
               time                      Node time and timezone settings
               node-capabilities (caps)  Supported QEMU CPU models and machine types
+              subscription (sub)        Proxmox subscription status per node
 
             EXAMPLES
               List all VMs in table format:
@@ -98,6 +99,12 @@ module Pvectl
               List supported CPU models / machine types for a node:
                 $ pvectl get node-capabilities --node pve1
                 $ pvectl get caps --node pve1 -o json
+
+              List subscription status across the cluster:
+                $ pvectl get subscription
+
+              Show full license key for one node (key is masked by default):
+                $ pvectl get subscription --node pve1 -o wide
 
             NOTES
               Use selectors (-l) to filter VMs/containers by status, name, tags, or

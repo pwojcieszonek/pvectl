@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Subscription
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Subscription?) -> void
+
+          def list: (?node: String?, ?name: String?, ?args: Array[String], ?storage: String?) -> Array[Models::Subscription]
+
+          def presenter: () -> Presenters::Subscription
+
+          def describe: (name: String, ?node: String?, ?args: Array[String], ?vmid: Array[String]?) -> Models::Subscription
+
+          private
+
+          attr_reader repository: Repositories::Subscription
+
+          def build_repository: () -> Repositories::Subscription
+        end
+      end
+    end
+  end
+end
