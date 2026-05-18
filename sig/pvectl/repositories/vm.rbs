@@ -43,6 +43,12 @@ module Pvectl
 
       def next_available_vmid: () -> Integer
 
+      def cloudinit_regenerate: (String node, Integer | String vmid) -> nil
+
+      def cloudinit_pending: (String node, Integer | String vmid) -> Array[Hash[Symbol, untyped]]
+
+      def cloudinit_dump: (String node, Integer | String vmid, String type) -> String
+
       private
 
       def build_model: (Hash[Symbol, untyped] data) -> Models::Vm
