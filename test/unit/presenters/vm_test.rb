@@ -1248,7 +1248,8 @@ class PresentersVmTest < Minitest::Test
     assert_equal "No", fw["Enable"]
     assert_equal "DROP", fw["Input Policy"]
     assert_equal "ACCEPT", fw["Output Policy"]
-    assert_equal "No rules configured", fw["Rules"]
+    assert_nil fw["Rules"]
+    assert_equal "-", desc["Firewall Rules"]
   end
 
   def test_to_description_firewall_with_options
@@ -1298,21 +1299,31 @@ class PresentersVmTest < Minitest::Test
     vm = create_vm_from_data(data)
     desc = @presenter.to_description(vm)
 
-    rules = desc["Firewall"]["Rules"]
+    rules = desc["Firewall Rules"]
     assert_kind_of Array, rules
     assert_equal 2, rules.length
 
-    assert_equal "Yes", rules[0]["ON"]
+    assert_equal "yes", rules[0]["ENABLED"]
     assert_equal "IN", rules[0]["TYPE"]
     assert_equal "ACCEPT", rules[0]["ACTION"]
     assert_equal "tcp", rules[0]["PROTO"]
-    assert_equal "22", rules[0]["D.PORT"]
     assert_equal "10.0.0.0/8", rules[0]["SOURCE"]
+    assert_equal "-", rules[0]["DEST"]
     assert_equal "Allow SSH", rules[0]["COMMENT"]
 
-    assert_equal "No", rules[1]["ON"]
+    assert_equal "no", rules[1]["ENABLED"]
     assert_equal "OUT", rules[1]["TYPE"]
     assert_equal "DROP", rules[1]["ACTION"]
+    assert_equal "-", rules[1]["SOURCE"]
+    assert_equal "-", rules[1]["COMMENT"]
+  end
+
+  def test_to_description_firewall_rules_absent_renders_dash
+    data = base_describe_data
+    vm = create_vm_from_data(data)
+    desc = @presenter.to_description(vm)
+
+    assert_equal "-", desc["Firewall Rules"]
   end
 
   def test_to_description_firewall_with_aliases_and_ipsets
