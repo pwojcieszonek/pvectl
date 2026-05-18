@@ -370,6 +370,34 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/cloudinit/dump"].get(params: { type: type })
       end
 
+      # Checks whether a feature (clone, snapshot, copy) is available for a VM.
+      #
+      # Calls +GET /nodes/{node}/qemu/{vmid}/feature+ with the feature and
+      # optional snapshot name. The Proxmox API returns +hasFeature+ (0/1) and
+      # a +nodes+ array listing cluster nodes that satisfy the feature.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node currently hosting the VM
+      # @param feature [String] feature name (one of: clone, snapshot, copy)
+      # @param snapname [String, nil] snapshot name (required for some checks)
+      # @return [Hash] result with :available (Boolean) and :nodes (Array<String>)
+      #
+      # @example Check whether VM 100 can be cloned
+      #   repo.feature_available?(100, "pve1", "clone")
+      #   #=> { available: true, nodes: ["pve1", "pve2"] }
+      def feature_available?(vmid, node, feature, snapname: nil)
+        params = { feature: feature }
+        params[:snapname] = snapname unless snapname.nil?
+
+        response = connection.client["nodes/#{node}/qemu/#{vmid}/feature"].get(params: params)
+        data = normalize_hash_response(response)
+
+        {
+          available: data[:hasFeature].to_i == 1,
+          nodes: Array(data[:nodes])
+        }
+      end
+
       # Returns the next available VMID from the Proxmox cluster.
       #
       # Uses the +/cluster/nextid+ API endpoint which performs server-side allocation.

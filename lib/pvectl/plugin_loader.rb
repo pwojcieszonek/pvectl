@@ -39,6 +39,7 @@ module Pvectl
       Commands::CloneVm,
       Commands::MigrateVm,
       Commands::MoveDiskVm,
+      Commands::FeatureVm,
       Commands::TemplateVm,
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,

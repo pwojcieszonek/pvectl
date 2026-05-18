@@ -399,6 +399,11 @@ require_relative "pvectl/commands/move_disk_command"
 require_relative "pvectl/commands/move_disk_vm"
 require_relative "pvectl/commands/move_disk_container"
 
+# Commands - Feature
+require_relative "pvectl/commands/feature_command"
+require_relative "pvectl/commands/feature_vm"
+require_relative "pvectl/commands/feature_container"
+
 # Commands - Console
 require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"

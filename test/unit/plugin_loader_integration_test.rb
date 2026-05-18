@@ -23,7 +23,7 @@ class PluginLoaderIntegrationTest < Minitest::Test
     expected_commands = %i[get top logs describe ping start stop shutdown
                           restart reset suspend resume create delete edit
                           clone migrate move rollback restore config console template
-                          set pull push service apt wakeonlan cloudinit sendkey]
+                          set pull push service apt wakeonlan cloudinit sendkey feature]
 
     expected_commands.each do |cmd|
       assert test_app.commands.key?(cmd),
@@ -41,7 +41,7 @@ class PluginLoaderIntegrationTest < Minitest::Test
 
     # GLI adds :help and :_doc by default, plus our 31 built-in commands
     user_commands = test_app.commands.keys - [:help, :_doc]
-    expected_count = 31
+    expected_count = 32
     assert_equal expected_count, user_commands.size,
                  "Expected #{expected_count} user commands, got #{user_commands.size}: #{user_commands.sort}"
   end
