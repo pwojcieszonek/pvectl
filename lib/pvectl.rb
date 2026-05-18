@@ -248,6 +248,9 @@ require_relative "pvectl/services/set_node"
 # Services - Resize Volume
 require_relative "pvectl/services/resize_volume"
 
+# Services - Sendkey
+require_relative "pvectl/services/sendkey"
+
 # Services - Set Volume
 require_relative "pvectl/services/set_volume"
 
@@ -396,6 +399,9 @@ require_relative "pvectl/commands/move_disk_container"
 require_relative "pvectl/commands/console_vm"
 require_relative "pvectl/commands/console_ct"
 require_relative "pvectl/commands/console"
+
+# Sendkey
+require_relative "pvectl/commands/sendkey_vm"
 
 # Commands - Pull
 require_relative "pvectl/commands/pull"

@@ -43,6 +43,7 @@ module Pvectl
       Commands::RollbackSnapshot,
       Commands::RestoreBackup,
       Commands::Console,
+      Commands::SendkeyVm,
       Commands::Pull,
       Commands::Push,
       Commands::Service,

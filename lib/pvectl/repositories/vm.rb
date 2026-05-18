@@ -256,6 +256,20 @@ module Pvectl
         connection.client["nodes/#{node}/qemu/#{vmid}/resize"].put({ disk: disk, size: size })
       end
 
+      # Sends a QEMU monitor key event to a running VM.
+      #
+      # PUTs to +/nodes/{node}/qemu/{vmid}/sendkey+ with the +key+ parameter.
+      # The +key+ uses QEMU qcode format (e.g., "ctrl-alt-delete", "ret", "f1").
+      # This is a synchronous operation — Proxmox returns null on success.
+      #
+      # @param vmid [Integer, String] VM identifier
+      # @param node [String] node name
+      # @param key [String] QEMU qcode key sequence (e.g., "ctrl-alt-delete")
+      # @return [nil]
+      def sendkey(vmid, node, key)
+        connection.client["nodes/#{node}/qemu/#{vmid}/sendkey"].put({ key: key })
+      end
+
       # Fetches VM configuration.
       #
       # @param node [String] node name
