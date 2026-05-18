@@ -17,6 +17,7 @@
       "Bash(git diff:*)",
       "Bash(git log:*)",
       "Bash(git pull:*)",
+      "Bash(git merge:*)",
       "Bash(git restore:*)",
       "Bash(git stash:*)",
       "Bash(git ls-remote:*)",

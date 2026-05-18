@@ -8,7 +8,7 @@ Every time you need to modify files in the repository, you MUST follow this sequ
 1. Be on a feature branch  →  2. Make changes  →  3. Commit  →  STOP
 ```
 
-**Workflow ends at commit.** The agent must NOT push and must NOT create a pull request. See `git-workflow.md` for the full prohibition.
+**Workflow ends at commit.** The agent must NOT push and must NOT create a pull request on its own initiative. Push and PR creation require an explicit user request — see `git-workflow.md` for details.
 
 ### Workflow
 
@@ -23,14 +23,16 @@ git checkout -b <type>/<short-description> main   # only if on main
 git add <files>
 git commit -m "<type>(<scope>): <description>"
 
-# 3. STOP. Do NOT run: git push, gh pr create, git merge.
+# 3. STOP. Do NOT push or create PRs on your own — these need explicit user request.
+#    git merge is allowed for local integration when appropriate.
 ```
 
 ### Rules
 
 - **NEVER commit changes directly to `main`** — always work on a feature branch.
-- **NEVER push to remote** — `git push` is reserved for the user.
-- **NEVER create pull requests** — `gh pr create` (and any equivalent) is forbidden, even if the user asks. PR creation is exclusively the user's responsibility.
+- **NEVER push to remote on agent initiative** — `git push` only when the user explicitly asks for it.
+- **NEVER create pull requests on agent initiative** — `gh pr create` only when the user explicitly asks for it.
+- `git merge` is allowed for local merges between branches.
 - If currently on a non-`main` branch, **continue working there** — do not create a new branch unless the new request is clearly a different scope.
 - Create a new branch **before** making any file modifications, not after.
 - One logical *initiative* per branch — multiple commits per branch is expected and desired.
