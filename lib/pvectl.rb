@@ -107,6 +107,7 @@ require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
 require_relative "pvectl/repositories/volume"
 require_relative "pvectl/repositories/dns"
+require_relative "pvectl/repositories/service"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -135,6 +136,7 @@ require_relative "pvectl/presenters/task_log_line"
 require_relative "pvectl/presenters/disk"
 require_relative "pvectl/presenters/volume"
 require_relative "pvectl/presenters/dns_config"
+require_relative "pvectl/presenters/service"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -244,6 +246,9 @@ require_relative "pvectl/services/pull_config"
 # Services - Push Config
 require_relative "pvectl/services/push_config"
 
+# Services - Service Lifecycle (systemd services on nodes)
+require_relative "pvectl/services/service_lifecycle"
+
 # Commands - Base
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
@@ -265,6 +270,7 @@ require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
 require_relative "pvectl/commands/get/handlers/dns"
+require_relative "pvectl/commands/get/handlers/services"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -360,6 +366,9 @@ require_relative "pvectl/commands/pull"
 
 # Commands - Push
 require_relative "pvectl/commands/push"
+
+# Commands - Service (systemd lifecycle on nodes)
+require_relative "pvectl/commands/service"
 
 # Wizards
 require_relative "pvectl/wizards/create_vm"

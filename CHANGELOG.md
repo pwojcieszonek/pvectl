@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **describe vm**: Block Device Statistics section with per-disk read/write bytes and IOPS
 - **describe vm**: Balloon memory details (actual, max, free, total inside guest) in Memory section
 - **commands**: Node DNS configuration — `pvectl get dns --node NODE` reads per-node DNS resolver settings; `pvectl edit dns NODE` opens DNS configuration (search domain, dns1, dns2, dns3) in an interactive YAML editor with diff preview and `--dry-run` support
+- **commands**: Node systemd services — `get services`, `pvectl service start/stop/restart/reload`
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
