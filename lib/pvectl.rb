@@ -90,6 +90,7 @@ require_relative "pvectl/models/syslog_entry"
 require_relative "pvectl/models/journal_entry"
 require_relative "pvectl/models/task_log_line"
 require_relative "pvectl/models/volume"
+require_relative "pvectl/models/dns_config"
 
 # Repositories
 require_relative "pvectl/repositories/base"
@@ -107,6 +108,7 @@ require_relative "pvectl/repositories/journal"
 require_relative "pvectl/repositories/task_log"
 require_relative "pvectl/repositories/disk"
 require_relative "pvectl/repositories/volume"
+require_relative "pvectl/repositories/dns"
 
 # Presenters
 require_relative "pvectl/presenters/base"
@@ -135,6 +137,7 @@ require_relative "pvectl/presenters/journal_entry"
 require_relative "pvectl/presenters/task_log_line"
 require_relative "pvectl/presenters/disk"
 require_relative "pvectl/presenters/volume"
+require_relative "pvectl/presenters/dns_config"
 
 # Selectors
 require_relative "pvectl/selectors/base"
@@ -206,6 +209,9 @@ require_relative "pvectl/services/edit_container"
 # Services - Edit Node
 require_relative "pvectl/services/edit_node"
 
+# Services - Edit DNS
+require_relative "pvectl/services/edit_dns"
+
 # Services - Edit Volume
 require_relative "pvectl/services/edit_volume"
 
@@ -262,6 +268,7 @@ require_relative "pvectl/commands/get/handlers/tasks"
 require_relative "pvectl/commands/get/handlers/templates"
 require_relative "pvectl/commands/get/handlers/disks"
 require_relative "pvectl/commands/get/handlers/volume"
+require_relative "pvectl/commands/get/handlers/dns"
 
 # Commands - Describe
 require_relative "pvectl/commands/describe/command"
@@ -319,6 +326,7 @@ require_relative "pvectl/commands/edit_vm"
 require_relative "pvectl/commands/edit_container"
 require_relative "pvectl/commands/edit_node"
 require_relative "pvectl/commands/edit_volume"
+require_relative "pvectl/commands/edit_dns"
 
 # Commands - Set
 require_relative "pvectl/commands/set_resource_command"
