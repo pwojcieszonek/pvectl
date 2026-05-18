@@ -1,0 +1,25 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Dns
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Dns?) -> void
+
+          def list: (?node: String?, **untyped options) -> Array[Models::DnsConfig]
+
+          def presenter: () -> Presenters::DnsConfig
+
+          def describe: (name: String?, ?node: String?, **untyped opts) -> Models::DnsConfig
+
+          private
+
+          attr_reader repository: Repositories::Dns
+
+          def build_repository: () -> Repositories::Dns
+        end
+      end
+    end
+  end
+end
