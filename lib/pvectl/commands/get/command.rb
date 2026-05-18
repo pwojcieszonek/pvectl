@@ -50,6 +50,7 @@ module Pvectl
               tasks (task)              Task history
               disks (disk)              Physical disks (block devices)
               volumes (volume, vol)     Virtual disks attached to VMs/containers
+              time                      Node time and timezone settings
               node-capabilities (caps)  Supported QEMU CPU models and machine types
 
             EXAMPLES
@@ -87,6 +88,12 @@ module Pvectl
 
               List volumes with filtering:
                 $ pvectl get volume vm 100 -l format=raw
+
+              Show node time and timezone for a single node:
+                $ pvectl get time --node pve1
+
+              Show time and timezone for all online nodes:
+                $ pvectl get time
 
               List supported CPU models / machine types for a node:
                 $ pvectl get node-capabilities --node pve1
