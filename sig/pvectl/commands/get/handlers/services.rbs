@@ -1,0 +1,23 @@
+module Pvectl
+  module Commands
+    module Get
+      module Handlers
+        class Services
+          include ResourceHandler
+
+          def initialize: (?repository: Repositories::Service?) -> void
+
+          def list: (?node: String?, ?name: String?, **untyped options) -> Array[Models::Service]
+
+          def presenter: () -> Presenters::Service
+
+          private
+
+          def repository: () -> Repositories::Service
+
+          def build_repository: () -> Repositories::Service
+        end
+      end
+    end
+  end
+end

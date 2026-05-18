@@ -31,6 +31,33 @@ module Pvectl
         svc = Service.new(service: "pvedaemon", name: nil)
         assert_equal "pvedaemon", svc.display_name
       end
+
+      def test_active_state_and_unit_state
+        svc = Service.new(
+          service: "pveproxy",
+          active_state: "active",
+          unit_state: "enabled"
+        )
+
+        assert_equal "active", svc.active_state
+        assert_equal "enabled", svc.unit_state
+      end
+
+      def test_dasherized_keys_from_api_are_accepted
+        svc = Service.new(
+          service: "pveproxy",
+          :"active-state" => "active",
+          :"unit-state" => "enabled"
+        )
+
+        assert_equal "active", svc.active_state
+        assert_equal "enabled", svc.unit_state
+      end
+
+      def test_node_attribute
+        svc = Service.new(service: "pveproxy", node: "pve1")
+        assert_equal "pve1", svc.node
+      end
     end
   end
 end

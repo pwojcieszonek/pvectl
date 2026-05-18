@@ -1,0 +1,12 @@
+module Pvectl
+  module Models
+    class TimeConfig < Base
+      attr_reader node_name: String?
+      attr_reader time: Integer?
+      attr_reader localtime: Integer?
+      attr_reader timezone: String?
+
+      def initialize: (?Hash[Symbol, untyped] attributes) -> void
+    end
+  end
+end
