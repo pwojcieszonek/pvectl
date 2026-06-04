@@ -1,0 +1,6 @@
+module Pvectl
+  module Models
+    class DescribeCollection < Array[untyped]
+    end
+  end
+end

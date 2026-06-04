@@ -396,6 +396,25 @@ class GetResourceServiceTest < Minitest::Test
     refute_match(/\e\[/, result, "Output should not contain ANSI codes when color_enabled is false")
   end
 
+  # ---------------------------
+  # #describe Method - DescribeCollection
+  # ---------------------------
+
+  def test_describe_renders_collection_per_item
+    collection = Pvectl::Models::DescribeCollection.new(%w[A B])
+    handler = Object.new
+    handler.define_singleton_method(:describe) { |**_kw| collection }
+    handler.define_singleton_method(:presenter) { :presenter }
+
+    service = Pvectl::Services::Get::ResourceService.new(handler: handler, format: "table")
+    # Stub the private describe-formatter to echo the model so we can assert joining.
+    service.define_singleton_method(:format_output_describe) { |model, _p| "D(#{model})" }
+
+    output = service.describe(name: "web")
+
+    assert_equal "D(A)\n\nD(B)", output
+  end
+
   private
 
   # Mock handler for testing

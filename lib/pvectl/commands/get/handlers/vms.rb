@@ -74,21 +74,28 @@ module Pvectl
             Pvectl::Presenters::Vm.new
           end
 
-          # Describes a single VM with comprehensive details.
+          # Describes one or more VMs matching the given identifier (VMID or name).
           #
-          # @param name [String] VMID as string (consistent with handler interface)
+          # Resolves the identifier via the repository's +resolve_identifier+ method,
+          # which matches by VMID (numeric string) or by VM name. Returns a single
+          # model when exactly one match is found, or a +DescribeCollection+ when
+          # several VMs share the same name.
+          #
+          # @param name [String] VMID or VM name
           # @param node [String, nil] unused, for API consistency
-          # @return [Models::Vm] VM model with full details
-          # @raise [ArgumentError] if VMID format is invalid
-          # @raise [Pvectl::ResourceNotFoundError] if VM not found
+          # @param args [Array<String>] unused, for interface compatibility
+          # @param vmid [Integer, nil] unused, for interface compatibility
+          # @return [Models::Vm] single VM model, or
+          # @return [Models::DescribeCollection] collection of VM models when multiple matched
+          # @raise [Pvectl::ResourceNotFoundError] if no VM matches the identifier
           def describe(name:, node: nil, args: [], vmid: nil)
-            raise ArgumentError, "Invalid VMID: must be positive integer (1-999999999)" unless valid_vmid?(name)
+            matches = repository.resolve_identifier(name)
+            raise Pvectl::ResourceNotFoundError, "VM not found: #{name}" if matches.empty?
 
-            vmid = name.to_i
-            vm = repository.describe(vmid)
-            raise Pvectl::ResourceNotFoundError, "VM not found: #{vmid}" if vm.nil?
+            models = matches.map { |m| repository.describe(m.vmid) }.compact
+            raise Pvectl::ResourceNotFoundError, "VM not found: #{name}" if models.empty?
 
-            vm
+            models.size == 1 ? models.first : Pvectl::Models::DescribeCollection.new(models)
           end
 
           private
