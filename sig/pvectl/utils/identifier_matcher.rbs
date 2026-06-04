@@ -1,0 +1,12 @@
+module Pvectl
+  module Utils
+    module IdentifierMatcher
+      def self.match: (
+        String | Integer identifier,
+        Array[untyped] resources,
+        ?id: ^(untyped) -> untyped,
+        ?name: ^(untyped) -> untyped
+      ) -> Array[untyped]
+    end
+  end
+end

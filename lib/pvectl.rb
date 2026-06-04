@@ -179,6 +179,7 @@ require_relative "pvectl/connection/retry_handler"
 require_relative "pvectl/connection"
 
 # Utils
+require_relative "pvectl/utils/identifier_matcher"
 require_relative "pvectl/utils/resource_resolver"
 
 # Parsers
