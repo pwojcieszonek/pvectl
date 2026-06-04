@@ -86,6 +86,8 @@ Once configured, explore your cluster:
 ```bash
 pvectl get nodes                  # List cluster nodes
 pvectl get vms                    # List all VMs
+pvectl get vm 100                 # Show one VM by VMID or name
+pvectl get vms 100 web-frontend   # Show several VMs by VMID or name
 pvectl get vms -o wide            # Extended columns
 pvectl get subscription           # Show Proxmox subscription per node (key masked)
 pvectl describe vm 100            # Detailed VM info
