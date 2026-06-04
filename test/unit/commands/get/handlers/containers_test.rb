@@ -223,104 +223,61 @@ class GetHandlersContainersTest < Minitest::Test
     assert_equal 999999999, container.vmid
   end
 
-  def test_describe_rejects_ctid_below_100
+  # Non-existent / non-resolvable identifiers all raise ResourceNotFoundError
+  # (the old ArgumentError contract was removed in favour of resolve_identifier).
+
+  def test_describe_raises_not_found_for_ctid_below_100
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "99")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "99") }
   end
 
-  def test_describe_rejects_ctid_1
+  def test_describe_raises_not_found_for_ctid_1
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "1")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "1") }
   end
 
-  def test_describe_rejects_ctid_zero
+  def test_describe_raises_not_found_for_ctid_zero
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "0")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "0") }
   end
 
-  def test_describe_rejects_negative_ctid
+  def test_describe_raises_not_found_for_negative_ctid
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "-1")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "-1") }
   end
 
-  def test_describe_rejects_non_numeric_ctid
+  def test_describe_raises_not_found_for_non_numeric_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "abc")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "abc") }
   end
 
-  def test_describe_rejects_empty_ctid
+  def test_describe_raises_not_found_for_empty_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "") }
   end
 
-  def test_describe_rejects_nil_ctid
+  def test_describe_raises_not_found_for_nil_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: nil)
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: nil) }
   end
 
-  def test_describe_rejects_ctid_with_leading_zero
+  def test_describe_raises_not_found_for_ctid_too_long
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "0100")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "1000000000") }
   end
 
-  def test_describe_rejects_ctid_too_long
+  def test_describe_raises_not_found_for_ctid_with_special_characters
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "1000000000")
-    end
-
-    assert_includes error.message, "Invalid CTID"
-  end
-
-  def test_describe_rejects_ctid_with_special_characters
-    handler = create_handler_with_describe_mock_repo
-
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "100;rm -rf")
-    end
-
-    assert_includes error.message, "Invalid CTID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "100;rm -rf") }
   end
 
   # ---------------------------
@@ -461,6 +418,8 @@ class GetHandlersContainersTest < Minitest::Test
   class MockDescribeRepository
     attr_reader :describe_called, :last_describe_ctid
 
+    VALID_CTIDS = [100, 999_999_999].freeze
+
     def initialize
       @describe_called = false
       @last_describe_ctid = nil
@@ -473,11 +432,22 @@ class GetHandlersContainersTest < Minitest::Test
       ]
     end
 
+    # Resolves identifier by CTID (numeric) or name.
+    # Returns matching model stubs so the handler can call describe(vmid).
+    def resolve_identifier(identifier)
+      ctid = Integer(identifier, 10) rescue nil
+      if ctid
+        return VALID_CTIDS.include?(ctid) ? [Struct.new(:vmid).new(ctid)] : []
+      end
+      # name-based lookup: not used in legacy numeric tests
+      []
+    end
+
     def describe(ctid)
       @describe_called = true
       @last_describe_ctid = ctid
 
-      return nil unless [100, 999999999].include?(ctid)
+      return nil unless VALID_CTIDS.include?(ctid)
 
       Pvectl::Models::Container.new(
         vmid: ctid,

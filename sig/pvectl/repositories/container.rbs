@@ -1,6 +1,8 @@
 module Pvectl
   module Repositories
     class Container < Base
+      include ResolvesByIdentifier
+
       def list: (?node: String?) -> Array[Models::Container]
 
       def get: (Integer | String ctid) -> Models::Container?

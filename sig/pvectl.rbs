@@ -6,4 +6,10 @@ module Pvectl
 
   class ResourceNotFoundError < Error
   end
+
+  class DuplicateNameError < Error
+  end
+
+  class AmbiguousIdentifierError < Error
+  end
 end

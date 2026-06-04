@@ -1,9 +1,11 @@
 module Pvectl
   module Services
     class EditVm
-      def initialize: (vm_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+      include ValidatesNameUniqueness
 
-      def execute: (vmid: Integer) -> Models::VmOperationResult?
+      def initialize: (vm_repository: untyped, ?editor_session: untyped?, ?name_resolver: untyped?, ?options: Hash[Symbol, untyped]) -> void
+
+      def execute: (vmid: Integer | String) -> Models::VmOperationResult?
 
       private
 
@@ -11,7 +13,7 @@ module Pvectl
 
       def build_result: (Hash[Symbol, untyped] resource_info, **untyped attrs) -> Models::VmOperationResult
 
-      def not_found_result: (Integer vmid) -> Models::VmOperationResult
+      def not_found_result: (Integer | String vmid) -> Models::VmOperationResult
     end
   end
 end

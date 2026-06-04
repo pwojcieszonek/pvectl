@@ -36,7 +36,7 @@ module Pvectl
       # @param resource_id [String] CTID (converted to Integer)
       # @return [Hash] parameters for the edit service
       def execute_params(resource_id)
-        { ctid: resource_id.to_i }
+        { ctid: resource_id }
       end
 
       # Builds the container edit service.
@@ -48,6 +48,7 @@ module Pvectl
         Pvectl::Services::EditContainer.new(
           container_repository: ct_repo,
           editor_session: build_editor_session,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection),
           options: service_options
         )
       end

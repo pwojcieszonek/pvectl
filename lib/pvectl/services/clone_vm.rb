@@ -20,6 +20,8 @@ module Pvectl
     #   result = service.execute(vmid: 100, new_vmid: 200, name: "web-clone")
     #
     class CloneVm
+      include ValidatesNameUniqueness
+
       DEFAULT_TIMEOUT = 300
 
       # @return [Integer] Default timeout for start operations (seconds)
@@ -30,10 +32,12 @@ module Pvectl
       # @param vm_repository [Repositories::Vm] VM repository
       # @param task_repository [Repositories::Task] Task repository
       # @param options [Hash] Options (timeout, async)
-      def initialize(vm_repository:, task_repository:, options: {})
+      # @param name_resolver [Utils::ResourceResolver, nil] Resolver for name uniqueness checks
+      def initialize(vm_repository:, task_repository:, options: {}, name_resolver: nil)
         @vm_repository = vm_repository
         @task_repository = task_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes clone operation.
@@ -55,8 +59,10 @@ module Pvectl
       def execute(vmid:, node: nil, new_vmid: nil, name: nil, target_node: nil,
                   storage: nil, linked: false, pool: nil, description: nil,
                   config_params: {})
-        source_vm = @vm_repository.get(vmid)
+        source_vm = @vm_repository.resolve_one(vmid)
         return vm_not_found_error(vmid) unless source_vm
+
+        vmid = source_vm.vmid
 
         if linked && !source_vm.template?
           return linked_clone_error(source_vm)
@@ -65,6 +71,7 @@ module Pvectl
         node ||= source_vm.node
         new_vmid ||= @vm_repository.next_available_vmid
         name ||= generate_name(source_vm)
+        ensure_name_available!(name)
 
         clone_options = build_clone_options(
           name: name, target_node: target_node, storage: storage,

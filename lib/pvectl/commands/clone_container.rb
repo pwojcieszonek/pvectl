@@ -49,7 +49,7 @@ module Pvectl
       # @return [Integer] exit code
       def execute
         ctid = @args.first
-        return usage_error("Source CTID required") unless ctid
+        return usage_error("Source CTID or name required") unless ctid
 
         config_params = build_ct_config_params
 
@@ -57,7 +57,7 @@ module Pvectl
           return usage_error("Config flags require sync mode (remove --async)")
         end
 
-        perform_clone(ctid.to_i, config_params)
+        perform_clone(ctid, config_params)
       end
 
       private
@@ -85,7 +85,8 @@ module Pvectl
         service = Pvectl::Services::CloneContainer.new(
           container_repository: ct_repo,
           task_repository: task_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
 
         result = service.execute(

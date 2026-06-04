@@ -52,7 +52,20 @@ module Pvectl
             Clone with explicit new ID:
               $ pvectl clone vm 100 --newid 150 --name web-test
 
+          EXAMPLES (by name)
+            Clone a VM referenced by name:
+              $ pvectl clone vm web --name web-clone
+
           NOTES
+            SOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            clone is a single-target command — if the name matches several
+            resources, the command errors with an ambiguity message. Use a VMID
+            to address the resource unambiguously in that case.
+
+            Names (container hostnames) must be unique across all VMs and
+            containers. The clone fails if the target name is already in use.
+
             Config modification is a two-step process: clone first, then update
             configuration via the Proxmox API. If the config update fails, the
             clone still exists but with the original configuration.
@@ -152,7 +165,7 @@ module Pvectl
       # @return [Integer] exit code
       def execute
         vmid = @args.first
-        return usage_error("Source VMID required") unless vmid
+        return usage_error("Source VMID or name required") unless vmid
 
         config_params = build_vm_config_params
 
@@ -160,7 +173,7 @@ module Pvectl
           return usage_error("Config flags require sync mode (remove --async)")
         end
 
-        perform_clone(vmid.to_i, config_params)
+        perform_clone(vmid, config_params)
       end
 
       private
@@ -188,7 +201,8 @@ module Pvectl
         service = Pvectl::Services::CloneVm.new(
           vm_repository: vm_repo,
           task_repository: task_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
 
         result = service.execute(

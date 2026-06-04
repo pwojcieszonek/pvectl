@@ -1,0 +1,8 @@
+module Pvectl
+  module Commands
+    module IdentifierResolution
+      private
+      def resolve_identifiers_against: (untyped repo) -> Array[untyped]
+    end
+  end
+end

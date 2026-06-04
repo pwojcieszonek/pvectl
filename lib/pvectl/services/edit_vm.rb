@@ -18,14 +18,18 @@ module Pvectl
     #   result = service.execute(vmid: 100)
     #
     class EditVm
+      include ValidatesNameUniqueness
+
       # Creates a new EditVm service.
       #
       # @param vm_repository [Repositories::Vm] VM repository
       # @param editor_session [EditorSession, nil] optional injected editor session
+      # @param name_resolver [Utils::ResourceResolver, nil] optional name uniqueness resolver
       # @param options [Hash] options (dry_run)
-      def initialize(vm_repository:, editor_session: nil, options: {})
+      def initialize(vm_repository:, editor_session: nil, name_resolver: nil, options: {})
         @vm_repository = vm_repository
         @editor_session = editor_session
+        @name_resolver = name_resolver
         @options = options
       end
 
@@ -34,9 +38,10 @@ module Pvectl
       # @param vmid [Integer] VM identifier
       # @return [Models::VmOperationResult, nil] operation result, or nil if cancelled/no changes
       def execute(vmid:)
-        vm = @vm_repository.get(vmid)
+        vm = @vm_repository.resolve_one(vmid)
         return not_found_result(vmid) unless vm
 
+        vmid = vm.vmid
         config = @vm_repository.fetch_config(vm.node, vmid)
         resource_info = { vmid: vmid, node: vm.node, status: vm.status }
 
@@ -58,6 +63,9 @@ module Pvectl
         end
 
         changes = ConfigSerializer.diff(original_roundtrip, edited_flat)
+
+        new_name = changes.dig(:changed, :name)&.last || changes.dig(:added, :name)
+        ensure_name_available!(new_name, except_vmid: vm.vmid) if new_name
 
         if changes[:changed].empty? && changes[:added].empty? && changes[:removed].empty?
           return nil

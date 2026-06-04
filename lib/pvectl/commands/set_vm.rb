@@ -51,7 +51,20 @@ module Pvectl
             Preview changes without applying:
               $ pvectl set vm 100 memory=8192 --dry-run
 
+          EXAMPLES (by name)
+            Set VM memory by name:
+              $ pvectl set vm web memory=4096
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            set is a single-target command — if the name matches several
+            resources, the command errors with an ambiguity message. Use a VMID
+            to address the resource unambiguously in that case.
+
+            Names (container hostnames) must be unique across all VMs and
+            containers. Renaming via set fails if the new name is already in use.
+
             Volume resize (size=) is irreversible. A confirmation prompt is shown
             unless --yes is specified.
 
@@ -117,7 +130,7 @@ module Pvectl
       # @param key_values [Hash] parsed key-value pairs
       # @return [Hash] parameters for the set service
       def execute_params(resource_id, key_values)
-        { vmid: resource_id.to_i, params: key_values }
+        { vmid: resource_id, params: key_values }
       end
 
       # Builds the VM set service.
@@ -128,7 +141,8 @@ module Pvectl
         vm_repo = Pvectl::Repositories::Vm.new(connection)
         Pvectl::Services::SetVm.new(
           vm_repository: vm_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
     end

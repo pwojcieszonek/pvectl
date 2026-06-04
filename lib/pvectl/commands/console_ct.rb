@@ -42,15 +42,17 @@ module Pvectl
       #
       # @return [Integer] exit code
       def execute
-        return usage_error("CTID is required") unless @ctid
+        return usage_error("CTID or name is required") unless @ctid
         return usage_error("Console requires an interactive terminal (TTY)") unless $stdin.tty?
 
         load_config
         connection = Pvectl::Connection.new(@config)
         repo = Pvectl::Repositories::Container.new(connection)
 
-        resource = repo.get(@ctid.to_i)
+        resource = repo.resolve_one(@ctid)
         return not_found("Container #{@ctid} not found") unless resource
+
+        @ctid = resource.vmid
 
         username, password = resolve_credentials
         return ExitCodes::GENERAL_ERROR if username.nil? || password.nil?
@@ -80,6 +82,9 @@ module Pvectl
              Pvectl::Config::UserNotFoundError,
              Pvectl::Config::MissingCredentialsError
         raise # re-raise for CLI handler
+      rescue Pvectl::AmbiguousIdentifierError => e
+        $stderr.puts "Error: #{e.message}"
+        ExitCodes::USAGE_ERROR
       rescue Errno::ECONNREFUSED, SocketError, Timeout::Error => e
         $stderr.puts "Error: Cannot connect to console: #{e.message}"
         ExitCodes::CONNECTION_ERROR

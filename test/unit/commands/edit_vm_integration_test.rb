@@ -28,7 +28,7 @@ module Pvectl
 
     def build_mock_repo(vm:, config:, expect_update: true, &update_block)
       repo = Minitest::Mock.new
-      repo.expect(:get, vm, [vm.vmid])
+      repo.expect(:resolve_one, vm, [vm.vmid])
       repo.expect(:fetch_config, config, [vm.node, vm.vmid])
       repo.expect(:update, nil, &update_block) if expect_update
       repo

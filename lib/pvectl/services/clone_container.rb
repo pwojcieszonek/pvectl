@@ -20,6 +20,8 @@ module Pvectl
     #   result = service.execute(ctid: 100, new_ctid: 200, hostname: "web-clone")
     #
     class CloneContainer
+      include ValidatesNameUniqueness
+
       DEFAULT_TIMEOUT = 300
 
       # @return [Integer] Default timeout for start operations (seconds)
@@ -30,10 +32,12 @@ module Pvectl
       # @param container_repository [Repositories::Container] Container repository
       # @param task_repository [Repositories::Task] Task repository
       # @param options [Hash] Options (timeout, async)
-      def initialize(container_repository:, task_repository:, options: {})
+      # @param name_resolver [Utils::ResourceResolver, nil] Resolver for name uniqueness checks
+      def initialize(container_repository:, task_repository:, options: {}, name_resolver: nil)
         @container_repository = container_repository
         @task_repository = task_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes clone operation.
@@ -55,8 +59,10 @@ module Pvectl
       def execute(ctid:, node: nil, new_ctid: nil, hostname: nil, target_node: nil,
                   storage: nil, linked: false, pool: nil, description: nil,
                   config_params: {})
-        source_ct = @container_repository.get(ctid)
+        source_ct = @container_repository.resolve_one(ctid)
         return container_not_found_error(ctid) unless source_ct
+
+        ctid = source_ct.vmid
 
         if linked && !source_ct.template?
           return linked_clone_error(source_ct)
@@ -65,6 +71,7 @@ module Pvectl
         node ||= source_ct.node
         new_ctid ||= @container_repository.next_available_ctid
         hostname ||= generate_hostname(source_ct)
+        ensure_name_available!(hostname)
 
         clone_options = build_clone_options(
           hostname: hostname, target_node: target_node, storage: storage,

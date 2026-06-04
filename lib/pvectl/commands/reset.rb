@@ -35,7 +35,16 @@ module Pvectl
             Reset multiple VMs:
               $ pvectl reset vm 100 101 102
 
+          EXAMPLES (by name)
+            Hard reset a VM by name:
+              $ pvectl reset vm web
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources resets ALL of them (you will be
+            asked to confirm before proceeding).
+
             May cause data loss or filesystem corruption. Use 'pvectl restart'
             for a graceful reboot instead.
 

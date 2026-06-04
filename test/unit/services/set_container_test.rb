@@ -18,7 +18,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
         update_params = nil
@@ -43,7 +43,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
         update_params = nil
@@ -66,7 +66,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
         update_params = nil
@@ -88,7 +88,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
         # NO update expectation — dry run should NOT call update
 
@@ -106,7 +106,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
         service = SetContainer.new(container_repository: ct_repo)
@@ -118,7 +118,7 @@ module Pvectl
 
       def test_container_not_found
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, nil, [200])
+        ct_repo.expect(:resolve_one, nil, [200])
 
         service = SetContainer.new(container_repository: ct_repo)
         result = service.execute(ctid: 200, params: { memory: "8192" })
@@ -134,7 +134,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
         ct_repo.expect(:update, nil) do |_ctid, _node, _params|
           raise StandardError, "API timeout"
@@ -153,7 +153,7 @@ module Pvectl
         config = build_config
 
         ct_repo = Minitest::Mock.new
-        ct_repo.expect(:get, ct, [200])
+        ct_repo.expect(:resolve_one, ct, [200])
         ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
         _update_params = nil

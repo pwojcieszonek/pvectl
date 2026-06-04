@@ -41,6 +41,26 @@ module Pvectl
   #   raise Pvectl::ResourceNotFoundError, "Node not found: pve1"
   #
   class ResourceNotFoundError < Error; end
+
+  # Raised when an object name collides with an existing VM or container.
+  #
+  # Names are unique across both VMs and containers (cluster-wide) from
+  # pvectl's perspective, even though Proxmox itself only enforces VMID
+  # uniqueness.
+  #
+  # @example
+  #   raise Pvectl::DuplicateNameError, "a VM or container named 'web' already exists (VMID 100 on pve1)"
+  #
+  class DuplicateNameError < Error; end
+
+  # Raised when a name-based identifier matches more than one resource in a
+  # context that can only act on a single resource (clone source, console,
+  # set, edit, rollback).
+  #
+  # @example
+  #   raise Pvectl::AmbiguousIdentifierError, "'web' matches multiple resources (VMIDs 100, 105) — specify a VMID"
+  #
+  class AmbiguousIdentifierError < Error; end
 end
 
 require_relative "pvectl/argv_preprocessor"
@@ -81,6 +101,7 @@ require_relative "pvectl/models/backup"
 require_relative "pvectl/models/container"
 require_relative "pvectl/models/task"
 require_relative "pvectl/models/operation_result"
+require_relative "pvectl/models/describe_collection"
 require_relative "pvectl/models/vm_operation_result"
 require_relative "pvectl/models/container_operation_result"
 require_relative "pvectl/models/node_operation_result"
@@ -98,6 +119,7 @@ require_relative "pvectl/models/subscription"
 
 # Repositories
 require_relative "pvectl/repositories/base"
+require_relative "pvectl/repositories/resolves_by_identifier"
 require_relative "pvectl/repositories/apt"
 require_relative "pvectl/repositories/vm"
 require_relative "pvectl/repositories/node"
@@ -168,6 +190,7 @@ require_relative "pvectl/connection/retry_handler"
 require_relative "pvectl/connection"
 
 # Utils
+require_relative "pvectl/utils/identifier_matcher"
 require_relative "pvectl/utils/resource_resolver"
 
 # Parsers
@@ -211,6 +234,9 @@ require_relative "pvectl/services/backup"
 
 # Services - Resource Delete
 require_relative "pvectl/services/resource_delete"
+
+# Services - Name uniqueness (shared mixin)
+require_relative "pvectl/services/validates_name_uniqueness"
 
 # Services - Clone VM
 require_relative "pvectl/services/clone_vm"
@@ -291,6 +317,7 @@ require_relative "pvectl/services/wakeonlan"
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
 require_relative "pvectl/commands/shared_config_parsers"
+require_relative "pvectl/commands/identifier_resolution"
 
 # Commands - Get
 require_relative "pvectl/commands/get/resource_handler"

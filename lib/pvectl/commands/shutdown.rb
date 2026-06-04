@@ -39,7 +39,16 @@ module Pvectl
             Shutdown all running VMs on a node:
               $ pvectl shutdown vm --all --node pve1 -l status=running --yes
 
+          EXAMPLES (by name)
+            Graceful shutdown of a VM by name:
+              $ pvectl shutdown vm web
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources shuts down ALL of them (you will
+            be asked to confirm before proceeding).
+
             Requires QEMU Guest Agent or ACPI support in the VM for graceful
             shutdown. If the guest doesn't respond, the shutdown may time out.
 

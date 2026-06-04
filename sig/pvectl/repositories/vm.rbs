@@ -1,6 +1,8 @@
 module Pvectl
   module Repositories
     class Vm < Base
+      include ResolvesByIdentifier
+
       def list: (?node: String?) -> Array[Models::Vm]
 
       def get: (Integer | String vmid) -> Models::Vm?

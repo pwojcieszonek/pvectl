@@ -60,6 +60,9 @@ module Pvectl
             If no ID is specified for VM/container, Proxmox auto-assigns the
             next available ID.
 
+            Names (container hostnames) must be unique across all VMs and
+            containers. The operation fails if the name is already in use.
+
             VM creation supports cloud-init configuration via --cloud-init flag.
 
             Backup modes: snapshot (default, no downtime), suspend (brief pause),
@@ -184,7 +187,8 @@ module Pvectl
         Pvectl::Services::CreateVm.new(
           vm_repository: vm_repo,
           task_repository: task_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
 

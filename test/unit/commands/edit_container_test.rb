@@ -48,7 +48,7 @@ module Pvectl
 
       def test_execute_params_returns_ctid_hash
         cmd = EditContainer.new([], {}, {})
-        assert_equal({ ctid: 200 }, cmd.send(:execute_params, 200))
+        assert_equal({ ctid: "200" }, cmd.send(:execute_params, "200"))
       end
 
       # --- service_options ---
@@ -69,7 +69,7 @@ module Pvectl
         cmd = EditContainer.new(["200"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, nil, [], ctid: 200)
+        mock_service.expect(:execute, nil, [], ctid: "200")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -98,7 +98,7 @@ module Pvectl
         cmd = EditContainer.new(["200"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], ctid: 200)
+        mock_service.expect(:execute, result, [], ctid: "200")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -128,7 +128,7 @@ module Pvectl
         cmd = EditContainer.new(["200"], { "dry-run": true }, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], ctid: 200)
+        mock_service.expect(:execute, result, [], ctid: "200")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -156,7 +156,7 @@ module Pvectl
         cmd = EditContainer.new(["200"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], ctid: 200)
+        mock_service.expect(:execute, result, [], ctid: "200")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do

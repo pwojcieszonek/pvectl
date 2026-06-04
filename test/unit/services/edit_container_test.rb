@@ -33,7 +33,7 @@ module Pvectl
             config = build_config
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -67,7 +67,7 @@ module Pvectl
             config = build_config
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             editor = build_noop_editor
@@ -85,7 +85,7 @@ module Pvectl
         describe "not found" do
           it "returns error when container not found" do
             ct_repo = Minitest::Mock.new
-            ct_repo.expect(:get, nil, [200])
+            ct_repo.expect(:resolve_one, nil, [200])
 
             service = EditContainer.new(container_repository: ct_repo)
             result = service.execute(ctid: 200)
@@ -103,7 +103,7 @@ module Pvectl
             config = build_config
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -132,7 +132,7 @@ module Pvectl
             config = build_config
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -158,7 +158,7 @@ module Pvectl
             config = build_config(digest: "cafebabe")
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -188,7 +188,7 @@ module Pvectl
             config = build_config(description: "old desc")
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -219,7 +219,7 @@ module Pvectl
             config = build_config(vmid: 200)
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,
@@ -245,7 +245,7 @@ module Pvectl
             config = build_config
             ct = build_container
 
-            ct_repo.expect(:get, ct, [200])
+            ct_repo.expect(:resolve_one, ct, [200])
             ct_repo.expect(:fetch_config, config, ["pve1", 200])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :container,

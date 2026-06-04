@@ -54,7 +54,19 @@ module Pvectl
             Delete a backup by volume ID:
               $ pvectl delete backup local:backup/vzdump-qemu-100-2026_01_01.vma.zst --yes
 
+          EXAMPLES (by name)
+            Delete a VM by name:
+              $ pvectl delete vm web --yes
+
+            Force-delete a running container by name:
+              $ pvectl delete container db --force --yes
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources deletes ALL of them — a
+            confirmation prompt lists every affected resource before proceeding.
+
             Deletion is irreversible. Always verify the resource ID before confirming.
 
             --force stops a running VM/container before deleting.

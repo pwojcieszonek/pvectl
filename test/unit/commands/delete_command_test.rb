@@ -292,8 +292,7 @@ module Pvectl
 
       def test_resolve_resources_with_vmids
         mock_repo = Minitest::Mock.new
-        mock_repo.expect(:get, @vm1, [100])
-        mock_repo.expect(:get, @vm2, [101])
+        mock_repo.expect(:list, [@vm1, @vm2, @vm3]) { |node:| node.nil? }
 
         mock_connection = Object.new
         Repositories::Vm.stub(:new, mock_repo) do

@@ -50,7 +50,7 @@ module Pvectl
       # @param protected [Boolean] protect backup
       # @return [Array<Models::OperationResult>]
       def create(vmids, storage:, mode: "snapshot", compress: "zstd", notes: nil, protected: false)
-        resources = @resolver.resolve_multiple(vmids)
+        resources = @resolver.resolve_identifiers(vmids)
         return [] if resources.empty?
 
         execute_multi(resources, :create) do |resource|

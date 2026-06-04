@@ -31,8 +31,17 @@ module Pvectl
             Resume a suspended VM:
               $ pvectl resume vm 100
 
+            Resume a suspended VM by name:
+              $ pvectl resume vm web
+
             Resume all suspended VMs:
               $ pvectl resume vm --all -l status=suspended --yes
+
+          NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources resumes ALL of them (you will be
+            asked to confirm before proceeding).
 
           SEE ALSO
             pvectl help suspend         Suspend (hibernate) VMs

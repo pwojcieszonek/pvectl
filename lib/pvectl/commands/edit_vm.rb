@@ -57,6 +57,9 @@ module Pvectl
             Uses $EDITOR environment variable by default, falling back to vi.
             Override with --editor flag.
 
+            Names (container hostnames) must be unique across all VMs and
+            containers. Renaming via edit fails if the new name is already in use.
+
             In --dry-run mode, shows the diff between current and edited
             configuration without applying changes to Proxmox.
 
@@ -134,7 +137,7 @@ module Pvectl
       # @param resource_id [String] VMID (converted to Integer)
       # @return [Hash] parameters for the edit service
       def execute_params(resource_id)
-        { vmid: resource_id.to_i }
+        { vmid: resource_id }
       end
 
       # Builds the VM edit service.
@@ -146,6 +149,7 @@ module Pvectl
         Pvectl::Services::EditVm.new(
           vm_repository: vm_repo,
           editor_session: build_editor_session,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection),
           options: service_options
         )
       end

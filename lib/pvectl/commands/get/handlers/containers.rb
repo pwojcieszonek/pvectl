@@ -74,21 +74,28 @@ module Pvectl
             Pvectl::Presenters::Container.new
           end
 
-          # Describes a single container with comprehensive details.
+          # Describes one or more containers matching the given identifier (CTID or name).
           #
-          # @param name [String] CTID as string (consistent with handler interface)
+          # Resolves the identifier via the repository's +resolve_identifier+ method,
+          # which matches by CTID (numeric string) or by container name. Returns a single
+          # model when exactly one match is found, or a +DescribeCollection+ when
+          # several containers share the same name.
+          #
+          # @param name [String] CTID or container name
           # @param node [String, nil] unused, for API consistency
-          # @return [Models::Container] Container model with full details
-          # @raise [ArgumentError] if CTID format is invalid
-          # @raise [Pvectl::ResourceNotFoundError] if container not found
+          # @param args [Array<String>] unused, for interface compatibility
+          # @param vmid [Integer, nil] unused, for interface compatibility
+          # @return [Models::Container] single container model, or
+          # @return [Models::DescribeCollection] collection of container models when multiple matched
+          # @raise [Pvectl::ResourceNotFoundError] if no container matches the identifier
           def describe(name:, node: nil, args: [], vmid: nil)
-            raise ArgumentError, "Invalid CTID: must be positive integer (100-999999999)" unless valid_ctid?(name)
+            matches = repository.resolve_identifier(name)
+            raise Pvectl::ResourceNotFoundError, "Container not found: #{name}" if matches.empty?
 
-            ctid = name.to_i
-            container = repository.describe(ctid)
-            raise Pvectl::ResourceNotFoundError, "Container not found: #{ctid}" if container.nil?
+            models = matches.map { |m| repository.describe(m.vmid) }.compact
+            raise Pvectl::ResourceNotFoundError, "Container not found: #{name}" if models.empty?
 
-            container
+            models.size == 1 ? models.first : Pvectl::Models::DescribeCollection.new(models)
           end
 
           private

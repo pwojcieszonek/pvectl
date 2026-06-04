@@ -19,6 +19,37 @@ A command-line tool for managing Proxmox clusters with kubectl-like syntax.
 - **Plugin system** — extend with gem-based or directory-based plugins
 - **Template management** — convert VMs/containers to templates, linked cloning
 
+## Addressing resources by name
+
+All VM and container commands accept a VMID **or** a name. Numeric arguments
+are matched against VMIDs first; non-numeric arguments (or numbers with no
+matching VMID) are matched by name.
+
+```bash
+pvectl start vm web           # start VM named "web"
+pvectl stop ct db             # stop container named "db"
+pvectl describe vm web-prod   # describe every VM named "web-prod"
+pvectl clone vm web --name web-clone   # clone source by name (unambiguous)
+```
+
+**Ambiguity rules:**
+
+- **Multi-target commands** (`start`, `stop`, `shutdown`, `restart`, `reset`,
+  `suspend`, `resume`, `delete`) act on **every** resource whose name matches.
+  If more than one resource matches, a confirmation prompt lists all affected
+  VMIDs before proceeding.
+- **Single-target commands** (`clone`, `console`, `set`, `edit`) require an
+  **unambiguous** match. If a name matches several resources, the command
+  errors: `'web' matches multiple resources (VMIDs 100, 105) — specify a VMID`.
+
+**Name uniqueness:** VM and container names must be unique across the entire
+cluster. `create`, `clone`, and renames via `set`/`edit` fail if the name (or
+container hostname) is already in use:
+
+```
+a VM or container named 'web' already exists (VMID 100 on pve1)
+```
+
 ## Installation
 
 ```bash

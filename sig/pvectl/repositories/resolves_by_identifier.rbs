@@ -1,0 +1,8 @@
+module Pvectl
+  module Repositories
+    module ResolvesByIdentifier
+      def resolve_identifier: (String | Integer identifier) -> Array[untyped]
+      def resolve_one: (String | Integer identifier) -> untyped?
+    end
+  end
+end

@@ -226,8 +226,7 @@ class VmLifecycleCommandResolveResourcesTest < Minitest::Test
 
   def test_resolve_resources_with_vmids
     mock_repo = Minitest::Mock.new
-    mock_repo.expect(:get, @vm1, [100])
-    mock_repo.expect(:get, @vm2, [101])
+    mock_repo.expect(:list, [@vm1, @vm2, @vm3]) { |node:| node.nil? }
 
     cmd = TestableCommand.new("vm", %w[100 101], {}, {})
     vms = cmd.test_resolve_resources(mock_repo)
@@ -265,8 +264,7 @@ class VmLifecycleCommandResolveResourcesTest < Minitest::Test
 
   def test_resolve_resources_with_vmids_and_node_filter
     mock_repo = Minitest::Mock.new
-    mock_repo.expect(:get, @vm1, [100])
-    mock_repo.expect(:get, @vm3, [102])
+    mock_repo.expect(:list, [@vm1, @vm2]) { |node:| node == "pve1" }
 
     cmd = TestableCommand.new("vm", %w[100 102], { node: "pve1" }, {})
     vms = cmd.test_resolve_resources(mock_repo)
@@ -276,10 +274,9 @@ class VmLifecycleCommandResolveResourcesTest < Minitest::Test
     mock_repo.verify
   end
 
-  def test_resolve_resources_filters_nil_results
+  def test_resolve_resources_skips_unknown_ids
     mock_repo = Minitest::Mock.new
-    mock_repo.expect(:get, @vm1, [100])
-    mock_repo.expect(:get, nil, [999])
+    mock_repo.expect(:list, [@vm1, @vm2, @vm3]) { |node:| node.nil? }
 
     cmd = TestableCommand.new("vm", %w[100 999], {}, {})
     vms = cmd.test_resolve_resources(mock_repo)
@@ -439,8 +436,7 @@ class VmLifecycleCommandSelectorIntegrationTest < Minitest::Test
 
   def test_resolve_resources_with_vmids_and_selector
     mock_repo = Minitest::Mock.new
-    mock_repo.expect(:get, @running_vm1, [100])
-    mock_repo.expect(:get, @stopped_vm, [102])
+    mock_repo.expect(:list, @all_vms) { |node:| node.nil? }
 
     cmd = TestableCommand.new("vm", %w[100 102], { selector: ["status=running"] }, {})
     vms = cmd.test_resolve_resources(mock_repo)

@@ -181,7 +181,7 @@ class GetHandlersVmsTest < Minitest::Test
   end
 
   # ---------------------------
-  # describe() Method - VMID Validation
+  # describe() Method - Identifier Resolution
   # ---------------------------
 
   def test_describe_accepts_valid_vmid_100
@@ -208,84 +208,88 @@ class GetHandlersVmsTest < Minitest::Test
     assert_equal 999999999, vm.vmid
   end
 
-  def test_describe_rejects_vmid_zero
+  # Non-existent / non-resolvable identifiers all raise ResourceNotFoundError
+  # (the old ArgumentError contract was removed in favour of resolve_identifier).
+
+  def test_describe_raises_not_found_for_vmid_zero
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "0")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "0") }
   end
 
-  def test_describe_rejects_negative_vmid
+  def test_describe_raises_not_found_for_negative_vmid
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "-1")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "-1") }
   end
 
-  def test_describe_rejects_non_numeric_vmid
+  def test_describe_raises_not_found_for_non_numeric_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "abc")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "abc") }
   end
 
-  def test_describe_rejects_empty_vmid
+  def test_describe_raises_not_found_for_empty_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "") }
   end
 
-  def test_describe_rejects_nil_vmid
+  def test_describe_raises_not_found_for_nil_name
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: nil)
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: nil) }
   end
 
-  def test_describe_rejects_vmid_with_leading_zero
+  def test_describe_raises_not_found_for_vmid_too_long
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "0100")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "1000000000") }
   end
 
-  def test_describe_rejects_vmid_too_long
+  def test_describe_raises_not_found_for_vmid_with_special_characters
     handler = create_handler_with_describe_mock_repo
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "1000000000")
-    end
-
-    assert_includes error.message, "Invalid VMID"
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "100;rm -rf") }
   end
 
-  def test_describe_rejects_vmid_with_special_characters
-    handler = create_handler_with_describe_mock_repo
+  # ---------------------------
+  # describe() Method - Name Resolution
+  # ---------------------------
 
-    error = assert_raises(ArgumentError) do
-      handler.describe(name: "100;rm -rf")
+  def test_describe_by_name_returns_collection_for_multiple
+    repo = Object.new
+    models = [
+      Struct.new(:vmid, :name).new(100, "web"),
+      Struct.new(:vmid, :name).new(105, "web")
+    ]
+    repo.define_singleton_method(:resolve_identifier) { |_id| models }
+    repo.define_singleton_method(:describe) { |vmid| "DESCRIBE-#{vmid}" }
+
+    handler = Pvectl::Commands::Get::Handlers::Vms.new(repository: repo)
+    result = handler.describe(name: "web")
+
+    assert_instance_of Pvectl::Models::DescribeCollection, result
+    assert_equal ["DESCRIBE-100", "DESCRIBE-105"], result
+  end
+
+  def test_describe_by_name_single_returns_model
+    repo = Object.new
+    repo.define_singleton_method(:resolve_identifier) do |_id|
+      [Struct.new(:vmid, :name).new(100, "web")]
     end
+    repo.define_singleton_method(:describe) { |vmid| "DESCRIBE-#{vmid}" }
 
-    assert_includes error.message, "Invalid VMID"
+    handler = Pvectl::Commands::Get::Handlers::Vms.new(repository: repo)
+    assert_equal "DESCRIBE-100", handler.describe(name: "web")
+  end
+
+  def test_describe_unknown_raises_not_found
+    repo = Object.new
+    repo.define_singleton_method(:resolve_identifier) { |_id| [] }
+
+    handler = Pvectl::Commands::Get::Handlers::Vms.new(repository: repo)
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.describe(name: "ghost") }
   end
 
   # ---------------------------
@@ -426,6 +430,8 @@ class GetHandlersVmsTest < Minitest::Test
   class MockDescribeRepository
     attr_reader :describe_called, :last_describe_vmid
 
+    VALID_VMIDS = [1, 100, 999_999_999].freeze
+
     def initialize
       @describe_called = false
       @last_describe_vmid = nil
@@ -438,11 +444,22 @@ class GetHandlersVmsTest < Minitest::Test
       ]
     end
 
+    # Resolves identifier by VMID (numeric) or name.
+    # Returns matching model stubs so the handler can call describe(vmid).
+    def resolve_identifier(identifier)
+      vmid = Integer(identifier, 10) rescue nil
+      if vmid
+        return VALID_VMIDS.include?(vmid) ? [Struct.new(:vmid).new(vmid)] : []
+      end
+      # name-based lookup: not used in legacy numeric tests
+      []
+    end
+
     def describe(vmid)
       @describe_called = true
       @last_describe_vmid = vmid
 
-      return nil unless [1, 100, 999999999].include?(vmid)
+      return nil unless VALID_VMIDS.include?(vmid)
 
       Pvectl::Models::Vm.new(
         vmid: vmid,

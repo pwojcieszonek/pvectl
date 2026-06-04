@@ -26,7 +26,7 @@ module Pvectl
       def test_error_message_when_no_vmid_provided
         CloneVm.execute([], {}, {})
 
-        assert_includes $stderr.string, "Source VMID required"
+        assert_includes $stderr.string, "Source VMID or name required"
       end
 
       def test_class_responds_to_execute

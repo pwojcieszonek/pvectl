@@ -41,7 +41,16 @@ module Pvectl
             Stop with sync wait:
               $ pvectl stop vm 100 --wait --timeout 30
 
+          EXAMPLES (by name)
+            Hard stop a VM by name:
+              $ pvectl stop vm web
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources stops ALL of them (you will be
+            asked to confirm before proceeding).
+
             Hard stop may cause data loss or filesystem corruption in the guest.
             Prefer 'shutdown' for production workloads.
 

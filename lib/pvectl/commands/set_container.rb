@@ -31,7 +31,7 @@ module Pvectl
       # @param key_values [Hash] parsed key-value pairs
       # @return [Hash] parameters for the set service
       def execute_params(resource_id, key_values)
-        { ctid: resource_id.to_i, params: key_values }
+        { ctid: resource_id, params: key_values }
       end
 
       # Builds the container set service.
@@ -42,7 +42,8 @@ module Pvectl
         ct_repo = Pvectl::Repositories::Container.new(connection)
         Pvectl::Services::SetContainer.new(
           container_repository: ct_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
     end

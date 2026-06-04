@@ -20,6 +20,8 @@ module Pvectl
     #                            ostemplate: "local:vztmpl/debian-12.tar.zst")
     #
     class CreateContainer
+      include ValidatesNameUniqueness
+
       # @return [Integer] Default timeout for create operations (seconds)
       DEFAULT_TIMEOUT = 300
 
@@ -31,10 +33,11 @@ module Pvectl
       # @param container_repository [Repositories::Container] Container repository
       # @param task_repository [Repositories::Task] Task repository
       # @param options [Hash] Options (timeout, async, start)
-      def initialize(container_repository:, task_repository:, options: {})
+      def initialize(container_repository:, task_repository:, options: {}, name_resolver: nil)
         @container_repository = container_repository
         @task_repository = task_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes container creation operation.
@@ -64,6 +67,7 @@ module Pvectl
                   features: nil, password: nil, ssh_public_keys: nil, onboot: nil,
                   startup: nil, description: nil, tags: nil, pool: nil)
         ctid ||= @container_repository.next_available_ctid
+        ensure_name_available!(hostname)
 
         params = build_params(
           hostname: hostname, ostemplate: ostemplate, cores: cores, memory: memory,

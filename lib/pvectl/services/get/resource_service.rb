@@ -60,8 +60,11 @@ module Pvectl
           result = @handler.describe(name: name, node: node, args: args, vmid: vmid)
           presenter = @handler.presenter
 
-          if result.is_a?(Array)
-            # Multiple instances - format as list
+          if result.is_a?(Models::DescribeCollection)
+            # Multiple named matches - render each in full describe format
+            result.map { |model| format_output_describe(model, presenter) }.join("\n\n")
+          elsif result.is_a?(Array)
+            # Multiple instances (e.g. storage across nodes) - format as list
             format_output(result, presenter)
           else
             # Single model - format as describe
