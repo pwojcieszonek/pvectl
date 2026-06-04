@@ -25,6 +25,8 @@ module Pvectl
 
           def build_repository: () -> Repositories::Vm
 
+          def filter_by_identifiers: (Array[Models::Vm] vms, Array[String] identifiers) -> Array[Models::Vm]
+
           def apply_sort: (Array[Models::Vm] vms, String sort_field) -> Array[Models::Vm]
 
           def valid_vmid?: (String? vmid) -> bool

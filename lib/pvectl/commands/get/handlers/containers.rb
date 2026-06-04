@@ -54,14 +54,21 @@ module Pvectl
 
           # Lists containers with optional filtering and sorting.
           #
+          # Positional identifiers (+args+) filter the result kubectl-style: each
+          # entry is resolved by CTID or name and the union of matches is returned,
+          # preserving request order. An identifier that matches nothing aborts the
+          # whole request with +ResourceNotFoundError+.
+          #
           # @param node [String, nil] filter by node name
           # @param name [String, nil] filter by container name
-          # @param args [Array<String>] unused, for interface compatibility
+          # @param args [Array<String>] CTIDs or names to filter by (empty: all)
           # @param storage [String, nil] unused, for interface compatibility
           # @param sort [String, nil] sort field (name, node, cpu, memory, disk, netin, netout)
           # @return [Array<Models::Container>] collection of Container models
+          # @raise [Pvectl::ResourceNotFoundError] if any identifier matches no container
           def list(node: nil, name: nil, args: [], storage: nil, sort: nil, **_options)
             containers = repository.list(node: node)
+            containers = filter_by_identifiers(containers, args) unless args.empty?
             containers = containers.select { |c| c.name == name } if name
             containers = apply_sort(containers, sort) if sort
             containers
@@ -115,6 +122,26 @@ module Pvectl
             config_service.load
             connection = Pvectl::Connection.new(config_service.current_config)
             Pvectl::Repositories::Container.new(connection)
+          end
+
+          # Filters containers by positional identifiers (CTID or name), kubectl-style.
+          #
+          # Resolves each identifier against the already-fetched collection via
+          # {Utils::IdentifierMatcher} (CTID-first, name-fallback), returns the
+          # de-duplicated union in request order, and fails fast when an
+          # identifier resolves to nothing.
+          #
+          # @param containers [Array<Models::Container>] containers to filter
+          # @param identifiers [Array<String>] CTIDs or names
+          # @return [Array<Models::Container>] matching containers (deduplicated by CTID)
+          # @raise [Pvectl::ResourceNotFoundError] if any identifier matches no container
+          def filter_by_identifiers(containers, identifiers)
+            identifiers.flat_map do |identifier|
+              matches = Pvectl::Utils::IdentifierMatcher.match(identifier, containers)
+              raise Pvectl::ResourceNotFoundError, "Container not found: #{identifier}" if matches.empty?
+
+              matches
+            end.uniq(&:vmid)
           end
 
           # Applies sorting to containers collection.

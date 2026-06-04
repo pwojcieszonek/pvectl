@@ -58,6 +58,13 @@ module Pvectl
               List all VMs in table format:
                 $ pvectl get vms
 
+              Show a single VM by VMID or name:
+                $ pvectl get vm 100
+                $ pvectl get vm web-frontend-1
+
+              Show several VMs/containers by VMID or name:
+                $ pvectl get vms 100 101 web-frontend-1
+
               List containers on a specific node as JSON:
                 $ pvectl get containers --node pve1 -o json
 
@@ -107,6 +114,12 @@ module Pvectl
                 $ pvectl get subscription --node pve1 -o wide
 
             NOTES
+              For VMs and containers, positional arguments filter by VMID or name
+              (kubectl-style): a numeric value matches a VMID first, falling back to
+              a name; a non-numeric value matches a name. Multiple identifiers return
+              the union. An identifier that matches nothing fails the whole request
+              with exit code 5. A name shared by several guests returns all of them.
+
               Use selectors (-l) to filter VMs/containers by status, name, tags, or
               pool. Multiple selectors use AND logic. The --status flag is a shortcut
               for -l status=VALUE and can be combined with other selectors.
@@ -216,6 +229,9 @@ module Pvectl
           end
 
           ExitCodes::SUCCESS
+        rescue Pvectl::ResourceNotFoundError => e
+          $stderr.puts "Error: #{e.message}"
+          ExitCodes::NOT_FOUND
         rescue Timeout::Error => e
           output_connection_error(e.message)
           ExitCodes::CONNECTION_ERROR

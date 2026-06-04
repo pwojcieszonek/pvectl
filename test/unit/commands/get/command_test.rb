@@ -578,6 +578,31 @@ class GetCommandConnectionErrorTest < Minitest::Test
     assert_equal Pvectl::ExitCodes::CONNECTION_ERROR, exit_code
   end
 
+  def test_handles_resource_not_found_error
+    handler_class = Class.new do
+      include Pvectl::Commands::Get::ResourceHandler
+
+      def list(node: nil, name: nil, args: [], storage: nil, **_options)
+        raise Pvectl::ResourceNotFoundError, "VM not found: 99999"
+      end
+
+      def presenter
+        MockPresenter.new
+      end
+    end
+
+    Pvectl::Commands::Get::ResourceRegistry.register("notfound", handler_class)
+
+    exit_code = Pvectl::Commands::Get::Command.execute(
+      "notfound",
+      ["99999"],
+      {},
+      { output: "json" }
+    )
+
+    assert_equal Pvectl::ExitCodes::NOT_FOUND, exit_code
+  end
+
   def test_outputs_error_message_to_stderr
     handler_class = Class.new do
       include Pvectl::Commands::Get::ResourceHandler

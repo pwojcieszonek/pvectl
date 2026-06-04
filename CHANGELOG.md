@@ -39,6 +39,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **cli**: Enforce unique VM/container names cluster-wide. `create`, `clone`,
   and renames via `set`/`edit` now fail with a clear error if the name (or
   container hostname) is already used by any VM or container.
+- **get**: Filter VMs and containers by positional VMID or name, kubectl-style
+  (`get vm 100`, `get vm web-frontend-1`, `get vms 100 101 web`). Multiple
+  identifiers return the de-duplicated union in request order; an identifier
+  matching nothing fails the request with exit code 5; a name shared by several
+  guests returns all of them. Output stays in list format — use `describe` for
+  full single-resource details.
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section

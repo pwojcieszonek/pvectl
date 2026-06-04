@@ -103,6 +103,81 @@ class GetHandlersVmsTest < Minitest::Test
   end
 
   # ---------------------------
+  # list() with positional identifiers (kubectl-style: get vm 100 web)
+  # ---------------------------
+
+  def test_list_with_positional_vmid_returns_single_vm
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: ["100"])
+
+    assert_equal 1, vms.length
+    assert_equal 100, vms.first.vmid
+  end
+
+  def test_list_with_positional_name_returns_matching_vm
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: ["web-frontend-1"])
+
+    assert_equal 1, vms.length
+    assert_equal "web-frontend-1", vms.first.name
+  end
+
+  def test_list_with_multiple_positional_identifiers_returns_union
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: ["100", "200"])
+
+    assert_equal [100, 200], vms.map(&:vmid).sort
+  end
+
+  def test_list_with_positional_identifiers_preserves_request_order
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: ["200", "100"])
+
+    assert_equal [200, 100], vms.map(&:vmid)
+  end
+
+  def test_list_with_duplicate_positional_matches_dedups
+    # "100" and "web-frontend-1" both reference vm1 (vmid 100)
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: ["100", "web-frontend-1"])
+
+    assert_equal 1, vms.length
+    assert_equal 100, vms.first.vmid
+  end
+
+  def test_list_with_empty_args_returns_all
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    vms = handler.list(args: [])
+
+    assert_equal 3, vms.length
+  end
+
+  def test_list_with_unknown_vmid_raises_not_found
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["99999"]) }
+  end
+
+  def test_list_with_unknown_name_raises_not_found
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["ghost"]) }
+  end
+
+  def test_list_partial_match_raises_when_any_identifier_unknown
+    # 100 exists, 99999 does not — kubectl fails the whole request
+    handler = create_handler_with_mock_repo(@all_vms)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["100", "99999"]) }
+  end
+
+  # ---------------------------
   # presenter() Method
   # ---------------------------
 
