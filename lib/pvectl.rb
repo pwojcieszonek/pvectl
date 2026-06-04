@@ -235,6 +235,9 @@ require_relative "pvectl/services/backup"
 # Services - Resource Delete
 require_relative "pvectl/services/resource_delete"
 
+# Services - Name uniqueness (shared mixin)
+require_relative "pvectl/services/validates_name_uniqueness"
+
 # Services - Clone VM
 require_relative "pvectl/services/clone_vm"
 

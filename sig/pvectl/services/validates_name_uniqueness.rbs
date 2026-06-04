@@ -1,0 +1,8 @@
+module Pvectl
+  module Services
+    module ValidatesNameUniqueness
+      private
+      def ensure_name_available!: (String? name, ?except_vmid: Integer?) -> void
+    end
+  end
+end
