@@ -77,6 +77,22 @@ module Pvectl
         end.uniq { |r| r[:vmid] }
       end
 
+      # Returns resources whose name collides with +name+, cluster-wide.
+      #
+      # Uniqueness is global across VMs and containers. Pass +except_vmid+
+      # to ignore a specific resource (used when renaming an object to its
+      # own name).
+      #
+      # @param name [String] candidate name
+      # @param except_vmid [Integer, nil] VMID to exclude from the check
+      # @return [Array<Hash>] conflicting resources (empty if the name is free)
+      def name_conflicts(name, except_vmid: nil)
+        load_resources
+        @cache.values.select do |r|
+          r[:name] == name && r[:vmid] != except_vmid
+        end
+      end
+
       private
 
       # Loads and caches cluster resources.

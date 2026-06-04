@@ -11,6 +11,8 @@ module Pvectl
 
       def resolve_identifiers: (Array[Integer | String] identifiers, ?type: Symbol?) -> Array[Hash[Symbol, untyped]]
 
+      def name_conflicts: (String name, ?except_vmid: Integer?) -> Array[Hash[Symbol, untyped]]
+
       private
 
       def load_resources: () -> void

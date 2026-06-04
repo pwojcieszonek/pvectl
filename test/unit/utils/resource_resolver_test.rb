@@ -131,6 +131,41 @@ module Pvectl
         assert_equal [100], results.map { |r| r[:vmid] }
       end
 
+      def test_name_conflicts_finds_existing_name_across_types
+        resolver = create_resolver(@api_response)
+
+        # "cache" belongs to an LXC; uniqueness is global so it conflicts.
+        conflicts = resolver.name_conflicts("cache")
+
+        assert_equal [101], conflicts.map { |r| r[:vmid] }
+      end
+
+      def test_name_conflicts_empty_when_free
+        resolver = create_resolver(@api_response)
+
+        assert_empty resolver.name_conflicts("brand-new")
+      end
+
+      def test_name_conflicts_excludes_self
+        resolver = create_resolver(@api_response)
+
+        # Renaming VMID 100 to its own name is not a conflict.
+        conflicts = resolver.name_conflicts("web-server", except_vmid: 100)
+
+        assert_empty conflicts
+      end
+
+      def test_name_conflicts_reports_other_holder_when_excluding_self
+        response = @api_response + [
+          { vmid: 105, node: "pve2", type: "qemu", name: "web-server" }
+        ]
+        resolver = create_resolver(response)
+
+        conflicts = resolver.name_conflicts("web-server", except_vmid: 100)
+
+        assert_equal [105], conflicts.map { |r| r[:vmid] }
+      end
+
       private
 
       def create_resolver(api_response)
