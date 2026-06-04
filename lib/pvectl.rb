@@ -41,6 +41,17 @@ module Pvectl
   #   raise Pvectl::ResourceNotFoundError, "Node not found: pve1"
   #
   class ResourceNotFoundError < Error; end
+
+  # Raised when an object name collides with an existing VM or container.
+  #
+  # Names are unique across both VMs and containers (cluster-wide) from
+  # pvectl's perspective, even though Proxmox itself only enforces VMID
+  # uniqueness.
+  #
+  # @example
+  #   raise Pvectl::DuplicateNameError, "a VM or container named 'web' already exists (VMID 100 on pve1)"
+  #
+  class DuplicateNameError < Error; end
 end
 
 require_relative "pvectl/argv_preprocessor"
