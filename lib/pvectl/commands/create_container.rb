@@ -45,7 +45,8 @@ module Pvectl
         Pvectl::Services::CreateContainer.new(
           container_repository: ct_repo,
           task_repository: task_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
 

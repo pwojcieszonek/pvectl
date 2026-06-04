@@ -327,6 +327,28 @@ module Pvectl
           end
         end
 
+        # --- Name uniqueness ---
+
+        describe "name uniqueness" do
+          def test_execute_rejects_duplicate_name
+            repo = Object.new
+            repo.define_singleton_method(:next_available_vmid) { 200 }
+            repo.define_singleton_method(:create) { |*| flunk "create should not run on duplicate name" }
+            resolver = Object.new
+            resolver.define_singleton_method(:name_conflicts) do |_name, except_vmid: nil|
+              [{ vmid: 100, node: "pve1" }]
+            end
+
+            service = Pvectl::Services::CreateVm.new(
+              vm_repository: repo, task_repository: Object.new, name_resolver: resolver
+            )
+            result = service.execute(name: "web", node: "pve1")
+
+            refute result.successful?
+            assert_match(/already exists/, result.error)
+          end
+        end
+
         # --- Error handling ---
 
         describe "error handling" do

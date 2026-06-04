@@ -1,10 +1,12 @@
 module Pvectl
   module Services
     class CreateContainer
+      include ValidatesNameUniqueness
+
       DEFAULT_TIMEOUT: Integer
       START_TIMEOUT: Integer
 
-      def initialize: (container_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      def initialize: (container_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped], ?name_resolver: untyped?) -> void
 
       def execute: (
         ?ctid: Integer?,

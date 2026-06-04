@@ -20,6 +20,8 @@ module Pvectl
     #                            cores: 8, memory: 16384)
     #
     class CreateVm
+      include ValidatesNameUniqueness
+
       # @return [Integer] Default timeout for create operations (seconds)
       DEFAULT_TIMEOUT = 300
 
@@ -31,10 +33,11 @@ module Pvectl
       # @param vm_repository [Repositories::Vm] VM repository
       # @param task_repository [Repositories::Task] Task repository
       # @param options [Hash] Options (timeout, async, start)
-      def initialize(vm_repository:, task_repository:, options: {})
+      def initialize(vm_repository:, task_repository:, options: {}, name_resolver: nil)
         @vm_repository = vm_repository
         @task_repository = task_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes VM creation operation.
@@ -69,6 +72,7 @@ module Pvectl
                   efidisk: nil, cloud_init: nil, agent: nil, ostype: nil,
                   description: nil, tags: nil, pool: nil)
         vmid ||= @vm_repository.next_available_vmid
+        ensure_name_available!(name)
 
         params = build_params(
           name: name, cores: cores, sockets: sockets, cpu_type: cpu_type,
