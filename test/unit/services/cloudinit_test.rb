@@ -20,7 +20,7 @@ module Pvectl
       # ---------------------------
 
       def test_regenerate_resolves_vmid_and_calls_repo
-        @resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :qemu, name: "web" }, [100])
+        @resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :qemu, name: "web" }], [[100]], type: :qemu)
         @vm_repo.expect(:cloudinit_regenerate, nil, ["pve1", 100])
 
         result = @service.regenerate(100)
@@ -40,7 +40,7 @@ module Pvectl
       end
 
       def test_regenerate_raises_resource_not_found_when_vm_missing
-        @resolver.expect(:resolve, nil, [999])
+        @resolver.expect(:resolve_identifiers, [], [[999]], type: :qemu)
 
         assert_raises(Pvectl::ResourceNotFoundError) do
           @service.regenerate(999)
@@ -49,7 +49,7 @@ module Pvectl
       end
 
       def test_regenerate_raises_when_resolved_is_not_qemu
-        @resolver.expect(:resolve, { vmid: 200, node: "pve1", type: :lxc, name: "ct" }, [200])
+        @resolver.expect(:resolve_identifiers, [{ vmid: 200, node: "pve1", type: :lxc, name: "ct" }], [[200]], type: :qemu)
 
         assert_raises(Pvectl::ResourceNotFoundError) do
           @service.regenerate(200)
@@ -61,7 +61,7 @@ module Pvectl
       # ---------------------------
 
       def test_pending_resolves_vmid_and_returns_repo_result
-        @resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :qemu, name: "web" }, [100])
+        @resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :qemu, name: "web" }], [[100]], type: :qemu)
         entries = [
           { key: "user", value: "old", pending: "new" },
           { key: "ipconfig0", delete: 1 }
@@ -85,7 +85,7 @@ module Pvectl
       end
 
       def test_pending_raises_when_vm_missing
-        @resolver.expect(:resolve, nil, [999])
+        @resolver.expect(:resolve_identifiers, [], [[999]], type: :qemu)
 
         assert_raises(Pvectl::ResourceNotFoundError) do
           @service.pending(999)
@@ -97,7 +97,7 @@ module Pvectl
       # ---------------------------
 
       def test_dump_returns_yaml_for_user_type
-        @resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :qemu, name: "web" }, [100])
+        @resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :qemu, name: "web" }], [[100]], type: :qemu)
         @vm_repo.expect(:cloudinit_dump, "#cloud-config\nuser: ubuntu\n", ["pve1", 100, "user"])
 
         assert_equal "#cloud-config\nuser: ubuntu\n", @service.dump(100, "user")
@@ -108,7 +108,7 @@ module Pvectl
 
       def test_dump_supports_all_valid_types
         VALID_TYPES.each do |type|
-          @resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :qemu, name: "x" }, [100])
+          @resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :qemu, name: "x" }], [[100]], type: :qemu)
           @vm_repo.expect(:cloudinit_dump, "data-#{type}", ["pve1", 100, type])
 
           assert_equal "data-#{type}", @service.dump(100, type)
@@ -124,7 +124,7 @@ module Pvectl
       end
 
       def test_dump_raises_when_vm_missing
-        @resolver.expect(:resolve, nil, [999])
+        @resolver.expect(:resolve_identifiers, [], [[999]], type: :qemu)
 
         assert_raises(Pvectl::ResourceNotFoundError) do
           @service.dump(999, "user")

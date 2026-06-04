@@ -5,15 +5,15 @@ module Pvectl
 
       def initialize: (vm_repository: untyped, resource_resolver: untyped) -> void
 
-      def regenerate: (Integer vmid, ?node: String?) -> Hash[Symbol, untyped]
+      def regenerate: (Integer | String vmid, ?node: String?) -> Hash[Symbol, untyped]
 
-      def pending: (Integer vmid, ?node: String?) -> Array[Hash[Symbol, untyped]]
+      def pending: (Integer | String vmid, ?node: String?) -> Array[Hash[Symbol, untyped]]
 
-      def dump: (Integer vmid, String type, ?node: String?) -> String
+      def dump: (Integer | String vmid, String type, ?node: String?) -> String
 
       private
 
-      def resolve_node!: (Integer vmid) -> String
+      def resolve_node!: (Integer | String vmid) -> String
     end
   end
 end

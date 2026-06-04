@@ -18,7 +18,7 @@ module Pvectl
       end
 
       def test_list_returns_snapshots_for_single_vmid
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -37,7 +37,7 @@ module Pvectl
       end
 
       def test_list_returns_snapshots_for_multiple_vmids
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -58,7 +58,7 @@ module Pvectl
       end
 
       def test_list_returns_empty_for_unknown_vmid
-        @mock_resolver.expect(:resolve_multiple, [], [[999]])
+        @mock_resolver.expect(:resolve_identifiers, [], [[999]])
 
         result = @service.list([999])
 
@@ -118,7 +118,7 @@ module Pvectl
       end
 
       def test_create_returns_success_result
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -138,7 +138,7 @@ module Pvectl
       end
 
       def test_create_multiple_returns_results_for_each
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -165,7 +165,7 @@ module Pvectl
           options: { async: true }
         )
 
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -186,7 +186,7 @@ module Pvectl
           options: { fail_fast: true }
         )
 
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -220,7 +220,7 @@ module Pvectl
       end
 
       def test_delete_returns_success_result
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -238,7 +238,7 @@ module Pvectl
       end
 
       def test_delete_with_force_passes_flag
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -256,7 +256,7 @@ module Pvectl
       # --- rollback tests ---
 
       def test_rollback_returns_success_result
-        @mock_resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :qemu, name: "web" }, [100])
+        @mock_resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :qemu, name: "web" }], [[100]])
 
         @mock_snapshot_repo.expect(:rollback, "UPID:pve1:00001237:...", [100, "pve1", :qemu, "snap1"], start: false)
 
@@ -271,7 +271,7 @@ module Pvectl
       end
 
       def test_rollback_with_start_passes_flag
-        @mock_resolver.expect(:resolve, { vmid: 100, node: "pve1", type: :lxc, name: "cache" }, [100])
+        @mock_resolver.expect(:resolve_identifiers, [{ vmid: 100, node: "pve1", type: :lxc, name: "cache" }], [[100]])
 
         @mock_snapshot_repo.expect(:rollback, "UPID:pve1:00001237:...", [100, "pve1", :lxc, "snap1"], start: true)
 
@@ -285,7 +285,7 @@ module Pvectl
       end
 
       def test_rollback_returns_error_for_unknown_vmid
-        @mock_resolver.expect(:resolve, nil, [999])
+        @mock_resolver.expect(:resolve_identifiers, [], [[999]])
 
         result = @service.rollback(999, "snap1")
 
@@ -297,7 +297,7 @@ module Pvectl
       # --- node filtering tests ---
 
       def test_list_filters_by_node
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -328,7 +328,7 @@ module Pvectl
       end
 
       def test_create_filters_by_node
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -346,7 +346,7 @@ module Pvectl
       end
 
       def test_delete_filters_by_node
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -364,7 +364,7 @@ module Pvectl
       end
 
       def test_describe_filters_by_node
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -417,7 +417,7 @@ module Pvectl
       # --- delete_all tests ---
 
       def test_delete_all_deletes_every_snapshot_from_vm
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -444,7 +444,7 @@ module Pvectl
       end
 
       def test_delete_all_skips_current_pseudo_snapshot
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -465,7 +465,7 @@ module Pvectl
       end
 
       def test_delete_all_filters_by_node
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -506,7 +506,7 @@ module Pvectl
       end
 
       def test_delete_all_returns_empty_when_no_snapshots
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -518,7 +518,7 @@ module Pvectl
       end
 
       def test_delete_all_with_force_flag
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -540,7 +540,7 @@ module Pvectl
       # --- describe tests ---
 
       def test_describe_finds_snapshot_by_name_on_specific_vmid
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -561,7 +561,7 @@ module Pvectl
       end
 
       def test_describe_finds_snapshot_across_multiple_vmids
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -586,7 +586,7 @@ module Pvectl
       end
 
       def test_describe_raises_not_found_when_snapshot_missing
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -600,7 +600,7 @@ module Pvectl
       end
 
       def test_describe_raises_not_found_when_no_resources_resolved
-        @mock_resolver.expect(:resolve_multiple, [], [[999]])
+        @mock_resolver.expect(:resolve_identifiers, [], [[999]])
 
         assert_raises(Pvectl::ResourceNotFoundError) do
           @service.describe([999], "snap1")

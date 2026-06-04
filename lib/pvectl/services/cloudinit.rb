@@ -76,13 +76,20 @@ module Pvectl
 
       private
 
-      # Resolves a VMID to its node, ensuring the resource is a QEMU VM.
+      # Resolves a VMID or name to its node, ensuring the resource is a QEMU VM.
       #
-      # @param vmid [Integer] VM identifier
+      # @param vmid [Integer, String] VM identifier or name
       # @return [String] node name
       # @raise [Pvectl::ResourceNotFoundError] when not found or not a VM
+      # @raise [Pvectl::AmbiguousIdentifierError] when name matches multiple VMs
       def resolve_node!(vmid)
-        resolved = @resolver.resolve(vmid)
+        matches = @resolver.resolve_identifiers([vmid], type: :qemu)
+        if matches.size > 1
+          ids = matches.map { |r| r[:vmid] }.join(", ")
+          raise Pvectl::AmbiguousIdentifierError,
+                "'#{vmid}' matches multiple resources (VMIDs #{ids}) — specify a VMID"
+        end
+        resolved = matches.first
         raise Pvectl::ResourceNotFoundError, "VM #{vmid} not found" if resolved.nil?
 
         unless resolved[:type] == :qemu

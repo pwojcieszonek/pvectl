@@ -70,7 +70,7 @@ module Pvectl
       # --- create tests ---
 
       def test_create_returns_success_result
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -92,7 +92,7 @@ module Pvectl
       end
 
       def test_create_multiple_returns_results_for_each
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -116,7 +116,7 @@ module Pvectl
       end
 
       def test_create_with_custom_options
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -143,7 +143,7 @@ module Pvectl
           options: { async: true }
         )
 
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 
@@ -166,7 +166,7 @@ module Pvectl
           options: { fail_fast: true }
         )
 
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" },
           { vmid: 101, node: "pve2", type: :lxc, name: "cache" }
         ], [[100, 101]])
@@ -181,7 +181,7 @@ module Pvectl
       end
 
       def test_create_returns_empty_for_unknown_vmids
-        @mock_resolver.expect(:resolve_multiple, [], [[999]])
+        @mock_resolver.expect(:resolve_identifiers, [], [[999]])
 
         results = @service.create([999], storage: "local")
 
@@ -305,7 +305,7 @@ module Pvectl
           options: { timeout: 600 }
         )
 
-        @mock_resolver.expect(:resolve_multiple, [
+        @mock_resolver.expect(:resolve_identifiers, [
           { vmid: 100, node: "pve1", type: :qemu, name: "web" }
         ], [[100]])
 

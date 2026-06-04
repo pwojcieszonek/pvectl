@@ -158,7 +158,17 @@ module Pvectl
       # @param start [Boolean] start after rollback (LXC only)
       # @return [Models::OperationResult] result
       def rollback(vmid, snapname, start: false)
-        resource = @resolver.resolve(vmid)
+        matches = @resolver.resolve_identifiers([vmid])
+        if matches.size > 1
+          ids = matches.map { |r| r[:vmid] }.join(", ")
+          return Models::OperationResult.new(
+            resource: { vmid: vmid },
+            operation: :rollback,
+            success: false,
+            error: "'#{vmid}' matches multiple resources (VMIDs #{ids}) — specify a VMID"
+          )
+        end
+        resource = matches.first
 
         if resource.nil?
           return Models::OperationResult.new(
@@ -181,7 +191,7 @@ module Pvectl
       # @param vmids [Array<Integer>] VM/container IDs (empty = resolve all)
       # @return [Array<Hash>] resolved resources
       def resolve_resources(vmids)
-        vmids.empty? ? @resolver.resolve_all : @resolver.resolve_multiple(vmids)
+        vmids.empty? ? @resolver.resolve_all : @resolver.resolve_identifiers(vmids)
       end
 
       # Filters resources by node name.
