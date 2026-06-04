@@ -88,6 +88,49 @@ module Pvectl
         assert_equal 2, results.length
       end
 
+      def test_resolve_identifiers_by_name
+        resolver = create_resolver(@api_response)
+
+        results = resolver.resolve_identifiers(["cache"])
+
+        assert_equal [101], results.map { |r| r[:vmid] }
+      end
+
+      def test_resolve_identifiers_by_vmid
+        resolver = create_resolver(@api_response)
+
+        results = resolver.resolve_identifiers(["100"])
+
+        assert_equal [100], results.map { |r| r[:vmid] }
+      end
+
+      def test_resolve_identifiers_filters_by_type
+        resolver = create_resolver(@api_response)
+
+        results = resolver.resolve_identifiers(["cache"], type: :qemu)
+
+        assert_empty results
+      end
+
+      def test_resolve_identifiers_returns_all_name_matches
+        response = @api_response + [
+          { vmid: 105, node: "pve2", type: "qemu", name: "web-server" }
+        ]
+        resolver = create_resolver(response)
+
+        results = resolver.resolve_identifiers(["web-server"])
+
+        assert_equal [100, 105], results.map { |r| r[:vmid] }.sort
+      end
+
+      def test_resolve_identifiers_dedupes_across_inputs
+        resolver = create_resolver(@api_response)
+
+        results = resolver.resolve_identifiers(["100", "web-server"])
+
+        assert_equal [100], results.map { |r| r[:vmid] }
+      end
+
       private
 
       def create_resolver(api_response)

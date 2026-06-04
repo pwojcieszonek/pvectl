@@ -55,6 +55,28 @@ module Pvectl
         @cache.values
       end
 
+      # Resolves identifiers (VMIDs or names) to resource information.
+      #
+      # Applies the {IdentifierMatcher} rule to each identifier and returns
+      # the union of matches, deduplicated by VMID. A name may resolve to
+      # several resources; a VMID to at most one.
+      #
+      # @param identifiers [Array<Integer, String>] VMIDs or names
+      # @param type [Symbol, nil] restrict to :qemu or :lxc (nil = both)
+      # @return [Array<Hash>] matching resources (empty if none match)
+      def resolve_identifiers(identifiers, type: nil)
+        load_resources
+        pool = @cache.values
+        pool = pool.select { |r| r[:type] == type } if type
+
+        identifiers.flat_map do |identifier|
+          IdentifierMatcher.match(
+            identifier, pool,
+            id: ->(r) { r[:vmid] }, name: ->(r) { r[:name] }
+          )
+        end.uniq { |r| r[:vmid] }
+      end
+
       private
 
       # Loads and caches cluster resources.

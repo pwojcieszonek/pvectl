@@ -9,6 +9,8 @@ module Pvectl
 
       def resolve_all: () -> Array[Hash[Symbol, untyped]]
 
+      def resolve_identifiers: (Array[Integer | String] identifiers, ?type: Symbol?) -> Array[Hash[Symbol, untyped]]
+
       private
 
       def load_resources: () -> void
