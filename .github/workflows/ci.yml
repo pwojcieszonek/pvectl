@@ -5,6 +5,8 @@ permissions:
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
   test:
@@ -26,3 +28,70 @@ jobs:
 
       - name: Run tests
         run: bundle exec rake test
+
+  release:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # push tag + create GitHub Release
+      id-token: write   # OIDC for RubyGems Trusted Publishing
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Read gem version
+        id: version
+        run: echo "version=$(ruby -r ./lib/pvectl/version -e 'print Pvectl::VERSION')" >> "$GITHUB_OUTPUT"
+
+      - name: Check whether tag already exists
+        id: tag
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Tag v${{ steps.version.outputs.version }} already exists — skipping release."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Tag v${{ steps.version.outputs.version }} not found — proceeding with release."
+          fi
+
+      - name: Extract release notes from CHANGELOG
+        if: steps.tag.outputs.exists == 'false'
+        run: |
+          awk -v ver="${{ steps.version.outputs.version }}" '
+            $0 ~ "^## \\[" ver "\\]" { capture = 1; next }
+            capture && /^## / { exit }
+            capture { print }
+          ' CHANGELOG.md > release-notes.md
+          echo "----- release-notes.md -----"
+          cat release-notes.md
+
+      - name: Configure RubyGems credentials (OIDC)
+        if: steps.tag.outputs.exists == 'false'
+        uses: rubygems/configure-rubygems-credentials@v2.0.0
+
+      - name: Build gem
+        if: steps.tag.outputs.exists == 'false'
+        run: bundle exec rake build
+
+      - name: Push gem to RubyGems
+        if: steps.tag.outputs.exists == 'false'
+        run: gem push "pkg/pvectl-${{ steps.version.outputs.version }}.gem"
+
+      - name: Create git tag and GitHub Release
+        if: steps.tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ steps.version.outputs.version }}" \
+            "pkg/pvectl-${{ steps.version.outputs.version }}.gem" \
+            --title "v${{ steps.version.outputs.version }}" \
+            --notes-file release-notes.md
