@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: `pvectl feature vm/ct` — query availability of clone/snapshot/copy for a VM or container
 - **commands**: `pvectl unlink disk vm` — remove disk from VM config without deleting volume (or `--force` to delete)
 - **ci**: Automatically build, tag, create a GitHub Release, and publish the gem to RubyGems (OIDC Trusted Publishing) when `Pvectl::VERSION` changes on `main`; gated on passing tests and made idempotent via the `v<VERSION>` tag check and a RubyGems version pre-check
+- **utils**: `IdentifierMatcher` resolving a CLI argument to resources by VMID
+  (preferred) or name (fallback); `ResourceResolver#resolve_identifiers` and
+  `#name_conflicts` underpinning name-based reference and global name uniqueness.
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
