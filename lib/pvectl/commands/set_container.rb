@@ -31,7 +31,7 @@ module Pvectl
       # @param key_values [Hash] parsed key-value pairs
       # @return [Hash] parameters for the set service
       def execute_params(resource_id, key_values)
-        { ctid: resource_id.to_i, params: key_values }
+        { ctid: resource_id, params: key_values }
       end
 
       # Builds the container set service.

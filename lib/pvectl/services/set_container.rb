@@ -35,9 +35,10 @@ module Pvectl
       # @param params [Hash] key-value pairs to set
       # @return [Models::ContainerOperationResult, nil] result, or nil if no changes
       def execute(ctid:, params:)
-        container = @container_repository.get(ctid)
+        container = @container_repository.resolve_one(ctid)
         return not_found_result(ctid) unless container
 
+        ctid = container.vmid
         config = @container_repository.fetch_config(container.node, ctid)
         resource_info = { vmid: ctid, node: container.node, status: container.status }
 

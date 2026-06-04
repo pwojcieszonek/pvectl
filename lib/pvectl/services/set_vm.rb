@@ -35,9 +35,10 @@ module Pvectl
       # @param params [Hash] key-value pairs to set
       # @return [Models::VmOperationResult, nil] result, or nil if no changes
       def execute(vmid:, params:)
-        vm = @vm_repository.get(vmid)
+        vm = @vm_repository.resolve_one(vmid)
         return not_found_result(vmid) unless vm
 
+        vmid = vm.vmid
         config = @vm_repository.fetch_config(vm.node, vmid)
         resource_info = { vmid: vmid, node: vm.node, status: vm.status }
 

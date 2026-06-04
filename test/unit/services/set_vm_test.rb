@@ -18,7 +18,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
         update_params = nil
@@ -43,7 +43,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
         update_params = nil
@@ -66,7 +66,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
         update_params = nil
@@ -88,7 +88,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
         # NO update expectation — dry run should NOT call update
 
@@ -106,7 +106,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
         service = SetVm.new(vm_repository: vm_repo)
@@ -118,7 +118,7 @@ module Pvectl
 
       def test_vm_not_found
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, nil, [100])
+        vm_repo.expect(:resolve_one, nil, [100])
 
         service = SetVm.new(vm_repository: vm_repo)
         result = service.execute(vmid: 100, params: { memory: "8192" })
@@ -129,12 +129,27 @@ module Pvectl
         vm_repo.verify
       end
 
+      def test_execute_resolves_vm_by_name
+        vm = Struct.new(:vmid, :node, :status).new(100, "pve1", "running")
+        repo = Object.new
+        repo.define_singleton_method(:resolve_one) { |id| id == "web" ? vm : nil }
+        repo.define_singleton_method(:fetch_config) { |_node, _vmid| { memory: "2048" } }
+        captured = {}
+        repo.define_singleton_method(:update) { |vmid, node, params| captured[:vmid] = vmid }
+
+        service = Pvectl::Services::SetVm.new(vm_repository: repo)
+        result = service.execute(vmid: "web", params: { "memory" => "4096" })
+
+        assert result.successful?
+        assert_equal 100, captured[:vmid]  # resolved to the integer VMID
+      end
+
       def test_api_error
         vm = build_vm
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
         vm_repo.expect(:update, nil) do |_vmid, _node, _params|
           raise StandardError, "API timeout"
@@ -153,7 +168,7 @@ module Pvectl
         config = build_config
 
         vm_repo = Minitest::Mock.new
-        vm_repo.expect(:get, vm, [100])
+        vm_repo.expect(:resolve_one, vm, [100])
         vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
         _update_params = nil

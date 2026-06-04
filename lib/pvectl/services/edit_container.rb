@@ -34,9 +34,10 @@ module Pvectl
       # @param ctid [Integer] Container identifier
       # @return [Models::ContainerOperationResult, nil] operation result, or nil if cancelled/no changes
       def execute(ctid:)
-        container = @container_repository.get(ctid)
+        container = @container_repository.resolve_one(ctid)
         return not_found_result(ctid) unless container
 
+        ctid = container.vmid
         config = @container_repository.fetch_config(container.node, ctid)
         resource_info = { ctid: ctid, node: container.node, status: container.status }
 

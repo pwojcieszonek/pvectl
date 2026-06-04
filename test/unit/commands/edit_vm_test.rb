@@ -48,7 +48,7 @@ module Pvectl
 
       def test_execute_params_returns_vmid_hash
         cmd = EditVm.new([], {}, {})
-        assert_equal({ vmid: 100 }, cmd.send(:execute_params, 100))
+        assert_equal({ vmid: "100" }, cmd.send(:execute_params, "100"))
       end
 
       # --- service_options ---
@@ -69,7 +69,7 @@ module Pvectl
         cmd = EditVm.new(["100"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, nil, [], vmid: 100)
+        mock_service.expect(:execute, nil, [], vmid: "100")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -98,7 +98,7 @@ module Pvectl
         cmd = EditVm.new(["100"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], vmid: 100)
+        mock_service.expect(:execute, result, [], vmid: "100")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -128,7 +128,7 @@ module Pvectl
         cmd = EditVm.new(["100"], { "dry-run": true }, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], vmid: 100)
+        mock_service.expect(:execute, result, [], vmid: "100")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do
@@ -156,7 +156,7 @@ module Pvectl
         cmd = EditVm.new(["100"], {}, {})
 
         mock_service = Minitest::Mock.new
-        mock_service.expect(:execute, result, [], vmid: 100)
+        mock_service.expect(:execute, result, [], vmid: "100")
 
         cmd.stub(:load_config, nil) do
           cmd.stub(:build_edit_service, mock_service) do

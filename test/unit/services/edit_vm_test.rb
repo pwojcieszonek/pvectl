@@ -33,7 +33,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             # Build the YAML that the editor will "produce" with cores changed to 8
@@ -68,7 +68,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             # Editor does not change file content (noop)
@@ -87,7 +87,7 @@ module Pvectl
         describe "not found" do
           it "returns error when VM not found" do
             vm_repo = Minitest::Mock.new
-            vm_repo.expect(:get, nil, [100])
+            vm_repo.expect(:resolve_one, nil, [100])
 
             service = EditVm.new(vm_repository: vm_repo)
             result = service.execute(vmid: 100)
@@ -105,7 +105,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
@@ -134,7 +134,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
@@ -161,7 +161,7 @@ module Pvectl
             config = build_config(digest: "deadbeef")
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
@@ -191,7 +191,7 @@ module Pvectl
             config = build_config(description: "old desc")
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
@@ -223,7 +223,7 @@ module Pvectl
             config = build_config(vmid: 100)
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
@@ -250,7 +250,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             # Editor adds a trailing newline but keeps same values — round-trip preserves
@@ -277,7 +277,7 @@ module Pvectl
             config = build_config
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:fetch_config, config, ["pve1", 100])
 
             original_yaml = ConfigSerializer.to_yaml(config, type: :vm,

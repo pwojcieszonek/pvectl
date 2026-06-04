@@ -134,7 +134,7 @@ module Pvectl
       # @param resource_id [String] VMID (converted to Integer)
       # @return [Hash] parameters for the edit service
       def execute_params(resource_id)
-        { vmid: resource_id.to_i }
+        { vmid: resource_id }
       end
 
       # Builds the VM edit service.
