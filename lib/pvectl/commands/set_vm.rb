@@ -138,7 +138,8 @@ module Pvectl
         vm_repo = Pvectl::Repositories::Vm.new(connection)
         Pvectl::Services::SetVm.new(
           vm_repository: vm_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
     end

@@ -1,7 +1,9 @@
 module Pvectl
   module Services
     class SetContainer
-      def initialize: (container_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      include ValidatesNameUniqueness
+
+      def initialize: (container_repository: untyped, ?options: Hash[Symbol, untyped], ?name_resolver: untyped?) -> void
       def execute: (ctid: Integer | String, params: Hash[Symbol | String, untyped]) -> Models::ContainerOperationResult?
 
       private

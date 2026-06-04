@@ -42,7 +42,8 @@ module Pvectl
         ct_repo = Pvectl::Repositories::Container.new(connection)
         Pvectl::Services::SetContainer.new(
           container_repository: ct_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
       end
     end

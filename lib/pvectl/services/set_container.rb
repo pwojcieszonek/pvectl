@@ -17,13 +17,17 @@ module Pvectl
     #   result = service.execute(ctid: 200, params: { memory: "8192" })
     #
     class SetContainer
+      include ValidatesNameUniqueness
+
       # Creates a new SetContainer service.
       #
       # @param container_repository [Repositories::Container] Container repository
       # @param options [Hash] options (dry_run)
-      def initialize(container_repository:, options: {})
+      # @param name_resolver [Utils::ResourceResolver, nil] resolver for name uniqueness checks
+      def initialize(container_repository:, options: {}, name_resolver: nil)
         @container_repository = container_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes the non-interactive container config update.
@@ -40,6 +44,8 @@ module Pvectl
 
         ctid = container.vmid
         config = @container_repository.fetch_config(container.node, ctid)
+        new_hostname = params["hostname"] || params[:hostname]
+        ensure_name_available!(new_hostname, except_vmid: container.vmid) if new_hostname
         resource_info = { vmid: ctid, node: container.node, status: container.status }
 
         changes = compute_diff(config, params)

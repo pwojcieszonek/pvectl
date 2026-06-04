@@ -1,7 +1,9 @@
 module Pvectl
   module Services
     class SetVm
-      def initialize: (vm_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      include ValidatesNameUniqueness
+
+      def initialize: (vm_repository: untyped, ?options: Hash[Symbol, untyped], ?name_resolver: untyped?) -> void
       def execute: (vmid: Integer | String, params: Hash[Symbol | String, untyped]) -> Models::VmOperationResult?
 
       private

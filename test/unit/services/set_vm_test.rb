@@ -144,6 +144,24 @@ module Pvectl
         assert_equal 100, captured[:vmid]  # resolved to the integer VMID
       end
 
+      def test_execute_rejects_rename_to_existing_name
+        vm = Struct.new(:vmid, :node, :status).new(100, "pve1", "running")
+        repo = Object.new
+        repo.define_singleton_method(:resolve_one) { |_id| vm }
+        repo.define_singleton_method(:fetch_config) { |_n, _v| { name: "old" } }
+        repo.define_singleton_method(:update) { |*| flunk "update should not run on duplicate name" }
+        resolver = Object.new
+        resolver.define_singleton_method(:name_conflicts) do |_name, except_vmid: nil|
+          except_vmid == 100 ? [{ vmid: 105, node: "pve2" }] : []
+        end
+
+        service = Pvectl::Services::SetVm.new(vm_repository: repo, name_resolver: resolver)
+        result = service.execute(vmid: 100, params: { "name" => "taken" })
+
+        refute result.successful?
+        assert_match(/already exists/, result.error)
+      end
+
       def test_api_error
         vm = build_vm
         config = build_config

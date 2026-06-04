@@ -17,13 +17,17 @@ module Pvectl
     #   result = service.execute(vmid: 100, params: { memory: "8192" })
     #
     class SetVm
+      include ValidatesNameUniqueness
+
       # Creates a new SetVm service.
       #
       # @param vm_repository [Repositories::Vm] VM repository
       # @param options [Hash] options (dry_run)
-      def initialize(vm_repository:, options: {})
+      # @param name_resolver [Utils::ResourceResolver, nil] resolver for name uniqueness checks
+      def initialize(vm_repository:, options: {}, name_resolver: nil)
         @vm_repository = vm_repository
         @options = options
+        @name_resolver = name_resolver
       end
 
       # Executes the non-interactive VM config update.
@@ -40,6 +44,8 @@ module Pvectl
 
         vmid = vm.vmid
         config = @vm_repository.fetch_config(vm.node, vmid)
+        new_name = params["name"] || params[:name]
+        ensure_name_available!(new_name, except_vmid: vm.vmid) if new_name
         resource_info = { vmid: vmid, node: vm.node, status: vm.status }
 
         changes = compute_diff(config, params)
