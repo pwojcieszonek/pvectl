@@ -26,6 +26,8 @@ module Pvectl
     # @see Pvectl::Connection API connection
     #
     class Vm < Base
+      include ResolvesByIdentifier
+
       # Lists all VMs in the cluster.
       #
       # Uses `/cluster/resources?type=vm` endpoint for efficient cluster-wide

@@ -25,6 +25,8 @@ module Pvectl
     # @see Pvectl::Connection API connection
     #
     class Container < Base
+      include ResolvesByIdentifier
+
       # Lists all containers in the cluster.
       #
       # Uses `/cluster/resources?type=lxc` endpoint for efficient cluster-wide

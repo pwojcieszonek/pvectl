@@ -118,6 +118,7 @@ require_relative "pvectl/models/subscription"
 
 # Repositories
 require_relative "pvectl/repositories/base"
+require_relative "pvectl/repositories/resolves_by_identifier"
 require_relative "pvectl/repositories/apt"
 require_relative "pvectl/repositories/vm"
 require_relative "pvectl/repositories/node"
