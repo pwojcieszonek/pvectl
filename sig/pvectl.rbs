@@ -9,4 +9,7 @@ module Pvectl
 
   class DuplicateNameError < Error
   end
+
+  class AmbiguousIdentifierError < Error
+  end
 end
