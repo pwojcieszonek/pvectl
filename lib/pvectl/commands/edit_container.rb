@@ -48,6 +48,7 @@ module Pvectl
         Pvectl::Services::EditContainer.new(
           container_repository: ct_repo,
           editor_session: build_editor_session,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection),
           options: service_options
         )
       end

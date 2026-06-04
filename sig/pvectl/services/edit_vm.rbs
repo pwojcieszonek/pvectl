@@ -1,7 +1,9 @@
 module Pvectl
   module Services
     class EditVm
-      def initialize: (vm_repository: untyped, ?editor_session: untyped?, ?options: Hash[Symbol, untyped]) -> void
+      include ValidatesNameUniqueness
+
+      def initialize: (vm_repository: untyped, ?editor_session: untyped?, ?name_resolver: untyped?, ?options: Hash[Symbol, untyped]) -> void
 
       def execute: (vmid: Integer | String) -> Models::VmOperationResult?
 

@@ -146,6 +146,7 @@ module Pvectl
         Pvectl::Services::EditVm.new(
           vm_repository: vm_repo,
           editor_session: build_editor_session,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection),
           options: service_options
         )
       end

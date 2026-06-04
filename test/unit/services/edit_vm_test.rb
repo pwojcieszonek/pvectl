@@ -269,6 +269,67 @@ module Pvectl
           end
         end
 
+        # --- Rename to taken name ---
+
+        describe "rename validation" do
+          it "rejects rename to a name already used by another VM" do
+            config = build_config(name: "old")
+            vm = build_vm(name: "old")
+
+            vm_repo = Object.new
+            vm_repo.define_singleton_method(:resolve_one) { |_id| vm }
+            vm_repo.define_singleton_method(:fetch_config) { |_n, _v| config }
+            vm_repo.define_singleton_method(:update) { |*| flunk "update should not run on duplicate name" }
+
+            original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
+                                                     resource: { vmid: 100, node: "pve1", status: "running" })
+            edited_yaml = original_yaml.gsub("name: old", "name: taken")
+            editor = build_editor(edited_yaml)
+            session = EditorSession.new(editor: editor)
+
+            resolver = Object.new
+            resolver.define_singleton_method(:name_conflicts) do |_name, except_vmid: nil|
+              except_vmid == 100 ? [{ vmid: 105, node: "pve2" }] : []
+            end
+
+            service = EditVm.new(vm_repository: vm_repo, editor_session: session, name_resolver: resolver)
+            result = service.execute(vmid: 100)
+
+            refute result.successful?
+            assert_match(/already exists/, result.error)
+          end
+
+          it "allows rename to own name (no conflict)" do
+            vm_repo = Minitest::Mock.new
+            config = build_config(name: "web")
+            vm = build_vm(name: "web")
+
+            vm_repo.expect(:resolve_one, vm, [100])
+            vm_repo.expect(:fetch_config, config, ["pve1", 100])
+
+            original_yaml = ConfigSerializer.to_yaml(config, type: :vm,
+                                                     resource: { vmid: 100, node: "pve1", status: "running" })
+            edited_yaml = original_yaml.gsub("cores: 4", "cores: 8")
+            editor = build_editor(edited_yaml)
+            session = EditorSession.new(editor: editor)
+
+            resolver = Object.new
+            resolver.define_singleton_method(:name_conflicts) do |_name, except_vmid: nil|
+              [] # no conflicts for any query
+            end
+
+            vm_repo.expect(:update, nil) do |_vmid, _node, _params|
+              true
+            end
+
+            service = EditVm.new(vm_repository: vm_repo, editor_session: session, name_resolver: resolver)
+            result = service.execute(vmid: 100)
+
+            assert result.successful?
+            vm_repo.verify
+          end
+        end
+
         # --- Result model type ---
 
         describe "result model" do
