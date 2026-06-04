@@ -44,7 +44,19 @@ module Pvectl
             Wait for start to complete with timeout:
               $ pvectl start vm 100 --wait --timeout 60
 
+          EXAMPLES (by name)
+            Start a VM by name:
+              $ pvectl start vm web
+
+            Start all VMs whose name matches a pattern:
+              $ pvectl start vm web db cache
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources starts ALL of them (you will be
+            asked to confirm before proceeding).
+
             Batch operations (--all) require --yes or interactive confirmation.
 
             Use selectors (-l) to filter: status, name, tags, pool.

@@ -35,7 +35,16 @@ module Pvectl
             Reboot all VMs with a specific tag:
               $ pvectl restart vm --all -l tags=webserver --yes
 
+          EXAMPLES (by name)
+            Reboot a VM by name:
+              $ pvectl restart vm web
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources reboots ALL of them (you will be
+            asked to confirm before proceeding).
+
             For VMs, this sends an ACPI reboot signal (requires guest agent or
             ACPI support). For containers, uses LXC reboot.
 

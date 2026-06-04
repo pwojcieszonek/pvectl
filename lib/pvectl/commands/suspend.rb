@@ -35,7 +35,16 @@ module Pvectl
             Suspend all running VMs on a node:
               $ pvectl suspend vm --all --node pve1 -l status=running --yes
 
+          EXAMPLES (by name)
+            Suspend a VM by name:
+              $ pvectl suspend vm web
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            A name that matches several resources suspends ALL of them (you will
+            be asked to confirm before proceeding).
+
             Suspend saves the full memory state to disk, which may take time
             for VMs with large memory allocations.
 

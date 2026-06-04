@@ -106,9 +106,21 @@ module Pvectl
               Container rootfs:
                 $ pvectl describe volume ct 200 rootfs
 
+            EXAMPLES (by name)
+              Describe a VM by name:
+                $ pvectl describe vm web
+
+              Describe a container by name (shows all matches if name is shared):
+                $ pvectl describe container db
+
             NOTES
               For local storage, --node is required because local storage exists
               independently on each node.
+
+              RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+              against VMIDs first; if no match is found it falls back to a name.
+              When a name matches several resources, EVERY matching resource is
+              described in full (one output block per resource).
 
               Snapshot describe shows a visual tree of all snapshots for the
               matching VMs, highlighting the described snapshot.

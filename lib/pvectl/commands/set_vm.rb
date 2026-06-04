@@ -51,7 +51,17 @@ module Pvectl
             Preview changes without applying:
               $ pvectl set vm 100 memory=8192 --dry-run
 
+          EXAMPLES (by name)
+            Set VM memory by name:
+              $ pvectl set vm web memory=4096
+
           NOTES
+            RESOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            set is a single-target command — if the name matches several
+            resources, the command errors with an ambiguity message. Use a VMID
+            to address the resource unambiguously in that case.
+
             Volume resize (size=) is irreversible. A confirmation prompt is shown
             unless --yes is specified.
 

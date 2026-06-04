@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **utils**: `IdentifierMatcher` resolving a CLI argument to resources by VMID
   (preferred) or name (fallback); `ResourceResolver#resolve_identifiers` and
   `#name_conflicts` underpinning name-based reference and global name uniqueness.
+- **cli**: Reference VMs and containers by name as well as VMID across all
+  commands. Multi-target commands (start/stop/shutdown/restart/reset/suspend/
+  resume/delete) act on every match (with confirmation); single-target commands
+  (clone/console/set/edit) require an unambiguous match. `describe <type> <name>`
+  shows every matching resource.
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section

@@ -52,7 +52,17 @@ module Pvectl
             Clone with explicit new ID:
               $ pvectl clone vm 100 --newid 150 --name web-test
 
+          EXAMPLES (by name)
+            Clone a VM referenced by name:
+              $ pvectl clone vm web --name web-clone
+
           NOTES
+            SOURCE_ID may be a VMID or a name. A numeric argument is matched
+            against VMIDs first; if no match is found it falls back to a name.
+            clone is a single-target command — if the name matches several
+            resources, the command errors with an ambiguity message. Use a VMID
+            to address the resource unambiguously in that case.
+
             Config modification is a two-step process: clone first, then update
             configuration via the Proxmox API. If the config update fails, the
             clone still exists but with the original configuration.
