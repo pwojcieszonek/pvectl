@@ -17,6 +17,8 @@ module Pvectl
     #   end
     #
     module IrreversibleCommand
+      include IdentifierResolution
+
       # Class methods added when the module is included.
       module ClassMethods
         # Executes the command.
@@ -123,9 +125,7 @@ module Pvectl
         resources = if @options[:all]
                       repo.list(node: @options[:node])
                     elsif @resource_ids.any?
-                      resolved = @resource_ids.map { |id| repo.get(id.to_i) }.compact
-                      resolved = resolved.select { |r| r.node == @options[:node] } if @options[:node]
-                      resolved
+                      resolve_identifiers_against(repo)
                     else
                       return [] if selector_strings.empty?
                       repo.list(node: @options[:node])

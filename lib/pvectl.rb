@@ -313,6 +313,7 @@ require_relative "pvectl/services/wakeonlan"
 require_relative "pvectl/commands/resource_registry"
 require_relative "pvectl/commands/shared_flags"
 require_relative "pvectl/commands/shared_config_parsers"
+require_relative "pvectl/commands/identifier_resolution"
 
 # Commands - Get
 require_relative "pvectl/commands/get/resource_handler"
