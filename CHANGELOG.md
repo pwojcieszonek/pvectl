@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **commands**: `pvectl get subscription` — show Proxmox subscription status per node (level, status, next due date, masked key). Use `-o wide` to reveal the full license key.
 - **commands**: `pvectl feature vm/ct` — query availability of clone/snapshot/copy for a VM or container
 - **commands**: `pvectl unlink disk vm` — remove disk from VM config without deleting volume (or `--force` to delete)
+- **ci**: Automatically build, tag, create a GitHub Release, and publish the gem to RubyGems (OIDC Trusted Publishing) when `Pvectl::VERSION` changes on `main`; gated on passing tests and made idempotent via the `v<VERSION>` tag check and a RubyGems version pre-check
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
