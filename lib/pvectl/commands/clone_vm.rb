@@ -152,7 +152,7 @@ module Pvectl
       # @return [Integer] exit code
       def execute
         vmid = @args.first
-        return usage_error("Source VMID required") unless vmid
+        return usage_error("Source VMID or name required") unless vmid
 
         config_params = build_vm_config_params
 
@@ -160,7 +160,7 @@ module Pvectl
           return usage_error("Config flags require sync mode (remove --async)")
         end
 
-        perform_clone(vmid.to_i, config_params)
+        perform_clone(vmid, config_params)
       end
 
       private

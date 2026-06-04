@@ -27,7 +27,7 @@ module Pvectl
         describe "validation" do
           it "returns error when source VM not found" do
             vm_repo, task_repo = build_mocks
-            vm_repo.expect(:get, nil, [999])
+            vm_repo.expect(:resolve_one, nil, [999])
 
             service = CloneVm.new(vm_repository: vm_repo, task_repository: task_repo)
             result = service.execute(vmid: 999)
@@ -40,7 +40,7 @@ module Pvectl
           it "returns error for linked clone when VM is not a template" do
             vm_repo, task_repo = build_mocks
             vm = build_vm(template: 0)
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
 
             service = CloneVm.new(vm_repository: vm_repo, task_repository: task_repo)
             result = service.execute(vmid: 100, linked: true)
@@ -55,7 +55,7 @@ module Pvectl
             vm = build_vm(template: 1)
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -75,7 +75,7 @@ module Pvectl
             vm = build_vm(name: "web-server")
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -93,7 +93,7 @@ module Pvectl
             vm = build_vm(name: nil)
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -109,7 +109,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -125,7 +125,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:next_available_vmid, 201)
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 201, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
@@ -143,7 +143,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -164,7 +164,7 @@ module Pvectl
             vm = build_vm(node: "pve2")
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve2", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -181,7 +181,7 @@ module Pvectl
             vm = build_vm(node: "pve1")
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve3", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -199,7 +199,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -223,7 +223,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -242,7 +242,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -261,7 +261,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -280,7 +280,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -299,7 +299,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -318,7 +318,7 @@ module Pvectl
             task = build_task
 
             clone_opts = nil
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone") do |vmid, node, new_vmid, opts|
               clone_opts = opts
               "UPID:pve1:clone"
@@ -340,7 +340,7 @@ module Pvectl
             vm = build_vm
             task = build_task(exitstatus: "OK")
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -357,7 +357,7 @@ module Pvectl
             vm_repo, task_repo = build_mocks
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
 
             service = CloneVm.new(
@@ -378,7 +378,7 @@ module Pvectl
             vm = build_vm
             task = build_task(exitstatus: "ERROR: clone failed")
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -398,7 +398,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -423,7 +423,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
             vm_repo.expect(:update, nil) do |*_args|
@@ -445,7 +445,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -461,7 +461,7 @@ module Pvectl
             vm = build_vm(node: "pve1")
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -485,7 +485,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
             vm_repo.expect(:update, nil) do |*_args|
@@ -509,7 +509,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -532,7 +532,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -555,7 +555,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 
@@ -579,7 +579,7 @@ module Pvectl
             task = build_task
             start_task = build_task(upid: "UPID:pve1:start")
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
             vm_repo.expect(:update, nil, [200, "pve1", Hash])
@@ -599,6 +599,30 @@ module Pvectl
           end
         end
 
+        # --- Name resolution ---
+
+        describe "name resolution" do
+          def test_execute_resolves_source_by_name
+            source = Struct.new(:vmid, :node, :name, :template?).new(100, "pve1", "web", false)
+            repo = Object.new
+            repo.define_singleton_method(:resolve_one) { |id| id == "web" ? source : nil }
+            repo.define_singleton_method(:next_available_vmid) { 200 }
+            captured = {}
+            repo.define_singleton_method(:clone) do |vmid, node, new_vmid, _opts|
+              captured[:vmid] = vmid
+              "UPID:clone"
+            end
+            task = Struct.new(:successful?).new(true)
+            task_repo = Object.new
+            task_repo.define_singleton_method(:wait) { |_upid, **_o| task }
+
+            service = Pvectl::Services::CloneVm.new(vm_repository: repo, task_repository: task_repo)
+            result = service.execute(vmid: "web")
+
+            assert_equal 100, captured[:vmid]  # source resolved to integer VMID
+          end
+        end
+
         # --- Error handling ---
 
         describe "error handling" do
@@ -606,7 +630,7 @@ module Pvectl
             vm_repo, task_repo = build_mocks
             vm = build_vm
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, nil) do |*_args|
               raise StandardError, "API connection timeout"
             end
@@ -623,7 +647,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 600)
 
@@ -643,7 +667,7 @@ module Pvectl
             vm = build_vm
             task = build_task
 
-            vm_repo.expect(:get, vm, [100])
+            vm_repo.expect(:resolve_one, vm, [100])
             vm_repo.expect(:clone, "UPID:pve1:clone", [100, "pve1", 200, Hash])
             task_repo.expect(:wait, task, ["UPID:pve1:clone"], timeout: 300)
 

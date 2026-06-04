@@ -55,8 +55,10 @@ module Pvectl
       def execute(vmid:, node: nil, new_vmid: nil, name: nil, target_node: nil,
                   storage: nil, linked: false, pool: nil, description: nil,
                   config_params: {})
-        source_vm = @vm_repository.get(vmid)
+        source_vm = @vm_repository.resolve_one(vmid)
         return vm_not_found_error(vmid) unless source_vm
+
+        vmid = source_vm.vmid
 
         if linked && !source_vm.template?
           return linked_clone_error(source_vm)

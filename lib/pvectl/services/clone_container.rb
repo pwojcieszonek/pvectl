@@ -55,8 +55,10 @@ module Pvectl
       def execute(ctid:, node: nil, new_ctid: nil, hostname: nil, target_node: nil,
                   storage: nil, linked: false, pool: nil, description: nil,
                   config_params: {})
-        source_ct = @container_repository.get(ctid)
+        source_ct = @container_repository.resolve_one(ctid)
         return container_not_found_error(ctid) unless source_ct
+
+        ctid = source_ct.vmid
 
         if linked && !source_ct.template?
           return linked_clone_error(source_ct)
