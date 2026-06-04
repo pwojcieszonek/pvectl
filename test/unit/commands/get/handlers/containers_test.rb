@@ -103,6 +103,79 @@ class GetHandlersContainersTest < Minitest::Test
   end
 
   # ---------------------------
+  # list() with positional identifiers (kubectl-style: get ct 100 web)
+  # ---------------------------
+
+  def test_list_with_positional_ctid_returns_single_container
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: ["100"])
+
+    assert_equal 1, containers.length
+    assert_equal 100, containers.first.vmid
+  end
+
+  def test_list_with_positional_name_returns_matching_container
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: ["web-frontend-1"])
+
+    assert_equal 1, containers.length
+    assert_equal "web-frontend-1", containers.first.name
+  end
+
+  def test_list_with_multiple_positional_identifiers_returns_union
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: ["100", "200"])
+
+    assert_equal [100, 200], containers.map(&:vmid).sort
+  end
+
+  def test_list_with_positional_identifiers_preserves_request_order
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: ["200", "100"])
+
+    assert_equal [200, 100], containers.map(&:vmid)
+  end
+
+  def test_list_with_duplicate_positional_matches_dedups
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: ["100", "web-frontend-1"])
+
+    assert_equal 1, containers.length
+    assert_equal 100, containers.first.vmid
+  end
+
+  def test_list_with_empty_args_returns_all
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    containers = handler.list(args: [])
+
+    assert_equal 3, containers.length
+  end
+
+  def test_list_with_unknown_ctid_raises_not_found
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["99999"]) }
+  end
+
+  def test_list_with_unknown_name_raises_not_found
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["ghost"]) }
+  end
+
+  def test_list_partial_match_raises_when_any_identifier_unknown
+    handler = create_handler_with_mock_repo(@all_containers)
+
+    assert_raises(Pvectl::ResourceNotFoundError) { handler.list(args: ["100", "99999"]) }
+  end
+
+  # ---------------------------
   # presenter() Method
   # ---------------------------
 

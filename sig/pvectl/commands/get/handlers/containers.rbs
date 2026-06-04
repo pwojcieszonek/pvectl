@@ -25,6 +25,8 @@ module Pvectl
 
           def build_repository: () -> Repositories::Container
 
+          def filter_by_identifiers: (Array[Models::Container] containers, Array[String] identifiers) -> Array[Models::Container]
+
           def apply_sort: (Array[Models::Container] containers, String sort_field) -> Array[Models::Container]
 
           def valid_ctid?: (String? ctid) -> bool
