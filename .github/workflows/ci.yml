@@ -66,11 +66,16 @@ jobs:
       - name: Extract release notes from CHANGELOG
         if: steps.tag.outputs.exists == 'false'
         run: |
-          awk -v ver="${{ steps.version.outputs.version }}" '
+          version="${{ steps.version.outputs.version }}"
+          awk -v ver="$version" '
             $0 ~ "^## \\[" ver "\\]" { capture = 1; next }
             capture && /^## / { exit }
             capture { print }
           ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "No CHANGELOG section for v${version} — using fallback notes."
+            echo "Release v${version}" > release-notes.md
+          fi
           echo "----- release-notes.md -----"
           cat release-notes.md
 
@@ -84,7 +89,16 @@ jobs:
 
       - name: Push gem to RubyGems
         if: steps.tag.outputs.exists == 'false'
-        run: gem push "pkg/pvectl-${{ steps.version.outputs.version }}.gem"
+        run: |
+          version="${{ steps.version.outputs.version }}"
+          status=$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://rubygems.org/api/v2/rubygems/pvectl/versions/${version}.json")
+          if [ "$status" = "200" ]; then
+            echo "pvectl ${version} already published to RubyGems — skipping push."
+          else
+            echo "pvectl ${version} not yet on RubyGems (HTTP ${status}) — pushing."
+            gem push "pkg/pvectl-${version}.gem"
+          fi
 
       - name: Create git tag and GitHub Release
         if: steps.tag.outputs.exists == 'false'
