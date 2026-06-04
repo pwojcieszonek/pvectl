@@ -1,11 +1,13 @@
 module Pvectl
   module Services
     class CloneVm
+      include ValidatesNameUniqueness
+
       DEFAULT_TIMEOUT: Integer
 
       START_TIMEOUT: Integer
 
-      def initialize: (vm_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped]) -> void
+      def initialize: (vm_repository: untyped, task_repository: untyped, ?options: Hash[Symbol, untyped], ?name_resolver: untyped?) -> void
 
       def execute: (vmid: Integer | String, ?node: String?, ?new_vmid: Integer?, ?name: String?, ?target_node: String?, ?storage: String?, ?linked: bool, ?pool: String?, ?description: String?, ?config_params: Hash[Symbol, untyped]) -> Models::VmOperationResult
 

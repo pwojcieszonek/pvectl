@@ -602,6 +602,26 @@ module Pvectl
         # --- Name resolution ---
 
         describe "name resolution" do
+          def test_execute_rejects_duplicate_clone_name
+            source = Struct.new(:vmid, :node, :name, :template?).new(100, "pve1", "web", false)
+            repo = Object.new
+            repo.define_singleton_method(:resolve_one) { |_id| source }
+            repo.define_singleton_method(:next_available_vmid) { 200 }
+            repo.define_singleton_method(:clone) { |*| flunk "clone should not run on duplicate name" }
+            resolver = Object.new
+            resolver.define_singleton_method(:name_conflicts) do |_name, except_vmid: nil|
+              [{ vmid: 105, node: "pve2" }]
+            end
+
+            service = Pvectl::Services::CloneVm.new(
+              vm_repository: repo, task_repository: Object.new, name_resolver: resolver
+            )
+            result = service.execute(vmid: 100, name: "web-prod")
+
+            refute result.successful?
+            assert_match(/already exists/, result.error)
+          end
+
           def test_execute_resolves_source_by_name
             source = Struct.new(:vmid, :node, :name, :template?).new(100, "pve1", "web", false)
             repo = Object.new

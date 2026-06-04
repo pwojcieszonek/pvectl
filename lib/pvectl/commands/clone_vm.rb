@@ -198,7 +198,8 @@ module Pvectl
         service = Pvectl::Services::CloneVm.new(
           vm_repository: vm_repo,
           task_repository: task_repo,
-          options: service_options
+          options: service_options,
+          name_resolver: Pvectl::Utils::ResourceResolver.new(connection)
         )
 
         result = service.execute(
