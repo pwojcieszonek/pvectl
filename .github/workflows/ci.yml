@@ -57,10 +57,10 @@ jobs:
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Tag v${{ steps.version.outputs.version }} already exists — skipping release."
+            echo "Tag v${{ steps.version.outputs.version }} already exists - skipping release."
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Tag v${{ steps.version.outputs.version }} not found — proceeding with release."
+            echo "Tag v${{ steps.version.outputs.version }} not found - proceeding with release."
           fi
 
       - name: Extract release notes from CHANGELOG
@@ -73,7 +73,7 @@ jobs:
             capture { print }
           ' CHANGELOG.md > release-notes.md
           if [ ! -s release-notes.md ]; then
-            echo "No CHANGELOG section for v${version} — using fallback notes."
+            echo "No CHANGELOG section for v${version} - using fallback notes."
             echo "Release v${version}" > release-notes.md
           fi
           echo "----- release-notes.md -----"
@@ -92,11 +92,15 @@ jobs:
         run: |
           version="${{ steps.version.outputs.version }}"
           status=$(curl -s -o /dev/null -w '%{http_code}' \
-            "https://rubygems.org/api/v2/rubygems/pvectl/versions/${version}.json")
+            "https://rubygems.org/api/v2/rubygems/pvectl/versions/${version}.json") || true
           if [ "$status" = "200" ]; then
-            echo "pvectl ${version} already published to RubyGems — skipping push."
+            echo "pvectl ${version} already published to RubyGems - skipping push."
           else
-            echo "pvectl ${version} not yet on RubyGems (HTTP ${status}) — pushing."
+            if [ -z "$status" ]; then
+              echo "RubyGems pre-check failed (curl error) - attempting push anyway."
+            else
+              echo "pvectl ${version} not yet on RubyGems (HTTP ${status}) - pushing."
+            fi
             gem push "pkg/pvectl-${version}.gem"
           fi
 
