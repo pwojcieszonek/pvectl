@@ -42,6 +42,14 @@ pvectl clone vm web --name web-clone   # clone source by name (unambiguous)
   **unambiguous** match. If a name matches several resources, the command
   errors: `'web' matches multiple resources (VMIDs 100, 105) — specify a VMID`.
 
+**Name uniqueness:** VM and container names must be unique across the entire
+cluster. `create`, `clone`, and renames via `set`/`edit` fail if the name (or
+container hostname) is already in use:
+
+```
+a VM or container named 'web' already exists (VMID 100 on pve1)
+```
+
 ## Installation
 
 ```bash

@@ -63,6 +63,9 @@ module Pvectl
             resources, the command errors with an ambiguity message. Use a VMID
             to address the resource unambiguously in that case.
 
+            Names (container hostnames) must be unique across all VMs and
+            containers. The clone fails if the target name is already in use.
+
             Config modification is a two-step process: clone first, then update
             configuration via the Proxmox API. If the config update fails, the
             clone still exists but with the original configuration.

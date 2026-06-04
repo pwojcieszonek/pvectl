@@ -57,6 +57,9 @@ module Pvectl
             Uses $EDITOR environment variable by default, falling back to vi.
             Override with --editor flag.
 
+            Names (container hostnames) must be unique across all VMs and
+            containers. Renaming via edit fails if the new name is already in use.
+
             In --dry-run mode, shows the diff between current and edited
             configuration without applying changes to Proxmox.
 

@@ -62,6 +62,9 @@ module Pvectl
             resources, the command errors with an ambiguity message. Use a VMID
             to address the resource unambiguously in that case.
 
+            Names (container hostnames) must be unique across all VMs and
+            containers. Renaming via set fails if the new name is already in use.
+
             Volume resize (size=) is irreversible. A confirmation prompt is shown
             unless --yes is specified.
 

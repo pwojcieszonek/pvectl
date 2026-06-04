@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resume/delete) act on every match (with confirmation); single-target commands
   (clone/console/set/edit) require an unambiguous match. `describe <type> <name>`
   shows every matching resource.
+- **cli**: Enforce unique VM/container names cluster-wide. `create`, `clone`,
+  and renames via `set`/`edit` now fail with a clear error if the name (or
+  container hostname) is already used by any VM or container.
 
 ### Changed
 - **describe**: rules are no longer nested under the `Firewall` section as a `Rules` sub-table; they are rendered in the dedicated `Firewall Rules` top-level section
